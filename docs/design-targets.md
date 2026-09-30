@@ -19,6 +19,7 @@ Locked product rules override placeholder design data. In particular, authentica
 | --- | --- | ---: | --- |
 | Calendar Day, Week, Month and New Session | `9fc1a7b4-af57-48f9-b645-88f741ca400a` | 53 | Current complete application draft |
 | Quiet Precision design system | `8aa64fb9-b219-4ac8-bd46-210672382d9c` | 10 | Typography, palette, shell, and component language |
+| Dashboard | `4cd2386e-ae7b-47fa-8029-7cd5db1d6636` | 1 | Same-project state approved for Story 01-03, generated from the V2 reference |
 | Calendar Day branch | `3b6767a8-0995-4cc2-82b4-1d2798feea98` | — | Supporting branch |
 | Calendar Day branch | `a9809a4a-d719-40a1-bf61-a7fe892b63b4` | — | Supporting branch |
 | Verify-email template | `c25217df-66b1-4381-915f-bce780850460` | — | Email template, not an app auth page |
@@ -26,11 +27,10 @@ Locked product rules override placeholder design data. In particular, authentica
 
 ## Screenshot-backed targets
 
-No current live node exposed Dashboard, Tasks, Documents, Settings, application auth pages, Task Details, or Session Details during inspection. Their current regression evidence is:
+No current live node exposed Tasks, Documents, Settings, application auth pages, Task Details, or Session Details during the initial inspection. Their current regression evidence is:
 
 | Target | Reference | Viewport |
 | --- | --- | --- |
-| Dashboard | `design-reference/screenshots/v2/01_Dashboard.png` | 1440 × 1200 |
 | Tasks | `design-reference/screenshots/v2/05_Tasks.png` | 1440 × 1200 |
 | Documents | `design-reference/screenshots/v2/06_Documents.png` | 1440 × 1200 |
 | Settings | `design-reference/screenshots/v2/07_Settings.png` | 1440 × 1200 |

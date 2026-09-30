@@ -1,7 +1,7 @@
 # Story 01-03: Port application shell and Dashboard pixel-faithfully
 
 Epic: epic-01
-Status: ready-for-dev
+Status: done
 Dependencies: 01-02
 
 ## Purpose
@@ -47,3 +47,11 @@ Playwright screenshot baseline and interaction smoke.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion evidence
+
+- Added and approved same-project Superdesign Dashboard draft `4cd2386e-ae7b-47fa-8029-7cd5db1d6636` v1 from the V2 reference and live Quiet Precision design system.
+- Ported the 240 px application sidebar, workspace shell, Dashboard summary, assignments, task progress, Today's Classes, and mini-calendar into focused presentation components.
+- UI consumes deterministic typed Dashboard fixture data; no backend, tenant data path, secret, or provider error surface exists in this static story.
+- Added keyboard/semantic browser assertions, responsive no-overflow checks at 320/768/1024 px, and an inspected 1440×1200 Chromium visual baseline.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, and `pnpm audit --prod` pass on 2026-09-30.

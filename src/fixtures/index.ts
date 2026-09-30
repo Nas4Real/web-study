@@ -137,10 +137,86 @@ export const documentsFixture = [
 ] as const satisfies readonly DocumentSummaryDTO[];
 
 export const dashboardFixture = {
-  date: "2026-09-30",
-  greetingName: profileFixture.displayName,
-  todaySessions: calendarFixture.occurrences,
-  upcomingTasks: tasksFixture,
+  date: "2026-08-10",
+  upcomingExam: { title: "Algèbre Linéaire", dueLabel: "in 2 days" },
+  nextSession: { title: "Mathematics", location: "Room 27", timeLabel: "11:00 AM" },
+  taskSummary: { total: 4, dueToday: 2, completedToday: 1 },
+  assignments: [
+    {
+      id: "assignment-mathematics",
+      title: "Mathematics Assignment",
+      description: "Chapter 4 : Linear Equation",
+      dueLabel: "Due Today",
+      dueTime: "23:59",
+      tone: "algebra",
+      state: "pending",
+    },
+    {
+      id: "assignment-science",
+      title: "Science Worksheet",
+      description: "Worksheet 2.3 & 2.4",
+      dueLabel: "Due Tomorrow",
+      dueTime: "23:59",
+      tone: "analysis",
+      state: "pending",
+    },
+    {
+      id: "assignment-english",
+      title: "English Presentation",
+      description: "Reading session",
+      dueLabel: "Completed",
+      dueTime: "10 Aug 09:00",
+      tone: "physics",
+      state: "completed",
+    },
+  ],
+  tasks: [
+    {
+      id: "dashboard-task-mathematics",
+      title: "Finish Mathematics Assignment",
+      subjectLabel: "MATH",
+      description: "Chapter 4 : Linear Equation",
+      dueLabel: "Due 23:59",
+      tone: "algebra",
+      completed: false,
+      highlighted: true,
+    },
+    {
+      id: "dashboard-task-physics",
+      title: "Review Physics Notes",
+      subjectLabel: "PHYSICS",
+      description: "Quantum Mechanics",
+      dueLabel: null,
+      tone: "physics",
+      completed: false,
+      highlighted: false,
+    },
+    {
+      id: "dashboard-task-chemistry",
+      title: "Submit Chemistry Lab Report",
+      subjectLabel: "CHEMISTRY",
+      description: null,
+      dueLabel: null,
+      tone: "analysis",
+      completed: true,
+      highlighted: false,
+    },
+  ],
+  todayClasses: [
+    { id: "class-mathematics", timeLabel: "09:00", title: "Mathematics", location: "Room 27" },
+    { id: "class-english", timeLabel: "11:00", title: "English Language", location: "Room 21" },
+    { id: "class-science", timeLabel: "13:00", title: "Science", location: "Lab 3" },
+  ],
+  calendar: {
+    label: "August 2026",
+    selectedDay: 10,
+    leadingDays: [27, 28, 29, 30, 31],
+    days: [
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+      26, 27, 28, 29, 30,
+    ],
+    events: { 8: "task", 12: "exam", 15: "task" },
+  },
 } as const satisfies DashboardFixtureDTO;
 
 export const settingsFixture = {

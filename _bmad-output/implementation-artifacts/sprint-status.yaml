@@ -16,6 +16,7 @@ stories:
 completed_stories:
   - 01-01
   - 01-02
+  - 01-03
 ui_stories_requiring_superdesign_first:
   - 02-05
   - 02-06

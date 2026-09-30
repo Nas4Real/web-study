@@ -67,6 +67,7 @@ describe("visual target registry", () => {
       "historical-preview",
     ]);
     expect(visualTargets.superdesign.projectId).toBe("71292a60-75e4-449b-a39f-0456ec77d72f");
+    expect(visualTargets.targets.dashboard.source).toBe("same-project-superdesign");
     expect(visualTargets.targets.calendar.source).toBe("live-superdesign");
     expect(visualTargets.targets.taskDetails.source).toBe("v4-screenshot");
   });

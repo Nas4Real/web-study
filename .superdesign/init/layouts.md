@@ -3,24 +3,12 @@
 ## RootLayout
 
 - Source: `src/app/layout.tsx`
-- Description: Required Next.js root document wrapper. It currently provides metadata, language, and global styles only; the approved application shell has not been ported yet.
+- Loads Poppins and IBM Plex Mono through `next/font`, applies global styles, metadata, and the root document.
 
-```tsx
-import type { Metadata } from "next";
-import type { ReactNode } from "react";
+## WorkspaceLayout
 
-import "@/styles/globals.css";
-
-export const metadata: Metadata = {
-  title: "Web Study",
-  description: "A private study workspace.",
-};
-
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}
-```
+- Source: `src/app/(workspace)/layout.tsx`
+- Dependencies: `src/features/shell/study-sidebar.tsx`, `src/styles/globals.css`.
+- Structure: 12 px black outer shell and gap, 240 px desktop sidebar, flexible `#09090b` workspace with 20 px radius, `#27272a` border, and approved workspace shadow.
+- Current active navigation item: Dashboard.
+- Below 1024 px the desktop sidebar is hidden; content remains usable without introducing an unapproved alternate shell.

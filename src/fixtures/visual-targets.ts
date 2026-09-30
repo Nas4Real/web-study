@@ -28,13 +28,15 @@ export const visualTargets = {
     calendarDraftVersion: 53,
     designSystemDraftId: "8aa64fb9-b219-4ac8-bd46-210672382d9c",
     designSystemDraftVersion: 10,
+    dashboardDraftId: "4cd2386e-ae7b-47fa-8029-7cd5db1d6636",
+    dashboardDraftVersion: 1,
   },
   viewports: {
     application: { width: 1440, height: 1200 },
     auth: { width: 1440, height: 900 },
   },
   targets: {
-    dashboard: screenshotTarget("design-reference/screenshots/v2/01_Dashboard.png"),
+    dashboard: sameProjectTarget("Superdesign Dashboard draft v1"),
     calendar: liveTarget("Superdesign calendar draft v53"),
     tasks: screenshotTarget("design-reference/screenshots/v2/05_Tasks.png"),
     documents: screenshotTarget("design-reference/screenshots/v2/06_Documents.png"),
@@ -49,6 +51,10 @@ export const visualTargets = {
 
 function liveTarget(reference: string): VisualTarget {
   return { source: "live-superdesign", reference, liveDraftAvailable: true };
+}
+
+function sameProjectTarget(reference: string): VisualTarget {
+  return { source: "same-project-superdesign", reference, liveDraftAvailable: true };
 }
 
 function screenshotTarget(reference: string): VisualTarget {

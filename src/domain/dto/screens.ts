@@ -1,12 +1,50 @@
-import type { CalendarOccurrenceSummaryDTO } from "./calendar";
 import type { EntityId, IsoDateTime, SubjectSummaryDTO } from "./shared";
-import type { TaskSummaryDTO } from "./task";
+
+export type DashboardTone = "algebra" | "analysis" | "physics" | "mechanics" | "method";
+
+export interface DashboardAssignmentDTO {
+  id: EntityId;
+  title: string;
+  description: string;
+  dueLabel: string;
+  dueTime: string;
+  tone: DashboardTone;
+  state: "pending" | "completed";
+}
+
+export interface DashboardTaskDTO {
+  id: EntityId;
+  title: string;
+  subjectLabel: string;
+  description: string | null;
+  dueLabel: string | null;
+  tone: DashboardTone;
+  completed: boolean;
+  highlighted: boolean;
+}
+
+export interface DashboardClassDTO {
+  id: EntityId;
+  timeLabel: string;
+  title: string;
+  location: string;
+}
 
 export interface DashboardFixtureDTO {
   date: string;
-  greetingName: string;
-  todaySessions: readonly CalendarOccurrenceSummaryDTO[];
-  upcomingTasks: readonly TaskSummaryDTO[];
+  upcomingExam: { title: string; dueLabel: string };
+  nextSession: { title: string; location: string; timeLabel: string };
+  taskSummary: { total: number; dueToday: number; completedToday: number };
+  assignments: readonly DashboardAssignmentDTO[];
+  tasks: readonly DashboardTaskDTO[];
+  todayClasses: readonly DashboardClassDTO[];
+  calendar: {
+    label: string;
+    selectedDay: number;
+    leadingDays: readonly number[];
+    days: readonly number[];
+    events: Readonly<Partial<Record<number, "exam" | "task" | "holiday">>>;
+  };
 }
 
 export interface SettingsFixtureDTO {
