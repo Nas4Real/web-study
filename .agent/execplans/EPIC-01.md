@@ -26,7 +26,7 @@ If a story is marked `ready-superdesign-first`, inspect the live Superdesign pro
 ## Progress log
 
 - [x] `01-01` Bootstrap exact stack and quality gates (2026-09-30)
-- [ ] `01-02` Establish live design references and deterministic fixtures
+- [x] `01-02` Establish live design references and deterministic fixtures (2026-09-30)
 - [ ] `01-03` Port application shell and Dashboard pixel-faithfully
 - [ ] `01-04` Port Calendar Day Week Month static views
 - [ ] `01-05` Port Tasks Documents Settings and modals
@@ -37,8 +37,12 @@ If a story is marked `ready-superdesign-first`, inspect the live Superdesign pro
 - The live `WEB STUDY` Superdesign project is accessible as project `71292a60-75e4-449b-a39f-0456ec77d72f`.
 - The current approved application draft uses `cdn.tailwindcss.com`, a `tailwind.config` object, and v3 utility conventions. Tailwind 3.4.19 is therefore pinned for parity.
 - Next.js 16.3.8 official guidance uses the ESLint CLI and flat config. ESLint 10 is not yet compatible with the React plugin bundled by `eslint-config-next` 16.3.8, so ESLint 9.39.5 is pinned.
-- The repository was not initialized as a Git repository, so no story commit was created.
+- The repository is private at `https://github.com/Nas4Real/web-study`; `main` is the delivery branch.
+- Live inspection on 2026-09-30 found Calendar Day/Week/Month and New Session in draft `9fc1a7b4-af57-48f9-b645-88f741ca400a` v53, with Quiet Precision tokens in draft `8aa64fb9-b219-4ac8-bd46-210672382d9c` v10.
+- Dashboard, Tasks, Documents, Settings, app auth pages, Task Details, and Session Details had no current live nodes. Their V2/V4 screenshots remain regression evidence and must be checked against the live project again before UI implementation.
 
 ## Completion evidence
 
 Story `01-01` passes lint, typecheck, four Vitest environment-contract tests, a Chromium Playwright smoke test, and the production build. Production server startup without configured secrets fails during the instrumentation hook as required. Production dependency audit reports no known vulnerabilities.
+
+Story `01-02` adds typed deterministic fixtures and a machine-readable visual target registry. Lint, typecheck, 11 Vitest tests, and the production build pass. No application UI was ported in this story.
