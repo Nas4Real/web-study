@@ -1,0 +1,813 @@
+openapi: 3.1.0
+info:
+  title: Web Study API
+  version: 1.0.0
+  description: |
+    External Web Study API. Personal API keys authenticate external clients.
+    The normal web application uses the same application-service layer with a Supabase session.
+servers:
+  - url: /api/v1
+security:
+  - personalApiKey: []
+
+tags:
+  - name: Profile
+  - name: Subjects
+  - name: Chapters
+  - name: Folders
+  - name: Tasks
+  - name: Calendar
+  - name: Files
+  - name: Notifications
+
+components:
+  securitySchemes:
+    personalApiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: WebStudyApiKey
+
+  parameters:
+    SubjectId:
+      in: path
+      name: subject_id
+      required: true
+      schema: { type: string, format: uuid }
+    ChapterId:
+      in: path
+      name: chapter_id
+      required: true
+      schema: { type: string, format: uuid }
+    FolderId:
+      in: path
+      name: folder_id
+      required: true
+      schema: { type: string, format: uuid }
+    TaskId:
+      in: path
+      name: task_id
+      required: true
+      schema: { type: string, format: uuid }
+    SubtaskId:
+      in: path
+      name: subtask_id
+      required: true
+      schema: { type: string, format: uuid }
+    SeriesId:
+      in: path
+      name: series_id
+      required: true
+      schema: { type: string, format: uuid }
+    OriginalStart:
+      in: path
+      name: original_start
+      required: true
+      description: URL-encoded RFC3339 timestamp representing the occurrence's original DTSTART identity.
+      schema: { type: string, format: date-time }
+    FileId:
+      in: path
+      name: file_id
+      required: true
+      schema: { type: string, format: uuid }
+    NotificationId:
+      in: path
+      name: notification_id
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: false
+      schema: { type: string, minLength: 8, maxLength: 200 }
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Unauthorized:
+      description: Missing, invalid, revoked, or expired API key
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    NotFound:
+      description: Resource not found or not visible to the authenticated owner
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Conflict:
+      description: Domain conflict or idempotency conflict
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    ValidationFailed:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    ErrorIssue:
+      type: object
+      properties:
+        path:
+          type: array
+          items: { type: [string, integer] }
+        code: { type: string }
+        message: { type: string }
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            request_id: { type: string }
+            details:
+              type: array
+              items: { $ref: '#/components/schemas/ErrorIssue' }
+
+    SubjectSummary:
+      type: object
+      required: [id, name, color]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        color: { type: string }
+        icon: { type: [string, 'null'] }
+    SubjectInput:
+      type: object
+      required: [name, color]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        color: { type: string, minLength: 1, maxLength: 80 }
+        icon: { type: [string, 'null'], maxLength: 120 }
+        position: { type: integer, minimum: 0 }
+    SubjectPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        color: { type: string, minLength: 1, maxLength: 80 }
+        icon: { type: [string, 'null'], maxLength: 120 }
+        position: { type: integer, minimum: 0 }
+
+    ChapterInput:
+      type: object
+      required: [subject_id, name]
+      additionalProperties: false
+      properties:
+        subject_id: { type: string, format: uuid }
+        name: { type: string, minLength: 1, maxLength: 160 }
+        position: { type: integer, minimum: 0 }
+    ChapterPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 160 }
+        position: { type: integer, minimum: 0 }
+
+    FolderInput:
+      type: object
+      required: [subject_id, name]
+      additionalProperties: false
+      properties:
+        subject_id: { type: string, format: uuid }
+        chapter_id: { type: [string, 'null'], format: uuid }
+        parent_id: { type: [string, 'null'], format: uuid }
+        name: { type: string, minLength: 1, maxLength: 160 }
+        position: { type: integer, minimum: 0 }
+    FolderPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        chapter_id: { type: [string, 'null'], format: uuid }
+        parent_id: { type: [string, 'null'], format: uuid }
+        name: { type: string, minLength: 1, maxLength: 160 }
+        position: { type: integer, minimum: 0 }
+
+    SubtaskInput:
+      type: object
+      required: [title]
+      additionalProperties: false
+      properties:
+        title: { type: string, minLength: 1, maxLength: 300 }
+        completed: { type: boolean, default: false }
+        position: { type: integer, minimum: 0 }
+    SubtaskPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        title: { type: string, minLength: 1, maxLength: 300 }
+        completed: { type: boolean }
+        position: { type: integer, minimum: 0 }
+    Subtask:
+      type: object
+      required: [id, title, position, completed]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        position: { type: integer }
+        completed: { type: boolean }
+        completed_at: { type: [string, 'null'], format: date-time }
+
+    TaskInput:
+      type: object
+      required: [title, subject_id]
+      additionalProperties: false
+      properties:
+        title: { type: string, minLength: 1, maxLength: 240 }
+        subject_id: { type: string, format: uuid }
+        description: { type: [string, 'null'], maxLength: 10000 }
+        priority: { type: string, enum: [normal, high], default: normal }
+        due_at: { type: [string, 'null'], format: date-time }
+        status: { type: string, enum: [pending, someday], default: pending }
+        subtasks:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/SubtaskInput' }
+    TaskPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        title: { type: string, minLength: 1, maxLength: 240 }
+        subject_id: { type: string, format: uuid }
+        description: { type: [string, 'null'], maxLength: 10000 }
+        priority: { type: string, enum: [normal, high] }
+        due_at: { type: [string, 'null'], format: date-time }
+        status: { type: string, enum: [pending, someday] }
+    TaskSummary:
+      type: object
+      required: [id, title, subject, priority, status]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        subject: { $ref: '#/components/schemas/SubjectSummary' }
+        priority: { type: string, enum: [normal, high] }
+        status: { type: string, enum: [pending, completed, someday] }
+        due_at: { type: [string, 'null'], format: date-time }
+        completed_at: { type: [string, 'null'], format: date-time }
+    TaskDetail:
+      allOf:
+        - $ref: '#/components/schemas/TaskSummary'
+        - type: object
+          required: [subtasks]
+          properties:
+            description: { type: [string, 'null'] }
+            subtasks:
+              type: array
+              items: { $ref: '#/components/schemas/Subtask' }
+
+    SessionBaseInput:
+      type: object
+      required: [kind, title, subject_id, starts_at, timezone]
+      properties:
+        kind: { type: string, enum: [exam, university, revision] }
+        title: { type: string, minLength: 1, maxLength: 240 }
+        subject_id: { type: string, format: uuid }
+        starts_at: { type: string, format: date-time }
+        timezone: { type: string, minLength: 1, maxLength: 100 }
+        recurrence_rule: { type: [string, 'null'], maxLength: 2000 }
+        location: { type: [string, 'null'], maxLength: 300 }
+        professor: { type: [string, 'null'], maxLength: 300 }
+        focus_text: { type: [string, 'null'], maxLength: 1000 }
+        notes_items:
+          type: array
+          maxItems: 30
+          items: { type: string, minLength: 1, maxLength: 1000 }
+    ExamSessionInput:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/SessionBaseInput'
+        - type: object
+          properties:
+            kind: { const: exam }
+            duration_minutes: { type: [integer, 'null'], minimum: 1, maximum: 1440 }
+    UniversitySessionInput:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/SessionBaseInput'
+        - type: object
+          required: [duration_minutes]
+          properties:
+            kind: { const: university }
+            duration_minutes: { type: integer, minimum: 1, maximum: 1440 }
+    RevisionSessionInput:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/SessionBaseInput'
+        - type: object
+          required: [duration_minutes]
+          properties:
+            kind: { const: revision }
+            duration_minutes: { type: integer, minimum: 1, maximum: 1440 }
+    SessionInput:
+      oneOf:
+        - $ref: '#/components/schemas/ExamSessionInput'
+        - $ref: '#/components/schemas/UniversitySessionInput'
+        - $ref: '#/components/schemas/RevisionSessionInput'
+      discriminator:
+        propertyName: kind
+    SessionSeriesPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      description: Session kind is kept stable in V1 unless the live product design explicitly introduces type switching.
+      properties:
+        title: { type: string, minLength: 1, maxLength: 240 }
+        subject_id: { type: string, format: uuid }
+        starts_at: { type: string, format: date-time }
+        duration_minutes: { type: [integer, 'null'], minimum: 1, maximum: 1440 }
+        timezone: { type: string, minLength: 1, maxLength: 100 }
+        recurrence_rule: { type: [string, 'null'], maxLength: 2000 }
+        location: { type: [string, 'null'], maxLength: 300 }
+        professor: { type: [string, 'null'], maxLength: 300 }
+        focus_text: { type: [string, 'null'], maxLength: 1000 }
+        notes_items:
+          type: array
+          maxItems: 30
+          items: { type: string, minLength: 1, maxLength: 1000 }
+    SessionOccurrencePatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        title: { type: string, minLength: 1, maxLength: 240 }
+        starts_at: { type: string, format: date-time }
+        duration_minutes: { type: [integer, 'null'], minimum: 1, maximum: 1440 }
+        location: { type: [string, 'null'], maxLength: 300 }
+        professor: { type: [string, 'null'], maxLength: 300 }
+        focus_text: { type: [string, 'null'], maxLength: 1000 }
+        notes_items:
+          type: array
+          maxItems: 30
+          items: { type: string, minLength: 1, maxLength: 1000 }
+    SessionOccurrenceDetail:
+      type: object
+      required: [series_id, original_start, kind, title, subject, starts_at, timezone, notes_items]
+      properties:
+        series_id: { type: string, format: uuid }
+        original_start: { type: string, format: date-time }
+        kind: { type: string, enum: [exam, university, revision] }
+        title: { type: string }
+        subject: { $ref: '#/components/schemas/SubjectSummary' }
+        starts_at: { type: string, format: date-time }
+        ends_at: { type: [string, 'null'], format: date-time }
+        duration_minutes: { type: [integer, 'null'] }
+        timezone: { type: string }
+        location: { type: [string, 'null'] }
+        professor: { type: [string, 'null'] }
+        focus_text: { type: [string, 'null'] }
+        notes_items:
+          type: array
+          items: { type: string }
+        recurring: { type: boolean }
+        overridden: { type: boolean }
+
+    FileMetadata:
+      type: object
+      required: [id, subject_id, display_name, mime_type, extension, size_bytes, upload_state]
+      properties:
+        id: { type: string, format: uuid }
+        subject_id: { type: string, format: uuid }
+        chapter_id: { type: [string, 'null'], format: uuid }
+        folder_id: { type: [string, 'null'], format: uuid }
+        display_name: { type: string }
+        original_filename: { type: string }
+        mime_type: { type: string }
+        extension: { type: string }
+        size_bytes: { type: integer, minimum: 0 }
+        upload_state: { type: string, enum: [pending, ready, failed, deleting, deleted] }
+        created_at: { type: string, format: date-time }
+    UploadIntentInput:
+      type: object
+      required: [subject_id, filename, mime_type, size_bytes]
+      additionalProperties: false
+      properties:
+        subject_id: { type: string, format: uuid }
+        chapter_id: { type: [string, 'null'], format: uuid }
+        folder_id: { type: [string, 'null'], format: uuid }
+        filename: { type: string, minLength: 1, maxLength: 512 }
+        mime_type: { type: string }
+        size_bytes: { type: integer, minimum: 1, maximum: 52428800 }
+    UploadIntentResponse:
+      type: object
+      required: [file, upload_url, expires_at, required_headers]
+      properties:
+        file: { $ref: '#/components/schemas/FileMetadata' }
+        upload_url: { type: string, format: uri }
+        expires_at: { type: string, format: date-time }
+        required_headers:
+          type: object
+          additionalProperties: { type: string }
+    DownloadUrlResponse:
+      type: object
+      required: [url, expires_at]
+      properties:
+        url: { type: string, format: uri }
+        expires_at: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      required: [id, kind, source_type, source_id, title, scheduled_for, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [upcoming_exam, overdue_task, session_start] }
+        source_type: { type: string, enum: [task, calendar_series] }
+        source_id: { type: string, format: uuid }
+        occurrence_start: { type: [string, 'null'], format: date-time }
+        title: { type: string }
+        body: { type: [string, 'null'] }
+        scheduled_for: { type: string, format: date-time }
+        read_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+    NotificationPreferences:
+      type: object
+      required: [upcoming_exams, overdue_tasks, session_reminders, exam_lead_hours, session_lead_minutes]
+      properties:
+        upcoming_exams: { type: boolean }
+        overdue_tasks: { type: boolean }
+        session_reminders: { type: boolean }
+        exam_lead_hours: { type: integer, minimum: 1, maximum: 720 }
+        session_lead_minutes: { type: integer, minimum: 1, maximum: 1440 }
+
+    Profile:
+      type: object
+      required: [id, display_name, timezone, storage_quota_bytes, storage_used_bytes]
+      properties:
+        id: { type: string, format: uuid }
+        display_name: { type: string }
+        timezone: { type: string }
+        avatar_url: { type: [string, 'null'], format: uri }
+        storage_quota_bytes: { type: integer, minimum: 1 }
+        storage_used_bytes: { type: integer, minimum: 0 }
+        storage_reserved_bytes: { type: integer, minimum: 0 }
+    ProfilePatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        display_name: { type: string, minLength: 1, maxLength: 160 }
+        timezone: { type: string, minLength: 1, maxLength: 100 }
+    StorageUsage:
+      type: object
+      required: [quota_bytes, used_bytes, reserved_bytes, available_bytes]
+      properties:
+        quota_bytes: { type: integer, minimum: 1 }
+        used_bytes: { type: integer, minimum: 0 }
+        reserved_bytes: { type: integer, minimum: 0 }
+        available_bytes: { type: integer, minimum: 0 }
+
+paths:
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Get current profile
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Profile' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Profile]
+      summary: Update current profile
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ProfilePatch' } } }
+      responses:
+        '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Profile' } } } }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /storage:
+    get:
+      tags: [Profile]
+      summary: Get storage usage and quota
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/StorageUsage' } } } }
+
+  /subjects:
+    get:
+      tags: [Subjects]
+      summary: List subjects
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/SubjectSummary' } } } }
+    post:
+      tags: [Subjects]
+      summary: Create subject
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SubjectInput' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/SubjectSummary' } } } }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /subjects/{subject_id}:
+    parameters: [{ $ref: '#/components/parameters/SubjectId' }]
+    get:
+      tags: [Subjects]
+      summary: Get subject
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SubjectSummary' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Subjects]
+      summary: Update subject
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SubjectPatch' } } } }
+      responses:
+        '200': { description: Updated }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      tags: [Subjects]
+      summary: Delete subject when dependency strategy allows
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /chapters:
+    get:
+      tags: [Chapters]
+      summary: List chapters
+      parameters:
+        - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Chapters]
+      summary: Create chapter and starter folders
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterInput' } } } }
+      responses:
+        '201': { description: Created }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /chapters/{chapter_id}:
+    parameters: [{ $ref: '#/components/parameters/ChapterId' }]
+    get: { tags: [Chapters], summary: Get chapter, responses: { '200': { description: OK }, '404': { $ref: '#/components/responses/NotFound' } } }
+    patch:
+      tags: [Chapters]
+      summary: Rename/reorder chapter
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterPatch' } } } }
+      responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+    delete:
+      tags: [Chapters]
+      summary: Delete chapter using the product's safe dependency strategy
+      responses: { '204': { description: Deleted }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } }
+
+  /folders:
+    get:
+      tags: [Folders]
+      summary: List folders
+      parameters:
+        - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
+        - { in: query, name: chapter_id, required: false, schema: { type: string, format: uuid } }
+        - { in: query, name: parent_id, required: false, schema: { type: string, format: uuid } }
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Folders]
+      summary: Create folder
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/FolderInput' } } } }
+      responses: { '201': { description: Created }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+
+  /folders/{folder_id}:
+    parameters: [{ $ref: '#/components/parameters/FolderId' }]
+    get: { tags: [Folders], summary: Get folder, responses: { '200': { description: OK }, '404': { $ref: '#/components/responses/NotFound' } } }
+    patch:
+      tags: [Folders]
+      summary: Rename, reorder, or move folder
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/FolderPatch' } } } }
+      responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } }
+    delete:
+      tags: [Folders]
+      summary: Delete folder using supported dependency strategy
+      responses: { '204': { description: Deleted }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } }
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks
+      parameters:
+        - { in: query, name: status, required: false, schema: { type: string, enum: [pending, completed, someday] } }
+        - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
+        - { in: query, name: due_from, required: false, schema: { type: string, format: date-time } }
+        - { in: query, name: due_to, required: false, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/TaskSummary' } } } }
+    post:
+      tags: [Tasks]
+      summary: Create task
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/TaskInput' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/TaskDetail' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /tasks/{task_id}:
+    parameters: [{ $ref: '#/components/parameters/TaskId' }]
+    get:
+      tags: [Tasks]
+      summary: Get full task detail including ordered subtasks
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TaskDetail' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Tasks]
+      summary: Update parent task fields
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/TaskPatch' } } } }
+      responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+    delete:
+      tags: [Tasks]
+      summary: Delete task and its subtasks
+      responses: { '204': { description: Deleted }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /tasks/{task_id}/complete:
+    parameters: [{ $ref: '#/components/parameters/TaskId' }]
+    post:
+      tags: [Tasks]
+      summary: Complete parent task without mutating subtask states
+      responses: { '200': { description: Completed }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /tasks/{task_id}/reopen:
+    parameters: [{ $ref: '#/components/parameters/TaskId' }]
+    post:
+      tags: [Tasks]
+      summary: Reopen parent task without mutating subtask states
+      responses: { '200': { description: Reopened }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /tasks/{task_id}/subtasks:
+    parameters: [{ $ref: '#/components/parameters/TaskId' }]
+    post:
+      tags: [Tasks]
+      summary: Add subtask
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SubtaskInput' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Subtask' } } } }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+
+  /tasks/{task_id}/subtasks/{subtask_id}:
+    parameters:
+      - { $ref: '#/components/parameters/TaskId' }
+      - { $ref: '#/components/parameters/SubtaskId' }
+    patch:
+      tags: [Tasks]
+      summary: Update title, order, or completion of an owned subtask
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SubtaskPatch' } } } }
+      responses: { '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Subtask' } } } }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+    delete:
+      tags: [Tasks]
+      summary: Delete owned subtask
+      responses: { '204': { description: Deleted }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /sessions:
+    get:
+      tags: [Calendar]
+      summary: List effective calendar occurrences in a bounded range
+      parameters:
+        - { in: query, name: from, required: true, schema: { type: string, format: date-time } }
+        - { in: query, name: to, required: true, schema: { type: string, format: date-time } }
+        - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/SessionOccurrenceDetail' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+    post:
+      tags: [Calendar]
+      summary: Create one-time or recurring session series
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SessionInput' } } } }
+      responses: { '201': { description: Created }, '409': { $ref: '#/components/responses/Conflict' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+
+  /sessions/{series_id}:
+    parameters: [{ $ref: '#/components/parameters/SeriesId' }]
+    get:
+      tags: [Calendar]
+      summary: Get session series metadata
+      responses: { '200': { description: OK }, '404': { $ref: '#/components/responses/NotFound' } }
+    patch:
+      tags: [Calendar]
+      summary: Update entire series
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeriesPatch' } } } }
+      responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+    delete:
+      tags: [Calendar]
+      summary: Delete entire series
+      responses: { '204': { description: Deleted }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /sessions/{series_id}/occurrences/{original_start}:
+    parameters:
+      - { $ref: '#/components/parameters/SeriesId' }
+      - { $ref: '#/components/parameters/OriginalStart' }
+    get:
+      tags: [Calendar]
+      summary: Get full effective occurrence detail after exception overlay
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SessionOccurrenceDetail' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Calendar]
+      summary: Modify one occurrence while preserving original_start identity
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SessionOccurrencePatch' } } } }
+      responses: { '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/SessionOccurrenceDetail' } } } }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+    delete:
+      tags: [Calendar]
+      summary: Cancel one occurrence
+      responses: { '204': { description: Cancelled }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /files:
+    get:
+      tags: [Files]
+      summary: List file metadata
+      parameters:
+        - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
+        - { in: query, name: chapter_id, required: false, schema: { type: string, format: uuid } }
+        - { in: query, name: folder_id, required: false, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/FileMetadata' } } } } }
+
+  /files/upload-intents:
+    post:
+      tags: [Files]
+      summary: Reserve quota and create direct R2 upload intent
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/UploadIntentInput' } } } }
+      responses:
+        '201': { description: Intent created, content: { application/json: { schema: { $ref: '#/components/schemas/UploadIntentResponse' } } } }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /files/{file_id}:
+    parameters: [{ $ref: '#/components/parameters/FileId' }]
+    get:
+      tags: [Files]
+      summary: Get file metadata
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/FileMetadata' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+    patch:
+      tags: [Files]
+      summary: Rename or move file metadata without renaming the R2 object key
+      responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+    delete:
+      tags: [Files]
+      summary: Logically delete file and enqueue R2 cleanup
+      responses: { '204': { description: Deleted }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /files/{file_id}/complete:
+    parameters: [{ $ref: '#/components/parameters/FileId' }]
+    post:
+      tags: [Files]
+      summary: HEAD/verify uploaded R2 object and finalize metadata/quota accounting
+      responses: { '200': { description: Ready, content: { application/json: { schema: { $ref: '#/components/schemas/FileMetadata' } } } }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } }
+
+  /files/{file_id}/download-url:
+    parameters: [{ $ref: '#/components/parameters/FileId' }]
+    post:
+      tags: [Files]
+      summary: Create short-lived authorized R2 download URL
+      responses: { '200': { description: URL issued, content: { application/json: { schema: { $ref: '#/components/schemas/DownloadUrlResponse' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications
+      parameters:
+        - { in: query, name: unread_only, required: false, schema: { type: boolean, default: false } }
+      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Notification' } } } } } }
+
+  /notifications/{notification_id}/read:
+    parameters: [{ $ref: '#/components/parameters/NotificationId' }]
+    post: { tags: [Notifications], summary: Mark notification read, responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' } } }
+
+  /notifications/{notification_id}/unread:
+    parameters: [{ $ref: '#/components/parameters/NotificationId' }]
+    post: { tags: [Notifications], summary: Mark notification unread, responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' } } }
+
+  /notification-preferences:
+    get:
+      tags: [Notifications]
+      summary: Get notification preferences
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreferences' } } } } }
+    patch:
+      tags: [Notifications]
+      summary: Update notification preferences
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreferences' } } } }
+      responses: { '200': { description: Updated }, '422': { $ref: '#/components/responses/ValidationFailed' } }

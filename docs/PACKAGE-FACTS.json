@@ -1,0 +1,23 @@
+{
+  "version": "v4",
+  "date": "2026-09-29",
+  "epics": 8,
+  "stories": 45,
+  "test_spec_files": 11,
+  "design_v4_screenshots": 2,
+  "openapi_paths": 26,
+  "openapi_schemas": 33,
+  "schema_draft_tables": 15,
+  "live_superdesign_required": true,
+  "total_package_files": 161,
+  "new_v4_story_ids": [
+    "03-04",
+    "03-05",
+    "04-06",
+    "04-07"
+  ],
+  "approved_v4_detail_states": [
+    "Task Details",
+    "Session Details"
+  ]
+}

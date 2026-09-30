@@ -1,0 +1,32 @@
+project: web-study
+version: v4
+status: implementation-in-progress
+updated: 2026-09-30
+source_of_truth: live-superdesign
+stories_total: 45
+stories:
+  epic_01: [01-01, 01-02, 01-03, 01-04, 01-05, 01-06]
+  epic_02: [02-01, 02-02, 02-03, 02-04, 02-05, 02-06]
+  epic_03: [03-01, 03-02, 03-03, 03-04, 03-05]
+  epic_04: [04-01, 04-02, 04-03, 04-04, 04-05, 04-06, 04-07]
+  epic_05: [05-01, 05-02, 05-03, 05-04, 05-05]
+  epic_06: [06-01, 06-02, 06-03, 06-04, 06-05, 06-06]
+  epic_07: [07-01, 07-02, 07-03, 07-04, 07-05, 07-06]
+  epic_08: [08-01, 08-02, 08-03, 08-04]
+completed_stories:
+  - 01-01
+ui_stories_requiring_superdesign_first:
+  - 02-05
+  - 02-06
+  - 03-05
+  - 04-04
+  - 04-05
+  - 04-07
+  - 06-02
+  - 06-04
+  - 06-06
+  - 07-06
+new_v4_ready_states:
+  - 03-04
+  - 04-06
+test_specifications: 11

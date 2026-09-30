@@ -1,0 +1,5 @@
+# Preserve exported design evidence byte-for-byte.
+design-reference/superdesign-preview-source.html -text -whitespace
+
+# Screenshot references are binary artifacts.
+*.png binary
