@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   authFixture,
   calendarFixture,
+  calendarViewFixture,
   dashboardFixture,
   documentsFixture,
   profileFixture,
@@ -19,6 +20,9 @@ describe("Web Study fixtures", () => {
     expect(dashboardFixture).toBeDefined();
     expect(calendarFixture.occurrences.length).toBeGreaterThan(0);
     expect(calendarFixture.availableViews).toEqual(["day", "week", "month"]);
+    expect(calendarViewFixture.weekDays).toHaveLength(7);
+    expect(calendarViewFixture.daySections.flatMap(({ events }) => events).some(({ inProgress }) => inProgress)).toBe(true);
+    expect(calendarViewFixture.monthCells).toHaveLength(35);
     expect(tasksFixture.length).toBeGreaterThan(0);
     expect(documentsFixture.length).toBeGreaterThan(0);
     expect(settingsFixture).toBeDefined();
