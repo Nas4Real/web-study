@@ -37,10 +37,8 @@ export function formatCalendarPeriod(date: Date, view: CalendarView): string {
 
   const mondayMonth = monthNames[monday.getUTCMonth()];
   const sundayMonth = monthNames[sunday.getUTCMonth()];
-  const start = mondayMonth === sundayMonth ? `${monday.getUTCDate()}` : `${monday.getUTCDate()} ${mondayMonth}`;
-  return `${start} ${mondayMonth === sundayMonth ? mondayMonth : ""} - ${sunday.getUTCDate()} ${sundayMonth} ${sunday.getUTCFullYear()}`
-    .replace("  ", " ")
-    .trim();
+  const start = `${monday.getUTCDate()} ${mondayMonth}`;
+  return `${start} - ${sunday.getUTCDate()} ${sundayMonth} ${sunday.getUTCFullYear()}`;
 }
 
 export function shiftCalendarPeriod(date: Date, view: CalendarView, direction: -1 | 1): Date {
@@ -51,7 +49,13 @@ export function shiftCalendarPeriod(date: Date, view: CalendarView, direction: -
   } else if (view === "week") {
     shifted.setUTCDate(shifted.getUTCDate() + direction * 7);
   } else {
+    const originalDay = shifted.getUTCDate();
+    shifted.setUTCDate(1);
     shifted.setUTCMonth(shifted.getUTCMonth() + direction);
+    const lastDayOfTargetMonth = new Date(
+      Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, 0),
+    ).getUTCDate();
+    shifted.setUTCDate(Math.min(originalDay, lastDayOfTargetMonth));
   }
 
   return shifted;

@@ -17,4 +17,10 @@ describe("calendar period state", () => {
     expect(shiftCalendarPeriod(anchor, "month", -1).toISOString()).toBe("2026-04-07T12:00:00.000Z");
     expect(anchor.toISOString()).toBe("2026-05-07T12:00:00.000Z");
   });
+
+  it("clamps month navigation to the last valid day", () => {
+    const januaryEnd = new Date("2026-01-31T12:00:00.000Z");
+
+    expect(shiftCalendarPeriod(januaryEnd, "month", 1).toISOString()).toBe("2026-02-28T12:00:00.000Z");
+  });
 });
