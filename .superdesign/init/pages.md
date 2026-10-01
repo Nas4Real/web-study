@@ -20,3 +20,22 @@ Entry: `src/app/(workspace)/page.tsx`
   - `src/domain/dto/screens.ts`
 
 For sibling designs, pass the WorkspaceLayout, StudySidebar, closest Dashboard components, global styles, Tailwind config, and `.superdesign/design-system.md` as context.
+
+## `/calendar` (Calendar)
+
+Entry: `src/app/(workspace)/calendar/page.tsx`
+
+- `src/app/layout.tsx`
+  - `src/styles/globals.css`
+- `src/app/(workspace)/layout.tsx`
+  - `src/features/shell/study-sidebar.tsx`
+- `src/features/calendar/calendar-page.tsx`
+  - `src/features/calendar/calendar-header.tsx`
+  - `src/features/calendar/calendar-event-card.tsx`
+  - `src/features/calendar/calendar-styles.ts`
+  - `src/features/calendar/calendar-period.ts`
+  - `src/features/calendar/views/day-view.tsx`
+  - `src/features/calendar/views/week-view.tsx`
+  - `src/features/calendar/views/month-view.tsx`
+  - `src/fixtures/index.ts`
+  - `src/domain/dto/calendar.ts`

@@ -14,3 +14,13 @@
 - `src/features/dashboard/mini-calendar.tsx`
 
 The Dashboard components are presentation-only and consume typed fixture DTOs. Shared subject tone classes live in `src/features/dashboard/dashboard-styles.ts`.
+
+## Calendar presentation components
+
+- `src/features/calendar/calendar-header.tsx`
+- `src/features/calendar/calendar-event-card.tsx`
+- `src/features/calendar/views/day-view.tsx`
+- `src/features/calendar/views/week-view.tsx`
+- `src/features/calendar/views/month-view.tsx`
+
+`src/features/calendar/calendar-page.tsx` owns only view and period state. Display data comes from the typed fixture contract and recurrence is intentionally not implemented yet.
