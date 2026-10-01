@@ -1,7 +1,7 @@
 # Story 01-05: Port Tasks Documents Settings and modals
 
 Epic: epic-01
-Status: ready-for-dev
+Status: done
 Dependencies: 01-02
 
 ## Purpose
@@ -47,3 +47,12 @@ Visual baselines for every supplied screen.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion evidence
+
+- Added deterministic fixture-backed `/tasks`, `/documents`, and `/settings` routes inside the approved workspace shell.
+- Added the approved New Task, Task Details, New Session (Exam, University, and Revision), Session Details, and profile-menu states without recurrence controls or persistence behavior from later epics.
+- Preserved separate task checkbox/body interactions, independent subtask completion state, and parent completion while subtasks remain incomplete.
+- Added accessible dialog labeling, Escape dismissal, body-scroll locking, and focus restoration.
+- Added ten inspected 1440×1200 Chromium baselines and responsive no-overflow checks at 320/768/1024 px.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (14 tests), `pnpm test:e2e`, and `pnpm build` pass on 2026-10-01.

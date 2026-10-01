@@ -39,3 +39,30 @@ Entry: `src/app/(workspace)/calendar/page.tsx`
   - `src/features/calendar/views/month-view.tsx`
   - `src/fixtures/index.ts`
   - `src/domain/dto/calendar.ts`
+
+## `/tasks` (Tasks)
+
+Entry: `src/app/(workspace)/tasks/page.tsx`
+
+- `src/features/tasks/tasks-page.tsx`
+  - `src/features/tasks/new-task-modal.tsx`
+  - `src/features/tasks/task-details-modal.tsx`
+  - `src/components/modal-frame.tsx`
+  - `src/fixtures/index.ts`
+
+## `/documents` (Documents)
+
+Entry: `src/app/(workspace)/documents/page.tsx`
+
+- `src/features/documents/documents-page.tsx`
+  - `src/fixtures/index.ts`
+
+## `/settings` (Settings)
+
+Entry: `src/app/(workspace)/settings/page.tsx`
+
+- `src/features/settings/settings-page.tsx`
+- `src/features/shell/study-sidebar.tsx` (profile menu)
+- `src/fixtures/index.ts`
+
+Calendar dialog states additionally use `src/features/calendar/new-session-modal.tsx`, `src/features/calendar/session-details-modal.tsx`, and the shared `src/components/modal-frame.tsx`.

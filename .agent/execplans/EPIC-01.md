@@ -29,7 +29,7 @@ If a story is marked `ready-superdesign-first`, inspect the live Superdesign pro
 - [x] `01-02` Establish live design references and deterministic fixtures (2026-09-30)
 - [x] `01-03` Port application shell and Dashboard pixel-faithfully (2026-09-30)
 - [x] `01-04` Port Calendar Day Week Month static views (2026-10-01)
-- [ ] `01-05` Port Tasks Documents Settings and modals
+- [x] `01-05` Port Tasks Documents Settings and modals (2026-10-01)
 - [ ] `01-06` Port auth screens with V1 auth-provider correction
 
 ## Decisions / discoveries
@@ -42,6 +42,7 @@ If a story is marked `ready-superdesign-first`, inspect the live Superdesign pro
 - Dashboard, Tasks, Documents, Settings, app auth pages, Task Details, and Session Details had no current live nodes. Their V2/V4 screenshots remain regression evidence and must be checked against the live project again before UI implementation.
 - Story `01-03` filled the Dashboard gap in the same live project with draft `4cd2386e-ae7b-47fa-8029-7cd5db1d6636` v1, then ported that approved state with the existing `StudySidebar` component.
 - Story `01-04` ports Calendar draft `9fc1a7b4-af57-48f9-b645-88f741ca400a` v53 directly. Period navigation is deterministic local UI state; recurrence and effective-occurrence detail behavior remain deferred to Epic 04.
+- Story `01-05` approved missing Tasks, Documents, Settings, profile-menu, task-dialog, and session-dialog states in the same live Superdesign project. The implementation preserves the existing approved `StudySidebar`; persistence, authorization, recurrence, and destructive execution remain assigned to later epics.
 
 ## Completion evidence
 
@@ -52,3 +53,5 @@ Story `01-02` adds typed deterministic fixtures and a machine-readable visual ta
 Story `01-03` adds the approved workspace shell and Dashboard, a committed 1440×1200 Chromium baseline, keyboard/semantic checks, and responsive no-overflow checks. All lint, type, unit, E2E, build, and production-audit gates pass.
 
 Story `01-04` adds approved Day/Week/Month Calendar views, deterministic date/view state, three visual baselines, and clean-browser/responsive tests. All lint, type, unit, E2E, and build gates pass.
+
+Story `01-05` adds fixture-backed Tasks, Documents, Settings, profile-menu, New Task, Task Details, type-specific New Session, and effective-occurrence Session Details states. Ten inspected Chromium baselines, responsive no-overflow checks, lint, typecheck, 14 unit tests, full E2E, and the production build pass.

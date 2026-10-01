@@ -24,3 +24,16 @@ The Dashboard components are presentation-only and consume typed fixture DTOs. S
 - `src/features/calendar/views/month-view.tsx`
 
 `src/features/calendar/calendar-page.tsx` owns only view and period state. Display data comes from the typed fixture contract and recurrence is intentionally not implemented yet.
+
+## Workspace and dialog components
+
+- `src/components/modal-frame.tsx` — shared labeled dialog frame with Escape dismissal, scroll locking, and focus restoration.
+- `src/features/tasks/tasks-page.tsx`
+- `src/features/tasks/new-task-modal.tsx`
+- `src/features/tasks/task-details-modal.tsx`
+- `src/features/documents/documents-page.tsx`
+- `src/features/settings/settings-page.tsx`
+- `src/features/calendar/new-session-modal.tsx`
+- `src/features/calendar/session-details-modal.tsx`
+
+These states are presentation-only and consume typed fixtures. Submit, destructive, persistence, and recurrence behavior belongs to later epics.
