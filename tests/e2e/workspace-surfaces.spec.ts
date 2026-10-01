@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("workspace surfaces", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1200 });
+  });
+
   test("navigates to Tasks and opens the approved task dialogs", async ({ page }) => {
     await page.goto("/tasks");
 
@@ -54,4 +58,86 @@ test.describe("workspace surfaces", () => {
     await expect(page.getByText("Room 304, Sci-Tech")).toBeVisible();
     await expect(page.getByRole("heading", { level: 3, name: "Notes & Reminders" })).toBeVisible();
   });
+
+  for (const surface of [
+    { name: "tasks", path: "/tasks" },
+    { name: "documents", path: "/documents" },
+    { name: "settings", path: "/settings" },
+  ] as const) {
+    test(`matches the approved ${surface.name} visual baseline`, async ({ page }) => {
+      await page.goto(surface.path);
+      await expect(page).toHaveScreenshot(`${surface.name}-1440x1200.png`, {
+        animations: "disabled",
+        fullPage: true,
+      });
+    });
+  }
+
+  test("matches the approved profile menu visual baseline", async ({ page }) => {
+    await page.goto("/settings");
+    await page.getByRole("button", { name: "Open profile menu" }).click();
+    await expect(page).toHaveScreenshot("profile-menu-1440x1200.png", {
+      animations: "disabled",
+      fullPage: true,
+    });
+  });
+
+  test("matches the approved task dialog visual baselines", async ({ page }) => {
+    await page.goto("/tasks");
+    await page.getByRole("button", { name: "New Task" }).click();
+    await expect(page).toHaveScreenshot("new-task-1440x1200.png", {
+      animations: "disabled",
+      fullPage: true,
+    });
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Open Complete Chapter 4 Exercises" }).click();
+    await expect(page).toHaveScreenshot("task-details-1440x1200.png", {
+      animations: "disabled",
+      fullPage: true,
+    });
+  });
+
+  for (const sessionType of [
+    { button: "University Class or lecture", name: "university" },
+    { button: "Exam Test or mock", name: "exam" },
+    { button: "Revision Solo study", name: "revision" },
+  ] as const) {
+    test(`matches the approved new ${sessionType.name} session visual baseline`, async ({ page }) => {
+      await page.goto("/calendar");
+      await page.getByRole("button", { name: "New Session" }).click();
+      await page.getByRole("button", { name: sessionType.button }).click();
+      await expect(page).toHaveScreenshot(`new-session-${sessionType.name}-1440x1200.png`, {
+        animations: "disabled",
+        fullPage: true,
+      });
+    });
+  }
+
+  test("matches the approved session details visual baseline", async ({ page }) => {
+    await page.goto("/calendar");
+    await page.getByRole("button", { name: "Open Capacités thermiques : modèle d'Einstein" }).click();
+    await expect(page).toHaveScreenshot("session-details-1440x1200.png", {
+      animations: "disabled",
+      fullPage: true,
+    });
+  });
+
+  for (const viewport of [
+    { width: 320, height: 800 },
+    { width: 768, height: 1024 },
+    { width: 1024, height: 900 },
+  ] as const) {
+    for (const surface of ["tasks", "documents", "settings"] as const) {
+      test(`keeps ${surface} usable at ${viewport.width}px`, async ({ page }) => {
+        await page.setViewportSize(viewport);
+        await page.goto(`/${surface}`);
+
+        await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        );
+        expect(overflow).toBe(false);
+      });
+    }
+  }
 });
