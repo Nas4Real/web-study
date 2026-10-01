@@ -1,7 +1,7 @@
 # Story 02-02: Email signup verification signin and Google OAuth
 
 Epic: epic-02
-Status: in-progress
+Status: done
 Dependencies: 02-01,01-06
 
 ## Purpose
@@ -57,4 +57,5 @@ E2E happy/failure flows with test Supabase project/local stack.
 - Added the minimal profiles migration/bootstrap required by authentication, including explicit grants, owner RLS, and a locked-down security-definer trigger. Profile editing, subjects, and avatars remain in Story 02-04.
 - Added local Supabase configuration with email confirmations enabled, an eight-character password floor, provider rate limits, and the exact application callback allow-list.
 - Lint, typecheck, 55 unit/static-security tests, production build, dependency audit, and 12 focused auth browser tests pass. The full browser suite reached 48/49 because of the existing Dashboard screenshot pixel flake; that unchanged test passed immediately in isolation.
-- Remaining gate: run the migration, positive/negative RLS checks, and real signup/verification/sign-in flow against the local Supabase stack. Docker Desktop aborts startup while removing the stale `C:\Users\itsna\AppData\Local\Docker\run\dockerInference` runtime socket (`The file cannot be accessed by the system`). Stopping Docker and WSL does not release the reparse point, and disabling Docker AI does not bypass its early inference-manager initialization. A Windows reboot or administrator-level cleanup is required before retrying. Story remains in progress until this database/auth integration gate passes.
+- Local integration gate completed on 2026-10-02 after recovering Docker's stale inference and secrets-engine runtime sockets. A clean database reset applied `20261001170000_auth_profile_bootstrap.sql`; the real browser flow passed email signup, Mailpit verification, PKCE callback exchange, unverified and invalid-password denial, verified password sign-in, profile provisioning, and sign-out cookie clearing.
+- Positive and negative Data API checks passed for owner insert/select/update, cross-user select/update denial, and anonymous denial. `supabase db advisors --local --type all --level info --fail-on error` reported no issues.
