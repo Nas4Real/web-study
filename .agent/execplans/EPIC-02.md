@@ -22,7 +22,7 @@ At every story boundary run the relevant lint, typecheck, unit/integration, E2E,
 ## Progress
 
 - `02-01` complete on 2026-10-01: pinned Supabase SSR clients, Next.js 16 Proxy session refresh, protected workspace routing, request-scoped verified actor context, and negative auth coverage.
-- `02-02` implementation checkpoint on 2026-10-01: email/password and Google PKCE flows, callback/profile bootstrap, approved verification-pending UI, shared sign-out, local Supabase configuration, and unit/browser/build gates are complete. Local migration, RLS, and real auth-flow verification remain blocked by a reproducible Docker Desktop daemon hang; do not mark the story done until those checks pass.
+- `02-02` implementation checkpoint on 2026-10-01: email/password and Google PKCE flows, callback/profile bootstrap, approved verification-pending UI, shared sign-out, local Supabase configuration, and unit/browser/build gates are complete. Local migration, RLS, and real auth-flow verification remain blocked because Docker Desktop aborts on the inaccessible stale `%LOCALAPPDATA%\Docker\run\dockerInference` socket. Docker/WSL shutdown and disabling Docker AI did not release or bypass it; reboot Windows or perform administrator-level cleanup, then rerun the gate before marking the story done.
 
 ## Design-block rule
 
