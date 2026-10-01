@@ -65,6 +65,26 @@ test.describe("auth screens", () => {
     await context.close();
   });
 
+  test("rejects an incomplete auth callback with a stable public error", async ({ page }) => {
+    await page.goto("/api/auth/callback?next=%2F%2Fevil.example%2Fsteal");
+
+    await expect(page).toHaveURL(/\/sign-in\?error=CALLBACK_FAILED$/);
+    await expect(page.getByText(
+      "The sign-in link is invalid or expired. Please try again.",
+      { exact: true },
+    )).toBeVisible();
+  });
+
+  test("normalizes unsafe post-auth destinations in both auth forms", async ({ page }) => {
+    for (const path of ["/sign-in", "/sign-up"] as const) {
+      await page.goto(`${path}?next=%2F%2Fevil.example%2Fsteal`);
+      const values = await page.locator('input[name="next"]').evaluateAll(
+        (inputs) => inputs.map((input) => (input as HTMLInputElement).value),
+      );
+      expect(values).toEqual(["/", "/"]);
+    }
+  });
+
   for (const screen of [
     { name: "sign-in", path: "/sign-in" },
     { name: "sign-up", path: "/sign-up" },

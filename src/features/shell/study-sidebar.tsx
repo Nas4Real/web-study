@@ -18,6 +18,8 @@ import {
   SquareCheckBig,
 } from "lucide-react";
 
+import { signOutAction } from "@/server/auth/auth-actions";
+
 const navigation = [
   {
     label: "Main",
@@ -138,9 +140,11 @@ export function StudySidebar() {
               <Settings aria-hidden="true" size={14} />
               Profile &amp; Settings
             </Link>
-            <button className="flex w-full items-center gap-2 border-t border-border-panel px-3 py-3 text-left text-xs font-semibold text-red-400 hover:bg-red-950/30" role="menuitem" type="button">
-              Sign Out
-            </button>
+            <form action={signOutAction}>
+              <button className="flex w-full items-center gap-2 border-t border-border-panel px-3 py-3 text-left text-xs font-semibold text-red-400 hover:bg-red-950/30" role="menuitem" type="submit">
+                Sign Out
+              </button>
+            </form>
           </div>
         ) : null}
         <button

@@ -1,7 +1,7 @@
 # Story 02-02: Email signup verification signin and Google OAuth
 
 Epic: epic-02
-Status: ready-for-dev
+Status: in-progress
 Dependencies: 02-01,01-06
 
 ## Purpose
@@ -47,3 +47,14 @@ E2E happy/failure flows with test Supabase project/local stack.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Implementation checkpoint
+
+- Added validated email/password signup and sign-in Server Actions backed by one auth application service.
+- Added Google OAuth PKCE startup and callback exchange with safe internal return paths, verified claims, stable public errors, and partial-session rollback.
+- Added the approved live Superdesign verification-pending state (`26ac6d79-4750-440c-af86-68af86fdc4ea`) without changing the approved base auth screens.
+- Added one shared sign-out action for the profile menu and Settings.
+- Added the minimal profiles migration/bootstrap required by authentication, including explicit grants, owner RLS, and a locked-down security-definer trigger. Profile editing, subjects, and avatars remain in Story 02-04.
+- Added local Supabase configuration with email confirmations enabled, an eight-character password floor, provider rate limits, and the exact application callback allow-list.
+- Lint, typecheck, 55 unit/static-security tests, production build, dependency audit, and 12 focused auth browser tests pass. The full browser suite reached 48/49 because of the existing Dashboard screenshot pixel flake; that unchanged test passed immediately in isolation.
+- Remaining gate: run the migration, positive/negative RLS checks, and real signup/verification/sign-in flow against the local Supabase stack. Docker Desktop was initially stopped, then its first image pull stalled the daemon; a clean restart reproduced the daemon hang before containers could start. Story remains in progress until this database/auth integration gate passes.
