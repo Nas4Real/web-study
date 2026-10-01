@@ -1,3 +1,8 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import {
   BarChart2,
   BookOpen,
@@ -16,7 +21,7 @@ const navigation = [
     label: "Main",
     items: [
       { id: "dashboard", label: "Dashboard", href: "/", icon: LayoutDashboard },
-      { id: "planning", label: "Planning", href: "#planning", icon: CalendarDays },
+      { id: "planning", label: "Planning", href: "/calendar", icon: CalendarDays },
       { id: "tutor", label: "AI Tutor", href: "#ai-tutor", icon: Bot },
     ],
   },
@@ -30,7 +35,10 @@ const navigation = [
   },
 ] as const;
 
-export function StudySidebar({ activeItem }: { activeItem: string }) {
+export function StudySidebar() {
+  const pathname = usePathname();
+  const activeItem = pathname.startsWith("/calendar") ? "planning" : "dashboard";
+
   return (
     <aside className="sticky top-3 hidden h-[calc(100vh-24px)] w-60 shrink-0 flex-col py-2 lg:flex">
       <div className="mb-[18px] flex h-9 items-center gap-3 px-4">
@@ -64,7 +72,7 @@ export function StudySidebar({ activeItem }: { activeItem: string }) {
               const Icon = item.icon;
               const isActive = item.id === activeItem;
               return (
-                <a
+                <Link
                   aria-current={isActive ? "page" : undefined}
                   className={`flex h-8 items-center gap-[11px] rounded-md px-2.5 text-[13px] font-medium transition-colors ${
                     isActive
@@ -77,7 +85,7 @@ export function StudySidebar({ activeItem }: { activeItem: string }) {
                   <Icon aria-hidden="true" size={15} />
                   <span>{item.label}</span>
                   {isActive ? <span aria-hidden="true" className="ml-auto size-1.5 rounded-full bg-white" /> : null}
-                </a>
+                </Link>
               );
             })}
           </div>
