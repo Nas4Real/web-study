@@ -1,4 +1,9 @@
+import { randomUUID } from "node:crypto";
+
 import { defineConfig, devices } from "@playwright/test";
+
+const e2eAuthToken = process.env.WEB_STUDY_E2E_AUTH_TOKEN ?? randomUUID();
+process.env.WEB_STUDY_E2E_AUTH_TOKEN = e2eAuthToken;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -8,6 +13,9 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: "http://localhost:3000",
+    extraHTTPHeaders: {
+      "x-web-study-e2e-auth": e2eAuthToken,
+    },
     trace: "on-first-retry",
   },
   projects: [
@@ -18,6 +26,10 @@ export default defineConfig({
   ],
   webServer: {
     command: "pnpm dev",
+    env: {
+      ...process.env,
+      WEB_STUDY_E2E_AUTH_TOKEN: e2eAuthToken,
+    },
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
   },

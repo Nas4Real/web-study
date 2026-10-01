@@ -48,6 +48,23 @@ test.describe("auth screens", () => {
     expect(errors).toEqual([]);
   });
 
+  test("redirects an unauthenticated workspace request to sign in", async ({ browser }) => {
+    const context = await browser.newContext({
+      baseURL: "http://localhost:3000",
+      extraHTTPHeaders: { "x-web-study-e2e-auth": "unauthenticated" },
+    });
+    const unauthenticatedPage = await context.newPage();
+
+    await unauthenticatedPage.goto("/tasks?filter=high");
+
+    await expect(unauthenticatedPage).toHaveURL(/\/sign-in\?next=%2Ftasks%3Ffilter%3Dhigh$/);
+    await expect(
+      unauthenticatedPage.getByRole("heading", { level: 2, name: "Welcome back" }),
+    ).toBeVisible();
+
+    await context.close();
+  });
+
   for (const screen of [
     { name: "sign-in", path: "/sign-in" },
     { name: "sign-up", path: "/sign-up" },
