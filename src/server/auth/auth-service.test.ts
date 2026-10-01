@@ -23,6 +23,8 @@ function createGateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
       identity: { id: "user-123", displayName: "Jane Doe" } satisfies AuthIdentity,
     }),
     ensureProfile: vi.fn().mockResolvedValue({ errorCode: null }),
+    requestPasswordReset: vi.fn().mockResolvedValue({ errorCode: null }),
+    updatePassword: vi.fn().mockResolvedValue({ errorCode: null }),
     signOut: vi.fn().mockResolvedValue({ errorCode: null }),
     ...overrides,
   };
@@ -114,6 +116,80 @@ describe("AuthService", () => {
       status: "success",
     });
     expect(gateway.createGoogleAuthorization).toHaveBeenCalledWith({ next: "/" });
+  });
+
+  it.each([null, "user_not_found"])(
+    "returns the same reset-request response for provider code %s",
+    async (errorCode) => {
+      const gateway = createGateway({
+        requestPasswordReset: vi.fn().mockResolvedValue({ errorCode }),
+      });
+      const service = new AuthService(gateway);
+
+      const result = await service.requestPasswordReset({
+        email: "  JANE@Example.COM ",
+      });
+
+      expect(result).toEqual({
+        code: "PASSWORD_RESET_REQUESTED",
+        message: "If an account exists for that email, a reset link is on its way.",
+        status: "success",
+      });
+      expect(gateway.requestPasswordReset).toHaveBeenCalledWith({
+        email: "jane@example.com",
+      });
+    },
+  );
+
+  it("requires a verified recovery session before updating the password", async () => {
+    const gateway = createGateway({
+      getVerifiedIdentity: vi.fn().mockResolvedValue({
+        errorCode: "invalid_claims",
+        identity: null,
+      }),
+    });
+    const service = new AuthService(gateway);
+
+    const result = await service.updatePassword({
+      confirmPassword: "new secure password",
+      password: "new secure password",
+    });
+
+    expect(result.code).toBe("RECOVERY_SESSION_REQUIRED");
+    expect(gateway.updatePassword).not.toHaveBeenCalled();
+  });
+
+  it("updates a password only after validating confirmation and verified claims", async () => {
+    const gateway = createGateway();
+    const service = new AuthService(gateway);
+
+    const result = await service.updatePassword({
+      confirmPassword: "new secure password",
+      password: "new secure password",
+    });
+
+    expect(result).toEqual({
+      code: "PASSWORD_UPDATED",
+      message: "Your password has been updated.",
+      status: "success",
+    });
+    expect(gateway.updatePassword).toHaveBeenCalledWith({
+      password: "new secure password",
+    });
+  });
+
+  it("rejects mismatched password confirmation before calling the provider", async () => {
+    const gateway = createGateway();
+    const service = new AuthService(gateway);
+
+    const result = await service.updatePassword({
+      confirmPassword: "different secure password",
+      password: "new secure password",
+    });
+
+    expect(result.code).toBe("INVALID_INPUT");
+    expect(gateway.getVerifiedIdentity).not.toHaveBeenCalled();
+    expect(gateway.updatePassword).not.toHaveBeenCalled();
   });
 
   it("exchanges callback codes and provisions the verified actor profile", async () => {

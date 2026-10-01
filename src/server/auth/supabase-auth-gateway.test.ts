@@ -18,6 +18,7 @@ function createSupabaseDouble() {
       error: null,
     }),
     exchangeCodeForSession: vi.fn().mockResolvedValue({ error: null }),
+    resetPasswordForEmail: vi.fn().mockResolvedValue({ data: {}, error: null }),
     getClaims: vi.fn().mockResolvedValue({
       data: {
         claims: {
@@ -28,6 +29,7 @@ function createSupabaseDouble() {
       error: null,
     }),
     signOut: vi.fn().mockResolvedValue({ error: null }),
+    updateUser: vi.fn().mockResolvedValue({ data: { user: {} }, error: null }),
   };
   const client = {
     auth,
@@ -84,6 +86,29 @@ describe("createSupabaseAuthGateway", () => {
           "https://study.example.com/api/auth/callback?next=%2Ftasks%3Ffilter%3Dhigh",
         skipBrowserRedirect: true,
       },
+    });
+  });
+
+  it("uses the fixed recovery callback and new-password destination", async () => {
+    const { auth, client } = createSupabaseDouble();
+    const gateway = createSupabaseAuthGateway(client, "https://study.example.com");
+
+    await gateway.requestPasswordReset({ email: "jane@example.com" });
+
+    expect(auth.resetPasswordForEmail).toHaveBeenCalledWith("jane@example.com", {
+      redirectTo:
+        "https://study.example.com/api/auth/callback?next=%2Fset-new-password",
+    });
+  });
+
+  it("updates only the current recovery-session user's password", async () => {
+    const { auth, client } = createSupabaseDouble();
+    const gateway = createSupabaseAuthGateway(client, "https://study.example.com");
+
+    await gateway.updatePassword({ password: "new secure password" });
+
+    expect(auth.updateUser).toHaveBeenCalledWith({
+      password: "new secure password",
     });
   });
 

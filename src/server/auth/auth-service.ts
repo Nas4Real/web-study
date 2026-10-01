@@ -1,4 +1,10 @@
-import { signInInputSchema, signUpInputSchema, normalizeInternalPath } from "./auth-input";
+import {
+  normalizeInternalPath,
+  passwordResetRequestInputSchema,
+  passwordUpdateInputSchema,
+  signInInputSchema,
+  signUpInputSchema,
+} from "./auth-input";
 
 type ProviderResult = Readonly<{ errorCode: string | null }>;
 
@@ -29,6 +35,8 @@ export type AuthGateway = Readonly<{
     ProviderResult & { identity: AuthIdentity | null }
   >;
   ensureProfile(identity: AuthIdentity): Promise<ProviderResult>;
+  requestPasswordReset(input: { email: string }): Promise<ProviderResult>;
+  updatePassword(input: { password: string }): Promise<ProviderResult>;
   signOut(): Promise<ProviderResult>;
 }>;
 
@@ -42,12 +50,17 @@ export type AuthActionState =
         | "AUTHENTICATION_FAILED"
         | "OAUTH_FAILED"
         | "CALLBACK_FAILED"
+        | "RECOVERY_SESSION_REQUIRED"
+        | "PASSWORD_UPDATE_FAILED"
         | "PROVIDER_UNAVAILABLE";
       message: string;
     }>
   | Readonly<{
       status: "success";
-      code: "VERIFICATION_REQUIRED";
+      code:
+        | "VERIFICATION_REQUIRED"
+        | "PASSWORD_RESET_REQUESTED"
+        | "PASSWORD_UPDATED";
       message: string;
     }>;
 
@@ -76,7 +89,12 @@ const PROVIDER_UNAVAILABLE: AuthActionState = {
 };
 
 function publicError(
-  code: "SIGN_UP_FAILED" | "OAUTH_FAILED" | "CALLBACK_FAILED",
+  code:
+    | "SIGN_UP_FAILED"
+    | "OAUTH_FAILED"
+    | "CALLBACK_FAILED"
+    | "RECOVERY_SESSION_REQUIRED"
+    | "PASSWORD_UPDATE_FAILED",
   message: string,
 ): AuthActionState {
   return { status: "error", code, message };
@@ -156,6 +174,55 @@ export class AuthService {
         status: "success",
         code: "OAUTH_REDIRECT",
         redirectTo: result.url,
+      };
+    } catch {
+      return PROVIDER_UNAVAILABLE;
+    }
+  }
+
+  async requestPasswordReset(input: unknown): Promise<AuthActionState> {
+    const parsed = passwordResetRequestInputSchema.safeParse(input);
+    if (!parsed.success) return INVALID_INPUT;
+
+    try {
+      await this.gateway.requestPasswordReset(parsed.data);
+      return {
+        status: "success",
+        code: "PASSWORD_RESET_REQUESTED",
+        message: "If an account exists for that email, a reset link is on its way.",
+      };
+    } catch {
+      return PROVIDER_UNAVAILABLE;
+    }
+  }
+
+  async updatePassword(input: unknown): Promise<AuthActionState> {
+    const parsed = passwordUpdateInputSchema.safeParse(input);
+    if (!parsed.success) return INVALID_INPUT;
+
+    try {
+      const identity = await this.gateway.getVerifiedIdentity();
+      if (identity.errorCode || !identity.identity) {
+        return publicError(
+          "RECOVERY_SESSION_REQUIRED",
+          "Open a valid password reset link and try again.",
+        );
+      }
+
+      const update = await this.gateway.updatePassword({
+        password: parsed.data.password,
+      });
+      if (update.errorCode) {
+        return publicError(
+          "PASSWORD_UPDATE_FAILED",
+          "Your password could not be updated. Please try again.",
+        );
+      }
+
+      return {
+        status: "success",
+        code: "PASSWORD_UPDATED",
+        message: "Your password has been updated.",
       };
     } catch {
       return PROVIDER_UNAVAILABLE;

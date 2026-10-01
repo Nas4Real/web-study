@@ -99,6 +99,20 @@ export function createSupabaseAuthGateway(
       return { errorCode: errorCode(error) };
     },
 
+    async requestPasswordReset({ email }) {
+      const recoveryUrl = new URL("/api/auth/callback", appOrigin);
+      recoveryUrl.searchParams.set("next", "/set-new-password");
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: recoveryUrl.toString(),
+      });
+      return { errorCode: errorCode(error) };
+    },
+
+    async updatePassword({ password }) {
+      const { error } = await supabase.auth.updateUser({ password });
+      return { errorCode: errorCode(error) };
+    },
+
     async signOut() {
       const { error } = await supabase.auth.signOut({ scope: "local" });
       return { errorCode: errorCode(error) };

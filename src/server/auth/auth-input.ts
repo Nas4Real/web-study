@@ -23,6 +23,19 @@ export const signInInputSchema = z.object({
   password: passwordSchema,
 });
 
+export const passwordResetRequestInputSchema = z.object({
+  email: emailSchema,
+});
+
+export const passwordUpdateInputSchema = z
+  .object({
+    confirmPassword: passwordSchema,
+    password: passwordSchema,
+  })
+  .refine(({ confirmPassword, password }) => confirmPassword === password, {
+    path: ["confirmPassword"],
+  });
+
 export function normalizeInternalPath(value: string | null | undefined) {
   if (
     !value ||
