@@ -58,6 +58,40 @@ export interface SettingsFixtureDTO {
   appearance: "dark";
 }
 
+export type WorkspaceTone = "algebra" | "analysis" | "physics" | "method" | "neutral";
+
+export interface TaskListVisualDTO {
+  id: EntityId;
+  title: string;
+  description: string;
+  subjectLabel: string;
+  tone: WorkspaceTone;
+  dueLabel: string;
+  group: "overdue" | "today" | "later";
+}
+
+export interface DocumentFolderVisualDTO {
+  id: EntityId;
+  name: string;
+  detail: string;
+  tone: WorkspaceTone;
+}
+
+export interface DocumentVisualDTO {
+  id: EntityId;
+  name: string;
+  subjectLabel: string;
+  kindLabel: "PDF" | "DOCX" | "XLSX";
+  sizeLabel: string;
+  dateLabel: string;
+}
+
+export interface DocumentsVisualFixtureDTO {
+  folders: readonly DocumentFolderVisualDTO[];
+  recent: readonly DocumentVisualDTO[];
+  files: readonly DocumentVisualDTO[];
+}
+
 export type AuthProvider = "email" | "google";
 export type AuthScreen = "sign-in" | "sign-up" | "forgot-password";
 

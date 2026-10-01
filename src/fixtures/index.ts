@@ -4,11 +4,13 @@ import type {
   CalendarOccurrenceDetailDTO,
   CalendarViewFixtureDTO,
   DashboardFixtureDTO,
+  DocumentsVisualFixtureDTO,
   DocumentSummaryDTO,
   ProfileDTO,
   SettingsFixtureDTO,
   SubjectSummaryDTO,
   TaskDetailDTO,
+  TaskListVisualDTO,
   TaskSummaryDTO,
 } from "../domain/dto";
 
@@ -52,6 +54,45 @@ export const tasksFixture = [
     completedAt: null,
   },
 ] as const satisfies readonly TaskSummaryDTO[];
+
+export const tasksPageFixture = [
+  {
+    id: "task-chapter-4",
+    title: "Complete Chapter 4 Exercises",
+    description: "Finish all odd-numbered problems before the next tutorial session.",
+    subjectLabel: "Math",
+    tone: "algebra",
+    dueLabel: "Yesterday",
+    group: "overdue",
+  },
+  {
+    id: "task-forces",
+    title: "Read Chapter 4: Forces",
+    description: "Read pages 45–60 and summarize key formulas.",
+    subjectLabel: "Physics",
+    tone: "physics",
+    dueLabel: "Today",
+    group: "today",
+  },
+  {
+    id: "task-proposal",
+    title: "Project Proposal Draft",
+    description: "Write a 2-page outline for the end-of-term project.",
+    subjectLabel: "Method",
+    tone: "method",
+    dueLabel: "Today",
+    group: "today",
+  },
+  {
+    id: "task-matrices",
+    title: "Review Matrices",
+    description: "Go over the past exams for matrix inversions.",
+    subjectLabel: "Math",
+    tone: "algebra",
+    dueLabel: "Friday",
+    group: "later",
+  },
+] as const satisfies readonly TaskListVisualDTO[];
 
 export const taskDetailFixture = {
   ...tasksFixture[0],
@@ -299,6 +340,24 @@ export const documentsFixture = [
     createdAt: "2026-09-27T09:15:00.000Z",
   },
 ] as const satisfies readonly DocumentSummaryDTO[];
+
+const documentsVisualFiles = [
+  { id: "doc-sequence", name: "Sequence Data", subjectLabel: "Analysis", kindLabel: "PDF", sizeLabel: "1.2 MB", dateLabel: "Oct 24, 2023" },
+  { id: "doc-q4", name: "Q4 Results", subjectLabel: "Physics", kindLabel: "DOCX", sizeLabel: "2.5 MB", dateLabel: "Oct 21, 2023" },
+  { id: "doc-april", name: "Analysis Data April", subjectLabel: "Math", kindLabel: "PDF", sizeLabel: "840 KB", dateLabel: "Sep 15, 2023" },
+  { id: "doc-q2", name: "Q2 Results", subjectLabel: "Archived", kindLabel: "XLSX", sizeLabel: "4.1 MB", dateLabel: "Aug 10, 2023" },
+] as const;
+
+export const documentsPageFixture = {
+  folders: [
+    { id: "folder-analysis", name: "Analysis", detail: "8 Chapters • 620 MB", tone: "analysis" },
+    { id: "folder-physics", name: "Physics", detail: "5 Chapters • 510 MB", tone: "physics" },
+    { id: "folder-math", name: "Math", detail: "6 Chapters • 420 MB", tone: "algebra" },
+    { id: "folder-languages", name: "Languages", detail: "4 Chapters • 150 MB", tone: "neutral" },
+  ],
+  recent: documentsVisualFiles.slice(0, 3),
+  files: documentsVisualFiles,
+} as const satisfies DocumentsVisualFixtureDTO;
 
 export const dashboardFixture = {
   date: "2026-08-10",
