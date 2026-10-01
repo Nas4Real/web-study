@@ -66,3 +66,18 @@ Entry: `src/app/(workspace)/settings/page.tsx`
 - `src/fixtures/index.ts`
 
 Calendar dialog states additionally use `src/features/calendar/new-session-modal.tsx`, `src/features/calendar/session-details-modal.tsx`, and the shared `src/components/modal-frame.tsx`.
+
+## Auth routes
+
+Entries:
+
+- `src/app/(auth)/sign-in/page.tsx`
+- `src/app/(auth)/sign-up/page.tsx`
+- `src/app/(auth)/forgot-password/page.tsx`
+
+Shared dependencies:
+
+- `src/features/auth/auth-shell.tsx`
+- `src/features/auth/auth-form.tsx`
+- `src/domain/dto/screens.ts`
+- `src/styles/globals.css`

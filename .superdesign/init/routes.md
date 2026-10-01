@@ -31,3 +31,18 @@
 - Rendering: approved profile, security, preferences, locked 2 GB storage, danger-zone, and profile-menu states.
 
 Sidebar links for AI Tutor, Knowledge Base, and Statistics remain hash placeholders until their routes exist.
+
+## `/sign-in`
+
+- Entry: `src/app/(auth)/sign-in/page.tsx`
+- Rendering: corrected Google/email-only Sign In screen.
+
+## `/sign-up`
+
+- Entry: `src/app/(auth)/sign-up/page.tsx`
+- Rendering: corrected Google/email-only Sign Up screen.
+
+## `/forgot-password`
+
+- Entry: `src/app/(auth)/forgot-password/page.tsx`
+- Rendering: approved reset-link request screen.

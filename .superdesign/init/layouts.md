@@ -12,3 +12,9 @@
 - Structure: 12 px black outer shell and gap, 240 px desktop sidebar, flexible `#09090b` workspace with 20 px radius, `#27272a` border, and approved workspace shadow.
 - `StudySidebar` derives the active Dashboard or Planning item from the current pathname.
 - Below 1024 px the desktop sidebar is hidden; content remains usable without introducing an unapproved alternate shell.
+
+## AuthShell
+
+- Source: `src/features/auth/auth-shell.tsx`
+- Used by `/sign-in`, `/sign-up`, and `/forgot-password` without the workspace sidebar.
+- Desktop structure: equal atmospheric brand and auth-form panels; below 1024 px the brand panel is replaced by compact centered branding above the card.

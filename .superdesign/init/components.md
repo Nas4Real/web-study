@@ -37,3 +37,10 @@ The Dashboard components are presentation-only and consume typed fixture DTOs. S
 - `src/features/calendar/session-details-modal.tsx`
 
 These states are presentation-only and consume typed fixtures. Submit, destructive, persistence, and recurrence behavior belongs to later epics.
+
+## Authentication presentation
+
+- `src/features/auth/auth-shell.tsx` — shared responsive split-screen brand and legal layout.
+- `src/features/auth/auth-form.tsx` — typed Sign In, Sign Up, and Forgot Password presentation with Google/email-only provider rules.
+
+Authentication actions are intentionally static until Epic 02.

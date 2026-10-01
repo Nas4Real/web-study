@@ -1,7 +1,7 @@
 # Story 01-06: Port auth screens with V1 auth-provider correction
 
 Epic: epic-01
-Status: ready-for-dev
+Status: done
 Dependencies: 01-02
 
 ## Purpose
@@ -47,3 +47,12 @@ Visual diff with intentional Apple removal documented.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion evidence
+
+- Added approved `/sign-in`, `/sign-up`, and `/forgot-password` routes with a shared responsive auth shell.
+- Removed Apple authentication from Sign In and Sign Up while preserving full-width Google and email/password composition.
+- Kept submit and Google actions intentionally static; Supabase and OAuth wiring remains Story 02-02.
+- Added accessible labels, native form semantics, password visibility control, and client-side navigation between auth screens.
+- Added three inspected 1440×900 Chromium baselines, clean-console/page-error coverage, and responsive no-overflow checks at 320/768/1024 px.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (14 tests), `pnpm test:e2e`, and `pnpm build` pass on 2026-10-01.

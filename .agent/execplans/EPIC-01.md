@@ -30,7 +30,7 @@ If a story is marked `ready-superdesign-first`, inspect the live Superdesign pro
 - [x] `01-03` Port application shell and Dashboard pixel-faithfully (2026-09-30)
 - [x] `01-04` Port Calendar Day Week Month static views (2026-10-01)
 - [x] `01-05` Port Tasks Documents Settings and modals (2026-10-01)
-- [ ] `01-06` Port auth screens with V1 auth-provider correction
+- [x] `01-06` Port auth screens with V1 auth-provider correction (2026-10-01)
 
 ## Decisions / discoveries
 
@@ -43,6 +43,7 @@ If a story is marked `ready-superdesign-first`, inspect the live Superdesign pro
 - Story `01-03` filled the Dashboard gap in the same live project with draft `4cd2386e-ae7b-47fa-8029-7cd5db1d6636` v1, then ported that approved state with the existing `StudySidebar` component.
 - Story `01-04` ports Calendar draft `9fc1a7b4-af57-48f9-b645-88f741ca400a` v53 directly. Period navigation is deterministic local UI state; recurrence and effective-occurrence detail behavior remain deferred to Epic 04.
 - Story `01-05` approved missing Tasks, Documents, Settings, profile-menu, task-dialog, and session-dialog states in the same live Superdesign project. The implementation preserves the existing approved `StudySidebar`; persistence, authorization, recurrence, and destructive execution remain assigned to later epics.
+- Story `01-06` added corrected live auth drafts `ad60089a-7f2b-4f18-abd4-b128905d3d02`, `222968f4-9d54-4317-9726-340922d4eea2`, and `1b113538-7501-43e4-8e3d-e55370d80eca`. Apple is intentionally absent; Google and email remain visual-only until Epic 02.
 
 ## Completion evidence
 
@@ -55,3 +56,5 @@ Story `01-03` adds the approved workspace shell and Dashboard, a committed 1440Ã
 Story `01-04` adds approved Day/Week/Month Calendar views, deterministic date/view state, three visual baselines, and clean-browser/responsive tests. All lint, type, unit, E2E, and build gates pass.
 
 Story `01-05` adds fixture-backed Tasks, Documents, Settings, profile-menu, New Task, Task Details, type-specific New Session, and effective-occurrence Session Details states. Ten inspected Chromium baselines, responsive no-overflow checks, lint, typecheck, 14 unit tests, full E2E, and the production build pass.
+
+Story `01-06` adds the approved responsive Sign In, Sign Up, and Forgot Password routes with the locked Google-and-email-only correction. Three inspected Chromium baselines, navigation/password-control tests, clean-console coverage, responsive no-overflow checks, lint, typecheck, 14 unit tests, full E2E, and the production build pass. Epic 01 is complete.
