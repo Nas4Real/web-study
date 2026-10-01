@@ -16,7 +16,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
           <span className="text-[22px] font-bold tracking-tight">Web Study</span>
         </div>
 
-        <div className="relative z-10 mb-10 max-w-[560px]">
+        <div className="relative z-10 mb-10 max-w-lg">
           <h1 className="text-[42px] font-bold leading-[1.08] tracking-tight xl:text-[48px]">
             Master your academic schedule with quiet precision.
           </h1>

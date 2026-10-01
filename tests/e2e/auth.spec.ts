@@ -34,6 +34,34 @@ test.describe("auth screens", () => {
     await expect(page).toHaveURL(/\/sign-in$/);
   });
 
+  test("loads the auth screens without browser errors", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    page.on("pageerror", (error) => errors.push(error.message));
+
+    for (const path of ["/sign-in", "/sign-up", "/forgot-password"] as const) {
+      await page.goto(path);
+    }
+
+    expect(errors).toEqual([]);
+  });
+
+  for (const screen of [
+    { name: "sign-in", path: "/sign-in" },
+    { name: "sign-up", path: "/sign-up" },
+    { name: "forgot-password", path: "/forgot-password" },
+  ] as const) {
+    test(`matches the approved ${screen.name} visual baseline`, async ({ page }) => {
+      await page.goto(screen.path);
+      await expect(page).toHaveScreenshot(`auth-${screen.name}-1440x900.png`, {
+        animations: "disabled",
+        fullPage: true,
+      });
+    });
+  }
+
   for (const viewport of [
     { width: 320, height: 800 },
     { width: 768, height: 1024 },
