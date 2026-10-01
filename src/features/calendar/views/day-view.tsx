@@ -2,7 +2,7 @@ import type { CalendarDaySectionDTO } from "@/domain/dto";
 
 import { DayEventCard } from "../calendar-event-card";
 
-export function DayView({ sections }: { sections: readonly CalendarDaySectionDTO[] }) {
+export function DayView({ onOpenEvent, sections }: { onOpenEvent?: () => void; sections: readonly CalendarDaySectionDTO[] }) {
   return (
     <section aria-label="Day calendar" className="flex flex-1 overflow-hidden px-4 pb-8 pt-6 sm:px-8">
       <div className="flex flex-1 flex-col gap-8 overflow-y-auto">
@@ -14,7 +14,7 @@ export function DayView({ sections }: { sections: readonly CalendarDaySectionDTO
             </div>
             <div className="flex flex-col gap-3">
               {section.events.map((event) => (
-                <DayEventCard event={event} key={event.id} />
+                <DayEventCard event={event} key={event.id} onOpen={onOpenEvent} />
               ))}
             </div>
           </div>

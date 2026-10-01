@@ -1,0 +1,25 @@
+"use client";
+
+import { BookOpen, Building2, CalendarPlus, ClipboardCheck, Plus } from "lucide-react";
+import { useState } from "react";
+
+import { ModalFrame } from "@/components/modal-frame";
+import type { CalendarSessionKind } from "@/domain/dto";
+
+const sessionTypes = [
+  { id: "exam", label: "Exam", description: "Test or mock", icon: ClipboardCheck },
+  { id: "university", label: "University", description: "Class or lecture", icon: Building2 },
+  { id: "revision", label: "Revision", description: "Solo study", icon: BookOpen },
+] as const;
+
+const kindCopy: Record<CalendarSessionKind, { title: string; placeholder: string; helper: string }> = {
+  exam: { title: "Exam title", placeholder: "e.g. Final Calculus Exam", helper: "An upcoming test, exam, or quiz." },
+  university: { title: "Class or Lecture Name", placeholder: "e.g. Physics 101 Lecture", helper: "A scheduled class, lecture, or lab." },
+  revision: { title: "Session title", placeholder: "e.g. Integrals — problem set", helper: "A focused block for studying on your own." },
+};
+
+export function NewSessionModal({ onClose }: { onClose: () => void }) {
+  const [kind, setKind] = useState<CalendarSessionKind>("university");
+  const copy = kindCopy[kind];
+  return <ModalFrame footer={<><span className="mr-auto hidden text-xs text-text-tertiary sm:block">You can edit this session later.</span><button className="rounded-lg border border-border-hover px-4 py-2.5 text-sm font-semibold" onClick={onClose} type="button">Cancel</button><button className="flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-black" type="button"><Plus aria-hidden="true" size={16} />Add session</button></>} labelId="new-session-title" onClose={onClose}><header className="flex items-start gap-4 border-b border-border-panel px-6 py-5 pr-20"><span className="grid size-12 shrink-0 place-items-center rounded-xl border border-border-hover bg-card-hover"><CalendarPlus aria-hidden="true" size={22} /></span><div><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-tertiary">Calendar</p><h2 className="mt-1 text-xl font-bold" id="new-session-title">Add a session</h2><p className="mt-1 text-sm text-text-muted">Choose a session type, then fill in the details.</p></div></header><form className="space-y-5 px-6 py-5"><fieldset><legend className="text-sm font-semibold text-text-secondary">Session type</legend><div className="mt-2 grid gap-2 sm:grid-cols-3">{sessionTypes.map(({ description, icon: Icon, id, label }) => <button aria-pressed={kind === id} className={`flex items-center gap-3 rounded-xl border p-3 text-left ${kind === id ? "border-text-muted bg-card-hover" : "border-border-panel bg-panel"}`} key={id} onClick={() => setKind(id)} type="button"><span className="grid size-8 place-items-center rounded-lg bg-border-panel"><Icon aria-hidden="true" size={16} /></span><span><span className="block text-sm font-bold">{label}</span><span className="block text-[10px] text-text-muted">{description}</span></span></button>)}</div><p className="mt-2 text-xs text-text-tertiary">{copy.helper}</p></fieldset><label className="block text-sm font-semibold text-text-secondary">{copy.title}<input className="mt-2 h-11 w-full rounded-lg border border-border-hover bg-panel px-3 text-sm" placeholder={copy.placeholder} /></label><div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold text-text-secondary">Subject<select className="mt-2 h-11 w-full rounded-lg border border-border-hover bg-panel px-3 text-sm"><option>Choose subject</option><option>Math</option><option>Physics</option></select></label><label className="text-sm font-semibold text-text-secondary">Date<input className="mt-2 h-11 w-full rounded-lg border border-border-hover bg-panel px-3 text-sm" type="date" /></label><label className="text-sm font-semibold text-text-secondary">Start time<input className="mt-2 h-11 w-full rounded-lg border border-border-hover bg-panel px-3 text-sm" type="time" /></label>{kind === "exam" ? <label className="text-sm font-semibold text-text-secondary">Room / Location<input className="mt-2 h-11 w-full rounded-lg border border-border-hover bg-panel px-3 text-sm" placeholder="e.g. Hall A" /></label> : <label className="text-sm font-semibold text-text-secondary">Duration<select className="mt-2 h-11 w-full rounded-lg border border-border-hover bg-panel px-3 text-sm"><option>45 minutes</option><option>1 hr 30 min</option><option>2 hours</option></select></label>}</div>{kind === "university" ? <label className="block text-sm font-semibold text-text-secondary">Professor <span className="font-normal text-text-tertiary">— optional</span><input className="mt-2 h-11 w-full rounded-lg border border-border-hover bg-panel px-3 text-sm" placeholder="e.g. Dr. Smith" /></label> : null}{kind === "revision" ? <label className="block text-sm font-semibold text-text-secondary">Focus or chapter <span className="font-normal text-text-tertiary">— optional</span><input className="mt-2 h-11 w-full rounded-lg border border-border-hover bg-panel px-3 text-sm" placeholder="e.g. Chapter 4 · integrals" /></label> : null}</form></ModalFrame>;
+}

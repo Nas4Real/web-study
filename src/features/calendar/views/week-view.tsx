@@ -2,7 +2,7 @@ import type { CalendarWeekDayDTO } from "@/domain/dto";
 
 import { WeekEventCard } from "../calendar-event-card";
 
-export function WeekView({ days }: { days: readonly CalendarWeekDayDTO[] }) {
+export function WeekView({ days, onOpenEvent }: { days: readonly CalendarWeekDayDTO[]; onOpenEvent?: () => void }) {
   return (
     <section aria-label="Week calendar" className="flex flex-1 overflow-x-auto px-4 pb-8 pt-6 sm:px-8">
       <div className="grid min-w-[840px] flex-1 grid-cols-7 divide-x divide-border-panel overflow-hidden rounded-xl border border-border-panel bg-panel shadow-inner">
@@ -28,7 +28,7 @@ export function WeekView({ days }: { days: readonly CalendarWeekDayDTO[] }) {
             </div>
             <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3">
               {day.events.map((event) => (
-                <WeekEventCard event={event} key={event.id} />
+                <WeekEventCard event={event} key={event.id} onOpen={onOpenEvent} />
               ))}
             </div>
           </div>

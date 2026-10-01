@@ -14,9 +14,10 @@ interface CalendarHeaderProps {
   view: CalendarView;
   onShift: (direction: -1 | 1) => void;
   onViewChange: (view: CalendarView) => void;
+  onNewSession: () => void;
 }
 
-export function CalendarHeader({ greetingName, onShift, onViewChange, periodLabel, view }: CalendarHeaderProps) {
+export function CalendarHeader({ greetingName, onNewSession, onShift, onViewChange, periodLabel, view }: CalendarHeaderProps) {
   return (
     <>
       <header className="flex shrink-0 items-start justify-between gap-4 px-4 pb-5 pt-6 sm:px-8 sm:pt-8">
@@ -85,6 +86,7 @@ export function CalendarHeader({ greetingName, onShift, onViewChange, periodLabe
           </div>
           <button
             className="flex items-center gap-2 rounded-md bg-zinc-100 px-4 py-2 text-[13px] font-bold text-black shadow-sm transition-colors hover:bg-white"
+            onClick={onNewSession}
             type="button"
           >
             <Plus aria-hidden="true" size={16} />
