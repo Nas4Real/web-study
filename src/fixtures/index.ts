@@ -455,5 +455,5 @@ export const settingsFixture = {
 
 export const authFixture = {
   providers: ["email", "google"],
-  screens: ["sign-in", "sign-up", "forgot-password"],
+  screens: ["sign-in", "sign-up", "forgot-password", "set-new-password"],
 } as const satisfies AuthFixtureDTO;

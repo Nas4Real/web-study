@@ -26,7 +26,12 @@ describe("Web Study fixtures", () => {
     expect(tasksFixture.length).toBeGreaterThan(0);
     expect(documentsFixture.length).toBeGreaterThan(0);
     expect(settingsFixture).toBeDefined();
-    expect(authFixture.screens).toEqual(["sign-in", "sign-up", "forgot-password"]);
+    expect(authFixture.screens).toEqual([
+      "sign-in",
+      "sign-up",
+      "forgot-password",
+      "set-new-password",
+    ]);
     expect(taskDetailFixture).toBeDefined();
     expect(sessionDetailFixture).toBeDefined();
   });

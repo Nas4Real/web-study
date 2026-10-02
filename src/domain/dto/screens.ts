@@ -93,7 +93,11 @@ export interface DocumentsVisualFixtureDTO {
 }
 
 export type AuthProvider = "email" | "google";
-export type AuthScreen = "sign-in" | "sign-up" | "forgot-password";
+export type AuthScreen =
+  | "sign-in"
+  | "sign-up"
+  | "forgot-password"
+  | "set-new-password";
 
 export interface AuthFixtureDTO {
   providers: readonly AuthProvider[];

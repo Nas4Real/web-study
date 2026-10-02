@@ -1,12 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("auth screens", () => {
+  test.describe.configure({ mode: "serial" });
+
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
   });
 
   test("renders the corrected Sign In screen and navigates the auth flow", async ({ page }) => {
     await page.goto("/sign-in");
+    await page.waitForLoadState("networkidle");
 
     await expect(page.getByRole("heading", { level: 1, name: "Master your academic schedule with quiet precision." })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Welcome back" })).toBeVisible();
@@ -41,11 +44,34 @@ test.describe("auth screens", () => {
     });
     page.on("pageerror", (error) => errors.push(error.message));
 
-    for (const path of ["/sign-in", "/sign-up", "/forgot-password"] as const) {
+    for (const path of [
+      "/sign-in",
+      "/sign-up",
+      "/forgot-password",
+      "/set-new-password",
+    ] as const) {
       await page.goto(path);
     }
 
     expect(errors).toEqual([]);
+  });
+
+  test("renders the recovery-session new-password form", async ({ page }) => {
+    await page.goto("/set-new-password");
+    await page.waitForLoadState("networkidle");
+
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Set new password" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("New password", { exact: true })).toHaveAttribute(
+      "autocomplete",
+      "new-password",
+    );
+    await expect(
+      page.getByLabel("Confirm password", { exact: true }),
+    ).toHaveAttribute("autocomplete", "new-password");
+    await expect(page.getByRole("button", { name: "Update Password" })).toBeVisible();
+    await expect(page.getByText(/Google|Apple/i)).toHaveCount(0);
   });
 
   test("redirects an unauthenticated workspace request to sign in", async ({ browser }) => {
@@ -89,9 +115,13 @@ test.describe("auth screens", () => {
     { name: "sign-in", path: "/sign-in" },
     { name: "sign-up", path: "/sign-up" },
     { name: "forgot-password", path: "/forgot-password" },
+    { name: "set-new-password", path: "/set-new-password" },
   ] as const) {
     test(`matches the approved ${screen.name} visual baseline`, async ({ page }) => {
       await page.goto(screen.path);
+      await page.waitForLoadState("networkidle");
+      const nextDevTools = page.getByRole("button", { name: "Open Next.js Dev Tools" });
+      if (await nextDevTools.count()) await nextDevTools.evaluate((element) => element.remove());
       await expect(page).toHaveScreenshot(`auth-${screen.name}-1440x900.png`, {
         animations: "disabled",
         fullPage: true,
