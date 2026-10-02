@@ -24,6 +24,7 @@ At every story boundary run the relevant lint, typecheck, unit/integration, E2E,
 - `02-01` complete on 2026-10-01: pinned Supabase SSR clients, Next.js 16 Proxy session refresh, protected workspace routing, request-scoped verified actor context, and negative auth coverage.
 - `02-02` complete on 2026-10-02: email/password and Google PKCE flows, callback/profile bootstrap, approved verification-pending UI, shared sign-out, and local Supabase configuration. Clean migration reset, real Mailpit verification/callback, verified and rejected password paths, sign-out cookie clearing, owner and cross-user RLS checks, anonymous denial, and Supabase advisors all pass.
 - `02-03` complete on 2026-10-02: non-enumerating reset-link requests, fixed PKCE recovery callbacks, verified-session password updates, and the approved Forgot Password request form. Unit/action/gateway tests, auth visual baselines, and the real local Mailpit recovery flow pass. The post-link visual remains scoped to Superdesign-first Story `02-06`.
+- `02-04` complete on 2026-10-02: private subject CRUD schema and services, least-privilege profile/subject grants, owner RLS, stable domain errors, and owner-bound avatar object keys. Unit/static-security tests, a clean local database reset, live owner/cross-user/anonymous Data API checks, quota-tampering denial, and Supabase advisors pass.
 
 ## Design-block rule
 
