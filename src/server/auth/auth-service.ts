@@ -50,6 +50,7 @@ export type AuthActionState =
         | "AUTHENTICATION_FAILED"
         | "OAUTH_FAILED"
         | "CALLBACK_FAILED"
+        | "PASSWORD_RESET_FAILED"
         | "RECOVERY_SESSION_REQUIRED"
         | "PASSWORD_UPDATE_FAILED"
         | "PROVIDER_UNAVAILABLE";
@@ -93,6 +94,7 @@ function publicError(
     | "SIGN_UP_FAILED"
     | "OAUTH_FAILED"
     | "CALLBACK_FAILED"
+    | "PASSWORD_RESET_FAILED"
     | "RECOVERY_SESSION_REQUIRED"
     | "PASSWORD_UPDATE_FAILED",
   message: string,
@@ -185,7 +187,13 @@ export class AuthService {
     if (!parsed.success) return INVALID_INPUT;
 
     try {
-      await this.gateway.requestPasswordReset(parsed.data);
+      const result = await this.gateway.requestPasswordReset(parsed.data);
+      if (result.errorCode) {
+        return publicError(
+          "PASSWORD_RESET_FAILED",
+          "We could not send a reset link. Please try again later.",
+        );
+      }
       return {
         status: "success",
         code: "PASSWORD_RESET_REQUESTED",

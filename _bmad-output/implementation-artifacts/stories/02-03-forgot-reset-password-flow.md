@@ -1,7 +1,7 @@
 # Story 02-03: Forgot/reset password flow
 
 Epic: epic-02
-Status: ready-for-dev
+Status: done
 Dependencies: 02-01
 
 ## Purpose
@@ -47,3 +47,11 @@ Integration tests for request and callback errors.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Implementation checkpoint
+
+- Added normalized reset-request and matching-password contracts, with a non-enumerating public response for valid email-shaped requests.
+- Added Supabase recovery-link generation through the fixed PKCE callback with `/set-new-password` as the safe internal destination.
+- Added verified-session password updates through `updateUser({ password })`, with stable public errors and no token logging.
+- Wired the approved Forgot Password request form without changing its initial visual baseline. The designed post-link form remains owned by Superdesign-first Story `02-06`.
+- Focused unit/action/gateway tests, the 12 approved auth browser/visual tests, and a real local Supabase + Mailpit recovery flow pass, including old-password rejection and new-password sign-in.

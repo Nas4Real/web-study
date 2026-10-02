@@ -2,13 +2,14 @@
 
 import { ArrowLeft, Check, Eye, EyeOff, KeyRound, LockKeyhole, Mail, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState, type FormEvent } from "react";
+import { useActionState, useState } from "react";
 
 import type { AuthScreen } from "@/domain/dto";
 import {
   signInAction,
   signUpAction,
   startGoogleAction,
+  requestPasswordResetAction,
 } from "@/server/auth/auth-actions";
 import type { AuthActionState } from "@/server/auth/auth-service";
 
@@ -78,16 +79,17 @@ export function AuthForm({
         message: "The sign-in link is invalid or expired. Please try again.",
       }
     : idleState;
-  const emailAction = screen === "sign-up" ? signUpAction : signInAction;
+  const emailAction =
+    screen === "sign-up"
+      ? signUpAction
+      : screen === "forgot-password"
+        ? requestPasswordResetAction
+        : signInAction;
   const [emailState, emailFormAction, emailPending] = useActionState(emailAction, initialState);
   const [googleState, googleFormAction, googlePending] = useActionState(startGoogleAction, idleState);
   const copy = screenCopy[screen];
   const isForgotPassword = screen === "forgot-password";
   const status = googleState.status === "error" ? googleState : emailState;
-
-  function preventStaticSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-  }
 
   if (screen === "sign-up" && emailState.code === "VERIFICATION_REQUIRED") {
     return <VerificationPending />;
@@ -124,9 +126,8 @@ export function AuthForm({
       ) : null}
 
       <form
-        action={isForgotPassword ? undefined : emailFormAction}
+        action={emailFormAction}
         className="space-y-5"
-        onSubmit={isForgotPassword ? preventStaticSubmit : undefined}
       >
         {!isForgotPassword ? <input name="next" type="hidden" value={nextPath} /> : null}
         {screen === "sign-up" ? (
@@ -170,6 +171,11 @@ export function AuthForm({
 
       {status.status === "error" ? (
         <p aria-live="polite" className="mt-5 text-center text-xs font-medium leading-relaxed text-red-400" role="alert">
+          {status.message}
+        </p>
+      ) : null}
+      {status.status === "success" && status.code === "PASSWORD_RESET_REQUESTED" ? (
+        <p aria-live="polite" className="mt-5 text-center text-xs font-medium leading-relaxed text-text-secondary" role="status">
           {status.message}
         </p>
       ) : null}

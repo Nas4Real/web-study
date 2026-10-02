@@ -89,6 +89,43 @@ export async function startGoogleAction(
   return result;
 }
 
+export async function requestPasswordResetAction(
+  _previousState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  try {
+    const service = await createAuthService();
+    return await service.requestPasswordReset({
+      email: textField(formData, "email"),
+    });
+  } catch {
+    return {
+      status: "error",
+      code: "PROVIDER_UNAVAILABLE",
+      message: "Authentication is temporarily unavailable. Please try again.",
+    };
+  }
+}
+
+export async function updatePasswordAction(
+  _previousState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  try {
+    const service = await createAuthService();
+    return await service.updatePassword({
+      confirmPassword: textField(formData, "confirmPassword"),
+      password: textField(formData, "password"),
+    });
+  } catch {
+    return {
+      status: "error",
+      code: "PROVIDER_UNAVAILABLE",
+      message: "Authentication is temporarily unavailable. Please try again.",
+    };
+  }
+}
+
 export async function signOutAction() {
   try {
     const service = await createAuthService();

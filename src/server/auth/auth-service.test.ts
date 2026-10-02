@@ -118,28 +118,43 @@ describe("AuthService", () => {
     expect(gateway.createGoogleAuthorization).toHaveBeenCalledWith({ next: "/" });
   });
 
-  it.each([null, "user_not_found"])(
-    "returns the same reset-request response for provider code %s",
-    async (errorCode) => {
-      const gateway = createGateway({
-        requestPasswordReset: vi.fn().mockResolvedValue({ errorCode }),
-      });
-      const service = new AuthService(gateway);
+  it("returns the same non-enumerating reset response Supabase gives known and unknown users", async () => {
+    const gateway = createGateway();
+    const service = new AuthService(gateway);
 
-      const result = await service.requestPasswordReset({
-        email: "  JANE@Example.COM ",
-      });
+    const result = await service.requestPasswordReset({
+      email: "  JANE@Example.COM ",
+    });
 
-      expect(result).toEqual({
-        code: "PASSWORD_RESET_REQUESTED",
-        message: "If an account exists for that email, a reset link is on its way.",
-        status: "success",
-      });
-      expect(gateway.requestPasswordReset).toHaveBeenCalledWith({
-        email: "jane@example.com",
-      });
-    },
-  );
+    expect(result).toEqual({
+      code: "PASSWORD_RESET_REQUESTED",
+      message: "If an account exists for that email, a reset link is on its way.",
+      status: "success",
+    });
+    expect(gateway.requestPasswordReset).toHaveBeenCalledWith({
+      email: "jane@example.com",
+    });
+  });
+
+  it("maps reset provider failures without leaking provider details", async () => {
+    const gateway = createGateway({
+      requestPasswordReset: vi.fn().mockResolvedValue({
+        errorCode: "rate_limit_exceeded",
+      }),
+    });
+    const service = new AuthService(gateway);
+
+    const result = await service.requestPasswordReset({
+      email: "jane@example.com",
+    });
+
+    expect(result).toEqual({
+      code: "PASSWORD_RESET_FAILED",
+      message: "We could not send a reset link. Please try again later.",
+      status: "error",
+    });
+    expect(JSON.stringify(result)).not.toContain("rate_limit_exceeded");
+  });
 
   it("requires a verified recovery session before updating the password", async () => {
     const gateway = createGateway({
