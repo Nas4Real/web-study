@@ -25,3 +25,7 @@ Deliver recurrence-correct Day/Week/Month data and approved effective-occurrence
 ## Proof
 
 Moved/cancelled/overridden occurrences behave correctly; detail matches live design; sibling occurrences remain unchanged after one-occurrence edit; tests pass.
+
+## Progress
+
+- `04-01` complete on 2026-10-02: added private typed session-series and stable occurrence-exception persistence with owner-aware foreign keys, least-privilege grants, full owner RLS, bounded Notes & Reminders, allowlisted override JSON, and query indexes; implemented validated Exam/University/Revision contracts, provider-neutral `CalendarService` CRUD/detail operations, and a Supabase repository adapter with provider-boundary record validation. All 13 focused tests, 42 full pgTAP tests, Supabase advisors, dependency audit, lint, typecheck, all 119 Vitest tests, and the production build pass.
