@@ -24,3 +24,7 @@ Deliver one secure canonical task domain, approved Tasks/Dashboard rendering, an
 ## Proof
 
 All Epic 03 stories ready/done, relevant test specs executable and passing, visual comparison approved, no cross-user task/subtask access.
+
+## Progress
+
+- `03-01` complete on 2026-10-02: added private task/subtask persistence with owner-aware subject/task foreign keys, least-privilege grants, full owner RLS, atomic ordered subtask creation, normalized service/repository contracts, user-timezone grouping, explicit parent transitions, and independent subtask completion. All 14 focused unit/static tests, 19 live pgTAP isolation/invariant tests, 96 full Vitest tests, lint, typecheck, build, and Supabase advisors pass.

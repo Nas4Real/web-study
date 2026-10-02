@@ -1,7 +1,7 @@
 # Story 03-01: Tasks schema service and CRUD
 
 Epic: epic-03
-Status: ready-for-dev
+Status: done
 Dependencies: 02-04
 
 ## Purpose
@@ -47,3 +47,12 @@ Service tests, subtask unit tests, owner-aware FK tests, and RLS tests.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Implementation checkpoint
+
+- Added constrained private `tasks` and ordered relational `task_subtasks` tables with mandatory owner-bound subjects, normal/high priority, pending/completed/someday status, canonical description, and a database-enforced `completed_at` invariant.
+- Added explicit least-privilege Data API grants, owner-scoped RLS for every operation, owner-aware composite foreign keys, query indexes, updated-at triggers, and an invoker-rights atomic task/subtask creation function.
+- Implemented normalized task contracts, user-timezone overdue/today/later/completed/someday grouping, owner-scoped repository adapters, CRUD, explicit complete/reopen/someday transitions, and target-only subtask completion without rewriting sibling or parent state.
+- Added stable provider-neutral error mapping so absent and foreign-owned identifiers return the same public `NOT_FOUND` result.
+- Added 14 focused domain/service/static-migration tests and 19 live pgTAP assertions covering positive access, cross-user denial, owner-aware FK rejection, ordered atomic creation, and parent/subtask independence.
+- A clean local Supabase bootstrap applied every migration; all 19 database tests, Supabase advisors, lint, typecheck, all 96 Vitest tests, and the production build pass.

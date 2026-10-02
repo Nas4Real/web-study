@@ -11,11 +11,20 @@ import type {
   SubjectUpdate,
 } from "./study-domain";
 import type { SubjectRepository } from "./subject-service";
+import type {
+  Task,
+  TaskCreate,
+  TaskSubtask,
+  TaskUpdate,
+} from "./task-domain";
+import type { TaskRepository } from "./task-service";
 
 const PROFILE_COLUMNS =
   "id, display_name, timezone, avatar_object_key, storage_quota_bytes, storage_used_bytes, storage_reserved_bytes, created_at, updated_at";
 const SUBJECT_COLUMNS =
   "id, name, color, icon, position, created_at, updated_at";
+const TASK_COLUMNS =
+  "id, subject_id, title, description, priority, status, due_at, completed_at, created_at, updated_at, task_subtasks(id, title, position, completed_at, created_at, updated_at)";
 
 type ProfileRow = Readonly<{
   avatar_object_key: string | null;
@@ -36,6 +45,29 @@ type SubjectRow = Readonly<{
   id: string;
   name: string;
   position: number;
+  updated_at: string;
+}>;
+
+type TaskSubtaskRow = Readonly<{
+  completed_at: string | null;
+  created_at: string;
+  id: string;
+  position: number;
+  title: string;
+  updated_at: string;
+}>;
+
+type TaskRow = Readonly<{
+  completed_at: string | null;
+  created_at: string;
+  description: string | null;
+  due_at: string | null;
+  id: string;
+  priority: "normal" | "high";
+  status: "pending" | "completed" | "someday";
+  subject_id: string;
+  task_subtasks: TaskSubtaskRow[] | null;
+  title: string;
   updated_at: string;
 }>;
 
@@ -67,6 +99,35 @@ function toSubject(row: SubjectRow): Subject {
     id: row.id,
     name: row.name,
     position: row.position,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toTaskSubtask(row: TaskSubtaskRow): TaskSubtask {
+  return {
+    completedAt: row.completed_at,
+    createdAt: row.created_at,
+    id: row.id,
+    position: row.position,
+    title: row.title,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toTask(row: TaskRow): Task {
+  return {
+    completedAt: row.completed_at,
+    createdAt: row.created_at,
+    description: row.description,
+    dueAt: row.due_at,
+    id: row.id,
+    priority: row.priority,
+    status: row.status,
+    subjectId: row.subject_id,
+    subtasks: [...(row.task_subtasks ?? [])]
+      .sort((left, right) => left.position - right.position || left.id.localeCompare(right.id))
+      .map(toTaskSubtask),
+    title: row.title,
     updatedAt: row.updated_at,
   };
 }
@@ -167,6 +228,132 @@ export function createSupabaseSubjectRepository(
         .select("id")
         .maybeSingle();
       return { data: data !== null, errorCode: errorCode(error) };
+    },
+  };
+}
+
+function taskWrite(input: TaskUpdate) {
+  return {
+    ...(input.description === undefined ? {} : { description: input.description }),
+    ...(input.dueAt === undefined ? {} : { due_at: input.dueAt }),
+    ...(input.priority === undefined ? {} : { priority: input.priority }),
+    ...(input.subjectId === undefined ? {} : { subject_id: input.subjectId }),
+    ...(input.title === undefined ? {} : { title: input.title }),
+  };
+}
+
+export function createSupabaseTaskRepository(
+  supabase: SupabaseClient,
+): TaskRepository {
+  async function findOwned(userId: string, taskId: string) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select(TASK_COLUMNS)
+      .eq("id", taskId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    return {
+      data: data ? toTask(data as unknown as TaskRow) : null,
+      errorCode: errorCode(error),
+    };
+  }
+
+  async function findAfterMutation(
+    userId: string,
+    taskId: string,
+    mutationError: unknown,
+  ) {
+    const code = errorCode(mutationError);
+    return code ? { data: null, errorCode: code } : findOwned(userId, taskId);
+  }
+
+  return {
+    async listOwned(userId) {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select(TASK_COLUMNS)
+        .eq("user_id", userId)
+        .order("due_at", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true });
+      return {
+        data: data ? (data as unknown as TaskRow[]).map(toTask) : null,
+        errorCode: errorCode(error),
+      };
+    },
+
+    findOwned,
+
+    async createOwned(userId, input: TaskCreate) {
+      const { data, error } = await supabase
+        .rpc("create_task_with_subtasks", {
+          p_description: input.description,
+          p_due_at: input.dueAt,
+          p_priority: input.priority,
+          p_subject_id: input.subjectId,
+          p_subtasks: input.subtasks.map(({ title }) => title),
+          p_title: input.title,
+          p_user_id: userId,
+        })
+        .single();
+      const code = errorCode(error);
+      if (code || !data || typeof data !== "object") {
+        return { data: null, errorCode: code ?? "provider_error" };
+      }
+      const taskId = Reflect.get(data, "id");
+      return typeof taskId === "string"
+        ? findOwned(userId, taskId)
+        : { data: null, errorCode: "provider_error" };
+    },
+
+    async updateOwned(userId, taskId, input) {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update(taskWrite(input))
+        .eq("id", taskId)
+        .eq("user_id", userId)
+        .select("id")
+        .maybeSingle();
+      return data
+        ? findAfterMutation(userId, taskId, error)
+        : { data: null, errorCode: errorCode(error) };
+    },
+
+    async deleteOwned(userId, taskId) {
+      const { data, error } = await supabase
+        .from("tasks")
+        .delete()
+        .eq("id", taskId)
+        .eq("user_id", userId)
+        .select("id")
+        .maybeSingle();
+      return { data: data !== null, errorCode: errorCode(error) };
+    },
+
+    async setStatusOwned(userId, taskId, status, completedAt) {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ completed_at: completedAt, status })
+        .eq("id", taskId)
+        .eq("user_id", userId)
+        .select("id")
+        .maybeSingle();
+      return data
+        ? findAfterMutation(userId, taskId, error)
+        : { data: null, errorCode: errorCode(error) };
+    },
+
+    async toggleSubtaskOwned(userId, taskId, subtaskId, completedAt) {
+      const { data, error } = await supabase
+        .from("task_subtasks")
+        .update({ completed_at: completedAt })
+        .eq("id", subtaskId)
+        .eq("task_id", taskId)
+        .eq("user_id", userId)
+        .select("id")
+        .maybeSingle();
+      return data
+        ? findAfterMutation(userId, taskId, error)
+        : { data: null, errorCode: errorCode(error) };
     },
   };
 }
