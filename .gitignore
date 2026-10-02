@@ -19,6 +19,7 @@
 .DS_Store
 Thumbs.db
 *.pem
+/.superdesign/tmp/
 
 # TypeScript incremental state
 *.tsbuildinfo

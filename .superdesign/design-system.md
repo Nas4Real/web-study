@@ -4,11 +4,12 @@ This file records the inspected live design evidence for implementation. The aut
 
 ## Provenance
 
+- Primary full-application interactive draft: `3b6767a8-0995-4cc2-82b4-1d2798feea98`, version 96. This single prototype contains the auth gate plus Dashboard, Calendar, Documents, Tasks, Settings, and the current dialog/detail states. Entering arbitrary demo credentials and submitting Sign In reveals the workspace screens.
 - Design-system draft: `8aa64fb9-b219-4ac8-bd46-210672382d9c`, version 10.
 - Calendar application draft: `9fc1a7b4-af57-48f9-b645-88f741ca400a`, version 53.
 - Auth drafts: Sign In `ad60089a-7f2b-4f18-abd4-b128905d3d02`, Sign Up `222968f4-9d54-4317-9726-340922d4eea2`, Forgot Password `1b113538-7501-43e4-8e3d-e55370d80eca`, version 1.
 - Styling convention: Tailwind CSS v3-style utilities and configuration.
-- Inspection date: 2026-09-30.
+- Inspection date: 2026-10-02.
 
 ## Typography
 
