@@ -12,7 +12,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:3100",
     extraHTTPHeaders: {
       "x-web-study-e2e-auth": e2eAuthToken,
     },
@@ -25,12 +25,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm dev",
+    command: "pnpm dev --port 3100",
     env: {
       ...process.env,
+      NEXT_PUBLIC_APP_ORIGIN: "http://localhost:3100",
       WEB_STUDY_E2E_AUTH_TOKEN: e2eAuthToken,
     },
-    url: "http://localhost:3000",
+    url: "http://localhost:3100",
     reuseExistingServer: !process.env.CI,
   },
 });

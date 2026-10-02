@@ -1,8 +1,11 @@
 import { expect, test } from "@playwright/test";
 
+import { hideNextDevTools } from "./visual-test-helpers";
+
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1200 });
   await page.goto("/");
+  await page.waitForLoadState("networkidle");
 });
 
 test("renders the approved Dashboard and application shell", async ({ page }) => {
@@ -24,6 +27,7 @@ test("keeps interactive shell controls keyboard reachable", async ({ page }) => 
 });
 
 test("matches the approved Dashboard visual baseline", async ({ page }) => {
+  await hideNextDevTools(page);
   await expect(page).toHaveScreenshot("dashboard-1440x1200.png", {
     animations: "disabled",
     fullPage: true,

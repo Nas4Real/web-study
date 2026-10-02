@@ -7,7 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { isE2eAuthenticatedRequest } from "./auth-routing";
 import { resolveVerifiedActor, type AuthActor } from "./verified-actor";
 
-const E2E_ACTOR: AuthActor = { userId: "e2e-user" };
+export const E2E_ACTOR_ID = "00000000-0000-4000-8000-000000000001";
+const E2E_ACTOR: AuthActor = { userId: E2E_ACTOR_ID };
 
 export async function getVerifiedActor(): Promise<AuthActor | null> {
   const requestHeaders = await headers();

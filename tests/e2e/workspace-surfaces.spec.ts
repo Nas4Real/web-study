@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { hideNextDevTools } from "./visual-test-helpers";
+
 test.describe("workspace surfaces", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1200 });
@@ -66,6 +68,8 @@ test.describe("workspace surfaces", () => {
   ] as const) {
     test(`matches the approved ${surface.name} visual baseline`, async ({ page }) => {
       await page.goto(surface.path);
+      await page.waitForLoadState("networkidle");
+      await hideNextDevTools(page);
       await expect(page).toHaveScreenshot(`${surface.name}-1440x1200.png`, {
         animations: "disabled",
         fullPage: true,
@@ -84,13 +88,18 @@ test.describe("workspace surfaces", () => {
 
   test("matches the approved task dialog visual baselines", async ({ page }) => {
     await page.goto("/tasks");
+    await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: "New Task" }).click();
+    await expect(page.getByRole("dialog", { name: "Create new task" })).toBeVisible();
+    await hideNextDevTools(page);
     await expect(page).toHaveScreenshot("new-task-1440x1200.png", {
       animations: "disabled",
       fullPage: true,
     });
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Open Complete Chapter 4 Exercises" }).click();
+    await expect(page.getByRole("dialog", { name: "Complete Chapter 4 Exercises" })).toBeVisible();
+    await hideNextDevTools(page);
     await expect(page).toHaveScreenshot("task-details-1440x1200.png", {
       animations: "disabled",
       fullPage: true,

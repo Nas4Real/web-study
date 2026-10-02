@@ -21,6 +21,7 @@ test.describe("auth screens", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Reset password" })).toBeVisible();
 
     await page.getByRole("link", { name: "Back to sign in" }).click();
+    await expect(page).toHaveURL(/\/sign-in$/);
     await page.getByRole("link", { name: "Sign up for free" }).click();
     await expect(page).toHaveURL(/\/sign-up$/);
     await expect(page.getByRole("heading", { level: 2, name: "Create an account" })).toBeVisible();
@@ -76,7 +77,7 @@ test.describe("auth screens", () => {
 
   test("redirects an unauthenticated workspace request to sign in", async ({ browser }) => {
     const context = await browser.newContext({
-      baseURL: "http://localhost:3000",
+      baseURL: "http://localhost:3100",
       extraHTTPHeaders: { "x-web-study-e2e-auth": "unauthenticated" },
     });
     const unauthenticatedPage = await context.newPage();

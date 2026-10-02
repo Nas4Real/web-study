@@ -1,7 +1,7 @@
 # Story 03-02: Wire New Task and task list UI
 
 Epic: epic-03
-Status: ready-for-dev
+Status: done
 Dependencies: 03-01,01-05
 
 ## Purpose
@@ -47,3 +47,13 @@ E2E create/complete/reopen/someday.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Implementation checkpoint
+
+- Replaced the Tasks page demo source with authenticated, owner-scoped reads through the verified actor, profile timezone, `SubjectService`, `TaskService`, and Supabase repositories.
+- Wired the approved New Task modal to a server action with service validation, provider-neutral errors, real subjects, and user-timezone end-of-day conversion for HTML due dates without changing the approved Superdesign structure.
+- Implemented Pending, Completed, and Someday views; overdue/today/later grouping; optimistic complete/reopen with rollback; and the approved overflow action for moving a task to Someday.
+- Preserved the task-row interaction contract: checkbox actions do not open Task Details, while the non-checkbox task body continues to open the approved detail dialog.
+- Added a deterministic in-memory task repository gated by the existing non-production E2E auth token so create/complete/reopen/someday behavior is tested without weakening production authentication or tenant isolation.
+- Added focused unit/action-handler tests and Playwright coverage for create, complete, reopen, Someday, event propagation, responsive surfaces, and clean approved visual baselines.
+- Lint, typecheck, all 106 Vitest tests, the production build, and all 52 Playwright tests pass; the task-dialog baselines were manually inspected after removing Next.js developer-overlay pixels.

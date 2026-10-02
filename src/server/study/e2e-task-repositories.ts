@@ -1,0 +1,182 @@
+import "server-only";
+
+import { randomUUID } from "node:crypto";
+
+import type { ProfileRepository } from "./profile-service";
+import type { Subject } from "./study-domain";
+import type { SubjectRepository } from "./subject-service";
+import type { Task, TaskCreate } from "./task-domain";
+import type { TaskRepository } from "./task-service";
+
+const SUBJECTS = [
+  { color: "#ec4899", id: "10000000-0000-4000-8000-000000000001", name: "Math" },
+  { color: "#06b6d4", id: "10000000-0000-4000-8000-000000000002", name: "Analysis" },
+  { color: "#10b981", id: "10000000-0000-4000-8000-000000000003", name: "Physics" },
+  { color: "#f59e0b", id: "10000000-0000-4000-8000-000000000004", name: "Method" },
+].map(
+  (subject, position): Subject => ({
+    ...subject,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    icon: null,
+    position,
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  }),
+);
+
+function initialTasks(): Task[] {
+  const base = {
+    completedAt: null,
+    createdAt: "2026-10-01T08:00:00.000Z",
+    priority: "normal" as const,
+    status: "pending" as const,
+    subtasks: [],
+    updatedAt: "2026-10-01T08:00:00.000Z",
+  };
+  return [
+    {
+      ...base,
+      description: "Finish all odd-numbered problems before the next tutorial session.",
+      dueAt: "2026-10-01T22:59:00.000Z",
+      id: "20000000-0000-4000-8000-000000000001",
+      subjectId: SUBJECTS[0].id,
+      title: "Complete Chapter 4 Exercises",
+    },
+    {
+      ...base,
+      description: "Read pages 45–60 and summarize key formulas.",
+      dueAt: "2026-10-02T22:59:00.000Z",
+      id: "20000000-0000-4000-8000-000000000002",
+      subjectId: SUBJECTS[2].id,
+      title: "Read Chapter 4: Forces",
+    },
+    {
+      ...base,
+      description: "Write a 2-page outline for the end-of-term project.",
+      dueAt: "2026-10-02T22:59:00.000Z",
+      id: "20000000-0000-4000-8000-000000000003",
+      subjectId: SUBJECTS[3].id,
+      title: "Project Proposal Draft",
+    },
+    {
+      ...base,
+      description: "Go over the past exams for matrix inversions.",
+      dueAt: "2026-10-09T22:59:00.000Z",
+      id: "20000000-0000-4000-8000-000000000004",
+      subjectId: SUBJECTS[0].id,
+      title: "Review Matrices",
+    },
+  ];
+}
+
+const stores = new Map<string, Task[]>();
+
+function storeFor(scope: string) {
+  const existing = stores.get(scope);
+  if (existing) return existing;
+  const created = initialTasks();
+  stores.set(scope, created);
+  return created;
+}
+
+function taskRepository(scope: string): TaskRepository {
+  const tasks = storeFor(scope);
+  const find = (taskId: string) => tasks.find((task) => task.id === taskId);
+  const save = (task: Task) => {
+    const index = tasks.findIndex(({ id }) => id === task.id);
+    if (index >= 0) tasks[index] = task;
+    return { data: task, errorCode: null };
+  };
+  return {
+    async createOwned(_userId, input: TaskCreate) {
+      if (!SUBJECTS.some(({ id }) => id === input.subjectId)) {
+        return { data: null, errorCode: "23503" };
+      }
+      const now = new Date().toISOString();
+      const created: Task = {
+        completedAt: null,
+        createdAt: now,
+        description: input.description,
+        dueAt: input.dueAt,
+        id: randomUUID(),
+        priority: input.priority,
+        status: "pending",
+        subjectId: input.subjectId,
+        subtasks: [],
+        title: input.title,
+        updatedAt: now,
+      };
+      tasks.push(created);
+      return { data: created, errorCode: null };
+    },
+    async deleteOwned(_userId, taskId) {
+      const index = tasks.findIndex(({ id }) => id === taskId);
+      if (index < 0) return { data: false, errorCode: null };
+      tasks.splice(index, 1);
+      return { data: true, errorCode: null };
+    },
+    async findOwned(_userId, taskId) {
+      return { data: find(taskId) ?? null, errorCode: null };
+    },
+    async listOwned() {
+      return { data: [...tasks], errorCode: null };
+    },
+    async setStatusOwned(_userId, taskId, status, completedAt) {
+      const task = find(taskId);
+      return task
+        ? save({ ...task, completedAt, status, updatedAt: new Date().toISOString() })
+        : { data: null, errorCode: null };
+    },
+    async toggleSubtaskOwned() {
+      return { data: null, errorCode: null };
+    },
+    async updateOwned(_userId, taskId, input) {
+      const task = find(taskId);
+      return task
+        ? save({ ...task, ...input, updatedAt: new Date().toISOString() })
+        : { data: null, errorCode: null };
+    },
+  };
+}
+
+export function createE2eStudyRepositories(scope: string) {
+  const profileRepository: ProfileRepository = {
+    async findByUserId(userId) {
+      return {
+        data: {
+          avatarObjectKey: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          displayName: "Nas",
+          id: userId,
+          storageQuotaBytes: 2_147_483_648,
+          storageReservedBytes: 0,
+          storageUsedBytes: 348_127_232,
+          timezone: "Africa/Tunis",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+        errorCode: null,
+      };
+    },
+    async updateOwned() {
+      return { data: null, errorCode: "provider_error" };
+    },
+  };
+  const subjectRepository: SubjectRepository = {
+    async createOwned() {
+      return { data: null, errorCode: "provider_error" };
+    },
+    async deleteOwned() {
+      return { data: false, errorCode: "provider_error" };
+    },
+    async listOwned() {
+      return { data: SUBJECTS, errorCode: null };
+    },
+    async updateOwned() {
+      return { data: null, errorCode: "provider_error" };
+    },
+  };
+  return {
+    profileRepository,
+    subjectRepository,
+    taskRepository: taskRepository(scope),
+  };
+}
