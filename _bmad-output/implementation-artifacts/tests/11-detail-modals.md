@@ -8,6 +8,10 @@
 - DETAIL-TASK-004 parent Complete works with incomplete subtasks and preserves their states.
 - DETAIL-TASK-005 delete closes dialog, invalidates caches and removes list/dashboard row.
 
+## Task verification
+
+Task scenarios above are executable in `tests/e2e/task-details.spec.ts`, `tests/e2e/dashboard-task-details.spec.ts`, `tests/e2e/modal-accessibility.spec.ts` and `tests/e2e/workspace-surfaces.spec.ts`. Canonical projection, validation, ownership and mutation tests live beside the task detail service/handlers and optimistic state helpers. Story 03-04 verification: full code checks and all 63 browser tests pass, including unchanged Dashboard baselines and separately retained canonical-task/confirmation baselines. Deferred-delete tests verify that a different selection remains open on both surfaces. Session scenarios below remain scoped to story 04-06.
+
 ## Session Details
 
 - DETAIL-CAL-001 Day card opens effective occurrence.

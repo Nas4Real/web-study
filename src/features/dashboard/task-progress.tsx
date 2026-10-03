@@ -4,7 +4,10 @@ import type { DashboardTaskDTO } from "@/domain/dto";
 
 import { toneStyles } from "./dashboard-styles";
 
-export function TaskProgress({ completed, tasks }: { completed: number; tasks: readonly DashboardTaskDTO[] }) {
+type TaskProgressProps = { completed: number; tasks: readonly DashboardTaskDTO[];
+  onOpen: (id: string) => void; onToggle: (task: DashboardTaskDTO) => void; pending: boolean };
+
+export function TaskProgress({ completed, tasks, onOpen, onToggle, pending }: TaskProgressProps) {
   return (
     <section aria-labelledby="tasks-heading">
       <div className="mb-6 flex items-center justify-between px-2">
@@ -27,7 +30,7 @@ export function TaskProgress({ completed, tasks }: { completed: number; tasks: r
         </div>
         <ul className="mt-8 space-y-3">
           {tasks.map((task) => (
-            <TaskRow key={task.id} task={task} />
+            <TaskRow key={task.id} task={task} onOpen={onOpen} onToggle={onToggle} pending={pending} />
           ))}
         </ul>
       </div>
@@ -35,10 +38,11 @@ export function TaskProgress({ completed, tasks }: { completed: number; tasks: r
   );
 }
 
-function TaskRow({ task }: { task: DashboardTaskDTO }) {
+function TaskRow({ task, onOpen, onToggle, pending }: Pick<TaskProgressProps, "onOpen" | "onToggle" | "pending"> & { task: DashboardTaskDTO }) {
   const tone = toneStyles[task.tone];
   return (
     <li
+      onClick={() => onOpen(task.id)}
       className={`flex items-center justify-between gap-4 rounded-2xl border p-5 ${
         task.highlighted ? "border-algebra/30 bg-card-hover/50" : "border-transparent bg-card-hover/50"
       } ${task.completed ? "opacity-40" : ""}`}
@@ -55,17 +59,19 @@ function TaskRow({ task }: { task: DashboardTaskDTO }) {
                 : "border-text-disabled hover:border-text-muted"
           }`}
           role="checkbox"
+          disabled={pending}
+          onClick={event => { event.stopPropagation(); onToggle(task); }}
           type="button"
         >
           {task.completed ? <Check aria-hidden="true" size={13} /> : null}
         </button>
-        <div className="min-w-0">
-          <h3 className={`truncate text-sm font-semibold ${task.completed ? "line-through" : ""}`}>{task.title}</h3>
-          <div className="mt-1 flex items-center gap-2">
+        <button aria-label={`Open task ${task.title}`} id={`dashboard-task-open-${task.id}`} className="min-w-0 text-left" type="button">
+          <span className={`block truncate text-sm font-semibold ${task.completed ? "line-through" : ""}`}>{task.title}</span>
+          <span className="mt-1 flex items-center gap-2">
             <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${tone.badge}`}>{task.subjectLabel}</span>
             {task.description ? <span className="truncate text-[10px] text-text-tertiary">{task.description}</span> : null}
-          </div>
-        </div>
+          </span>
+        </button>
       </div>
       {task.dueLabel ? (
         <span className="shrink-0 rounded bg-algebra/10 px-2.5 py-1 text-[10px] font-bold text-algebra">

@@ -54,11 +54,11 @@ export function useTaskDetail(taskId: string | null, onSuccess: (detail: TaskDet
     },
     onSettled: () => { inFlight.current = false; },
   });
-  function mutate(command: TaskDetailMutation) {
+  function mutate(command: TaskDetailMutation, id: string | null = taskId) {
     // Lock synchronously; two clicks before React renders cannot race rollback snapshots.
-    if (!taskId || inFlight.current) return;
+    if (!id || inFlight.current) return;
     inFlight.current = true;
-    mutation.mutate({ id: taskId, command });
+    mutation.mutate({ id, command });
   }
   return { query, mutation, mutate };
 }

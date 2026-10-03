@@ -1,7 +1,7 @@
 # Story 03-04: Task Details modal and subtask interactions
 
 Epic: epic-03
-Status: in-progress
+Status: done
 Dependencies: 03-01,03-02,01-05
 
 ## Purpose
@@ -63,3 +63,13 @@ TaskDetail DTO/query, dialog component/behavior, task/subtask service methods, q
 - Pinned `@tanstack/react-query` 5.104.1 with only query-core added transitively; MIT, React 19 compatible, production audit clean. No new persistence or authorization rules.
 - Original approved fixture baseline retained unchanged. New separately named canonical-content and delete-confirmation images were manually compared; due date/description come from stored data rather than hardcoded demo prose. Existing Tasks/New Task baselines still pass unchanged.
 - Story remains in-progress: supported Dashboard task/assignment launch surfaces and shared mutation synchronization are the next slice. Completion count remains 17/45.
+
+## Completion evidence
+
+- Dashboard assignment cards and non-checkbox task bodies now open the same canonical Task Details component/controller as Tasks. Live Dashboard assignment click behavior and pointer-styled task bodies were inspected before wiring; no approved classes/colors/layouts changed.
+- Dashboard checkboxes send explicit complete/reopen commands through the same validated actor-owned detail service without opening a modal. Successful mutations refresh the server-derived summary, assignment/task lists and calendar markers; detail cache updates remain keyed to the mutated ID.
+- Five new browser tests cover canonical selection, Enter/Space opening, exact invoker restoration, independent subtask persistence across Dashboard/Tasks, parent complete/reopen, confirmed deletion across both surfaces and reload, failed saves, and deferred deletion while a different task is selected (both surfaces).
+- The initial three Dashboard tests failed against the inert implementation. Focused behavior tests pass after wiring. Full `pnpm check` (lint, typecheck, unit suite, build) passes. All 63 E2E tests pass with two workers, with all existing visual baselines unchanged. A six-worker run concurrent with the build had one cumulative 30-second Tasks-flow timeout; assertions/timeouts were not weakened for the passing rerun.
+- Manually inspected `test-results/dashboard-task-details.png`; the selected Physics task renders canonical data in the existing approved dialog over Dashboard. Existing Tasks canonical-content and neutral-confirmation baselines remain green.
+- Review covered explicit mutation identity, cache scope, request authorization, rollback, derived-data refresh, nested dialogs, keyboard paths and selection changes during outstanding requests. No new persistence rules, dependencies, or infrastructure changes in this slice. Earlier backend foreign-ID denial tests and owner-aware task/subtask RLS remain in place.
+- All seven acceptance scenarios are covered. Story is done; completion count is 18/45. Priority/description/subtask authoring/editing remains separately scoped to Superdesign-first story 03-05.

@@ -6,7 +6,7 @@ import { toneStyles } from "./dashboard-styles";
 
 const assignmentIcons = [Calculator, FlaskConical, BookOpen] as const;
 
-export function UpcomingAssignments({ assignments }: { assignments: readonly DashboardAssignmentDTO[] }) {
+export function UpcomingAssignments({ assignments, onOpen }: { assignments: readonly DashboardAssignmentDTO[]; onOpen: (id: string) => void }) {
   return (
     <section className="rounded-2xl border border-border-base bg-card p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -24,6 +24,14 @@ export function UpcomingAssignments({ assignments }: { assignments: readonly Das
           const tone = toneStyles[assignment.tone];
           return (
             <article
+              aria-label={`Open assignment ${assignment.title}`}
+              id={`dashboard-assignment-open-${assignment.id}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => onOpen(assignment.id)}
+              onKeyDown={event => {
+                if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen(assignment.id); }
+              }}
               className="flex items-center justify-between gap-4 rounded-xl border border-transparent bg-card-hover p-4 transition-colors hover:border-border-panel"
               key={assignment.id}
             >
