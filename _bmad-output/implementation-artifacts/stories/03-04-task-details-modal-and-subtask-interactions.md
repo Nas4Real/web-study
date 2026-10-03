@@ -48,3 +48,8 @@ TaskDetail DTO/query, dialog component/behavior, task/subtask service methods, q
 - ModalFrame now traps keyboard focus and makes background siblings inert, restoring their original inert state on cleanup. Escape uses the latest close callback without resetting focus on render. Closing restores the connected original invoker and prior scroll state.
 - Two focused Playwright tests pass; focus wrapping failed before implementation. Full `pnpm check` and full `pnpm test:e2e --workers=2` pass, including unchanged visual baselines. Existing visual classes are unchanged.
 - Repaired confirmation preview: https://p.superdesign.dev/draft/abad03b2-7a63-4e9c-b022-ba4a602bf087. Browser inspection verifies rendering and all three underlying subtasks. Await user review before porting this new state; original approved drafts remain unchanged.
+
+## Confirmation palette review
+
+- User rejected the repaired draft's pink palette. Exact main-live Task Details DOM and design-system v10 were inspected; use main-live evidence rather than the obsolete standalone overlay styling.
+- Revised same-project preview: https://p.superdesign.dev/draft/fec4830f-529a-41e3-a71d-1d45afa12c0e. Computed browser styles verify #101012 surface, #2a2a2e border, Poppins, and neutral primary #f4f4f5 / #09090b. Pink is removed from confirmation; red is a small destructive cue. No approved main-draft or app styling changes. Await user review before porting.
