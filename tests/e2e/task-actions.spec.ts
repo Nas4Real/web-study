@@ -8,7 +8,7 @@ test("creates, completes, reopens, and moves a task to Someday", async ({ page }
   await dialog.getByLabel("Task title").fill("Prepare topology summary");
   await dialog.getByLabel("Subject").selectOption({ label: "Analysis" });
   await dialog.getByLabel("Due Date").fill("2026-10-02");
-  await dialog.getByLabel(/Notes/).fill("Summarize the compactness section.");
+  await dialog.getByLabel(/Description/).fill("Summarize the compactness section.");
   await dialog.getByRole("button", { name: "Add Task" }).click();
 
   await expect(dialog).toBeHidden();

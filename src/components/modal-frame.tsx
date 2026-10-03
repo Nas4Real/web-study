@@ -20,7 +20,7 @@ const isolation = new Map<HTMLElement, { count: number; original: boolean }>();
 let scrollLocks = 0;
 let originalOverflow = "";
 
-export function ModalFrame({ children, footer, labelId, onClose, widthClass = "max-w-[600px]", panelClass = "border-border-hover bg-card", footerClass = "border-border-panel bg-panel/50 px-6 py-4", closeClass = "size-10 border-border-panel bg-card-hover text-text-muted", overlayClass = "bg-black/80 p-4 backdrop-blur-sm" }: ModalFrameProps) {
+export function ModalFrame({ children, footer, labelId, onClose, widthClass = "max-w-[600px]", panelClass = "rounded-2xl shadow-2xl border-border-hover bg-card", footerClass = "border-border-panel bg-panel/50 px-6 py-4", closeClass = "right-5 top-5 size-10 border-border-panel bg-card-hover text-text-muted", overlayClass = "bg-black/80 p-4 backdrop-blur-sm" }: ModalFrameProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
@@ -106,14 +106,14 @@ export function ModalFrame({ children, footer, labelId, onClose, widthClass = "m
       <section
         aria-labelledby={labelId}
         aria-modal="true"
-        className={`relative my-auto w-full overflow-hidden rounded-2xl border shadow-2xl ${panelClass} ${widthClass}`}
+        className={`relative my-auto w-full overflow-hidden border ${panelClass} ${widthClass}`}
         role="dialog"
         ref={dialogRef}
         tabIndex={-1}
       >
         <button
           aria-label="Close dialog"
-          className={`absolute right-5 top-5 z-10 grid place-items-center rounded-lg border transition-colors hover:text-white ${closeClass}`}
+          className={`absolute z-10 grid place-items-center rounded-lg border transition-colors hover:text-white ${closeClass}`}
           onClick={onClose}
           ref={closeRef}
           type="button"

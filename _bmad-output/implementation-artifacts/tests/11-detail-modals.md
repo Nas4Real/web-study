@@ -12,6 +12,10 @@
 
 Task scenarios above are executable in `tests/e2e/task-details.spec.ts`, `tests/e2e/dashboard-task-details.spec.ts`, `tests/e2e/modal-accessibility.spec.ts` and `tests/e2e/workspace-surfaces.spec.ts`. Canonical projection, validation, ownership and mutation tests live beside the task detail service/handlers and optimistic state helpers. Story 03-04 verification: full code checks and all 63 browser tests pass, including unchanged Dashboard baselines and separately retained canonical-task/confirmation baselines. Deferred-delete tests verify that a different selection remains open on both surfaces. Session scenarios below remain scoped to story 04-06.
 
+## Task authoring verification
+
+Story 03-05 authoring scenarios are executable in `tests/e2e/task-authoring.spec.ts`: approved empty/populated visuals, high-priority/description/ordered-subtask creation, edited/removed/reordered rows, canonical detail round-trip after reload, date-only due time, independent parent/subtask completion, input preservation after rejection, optional-field defaults, keyboard focus/reordering at 320/768/1024/1440px and coarse-pointer controls. The action-handler tests reject malformed priorities, File-valued entries, blank/oversized subtask titles and oversized lists using the shared schemas. Full code checks and all 71 browser tests pass. Historical New Task imagery is retained alongside separately named approved authoring baselines.
+
 ## Session Details
 
 - DETAIL-CAL-001 Day card opens effective occurrence.

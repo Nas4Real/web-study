@@ -92,7 +92,7 @@ test.describe("workspace surfaces", () => {
     await page.getByRole("button", { name: "New Task" }).click();
     await expect(page.getByRole("dialog", { name: "Create new task" })).toBeVisible();
     await hideNextDevTools(page);
-    await expect(page).toHaveScreenshot("new-task-1440x1200.png", {
+    await expect(page).toHaveScreenshot("new-task-authoring-1440x1200.png", {
       animations: "disabled",
       fullPage: true,
     });

@@ -51,3 +51,21 @@ input {
   border-radius: 10px;
   background: #27272a;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.subtask-controls {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.subtask-row:hover .subtask-controls,
+.subtask-row:focus-within .subtask-controls {
+  opacity: 1;
+}
+
+@media (pointer: coarse) {
+  .subtask-controls { opacity: 1; }
+}
