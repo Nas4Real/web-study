@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { CalendarSeries } from "./calendar-domain";
+import type { CalendarException, CalendarSeries } from "./calendar-domain";
 import { CalendarService, type CalendarRepository } from "./calendar-service";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -25,6 +25,16 @@ const SERIES: CalendarSeries = {
   updatedAt: NOW,
 };
 
+const EXCEPTION: CalendarException = {
+  action: "modified",
+  createdAt: NOW,
+  id: "44444444-4444-4444-8444-444444444444",
+  originalStart: "2026-10-12T08:00:00.000Z",
+  overridePayload: { location: "Room 401" },
+  seriesId: SERIES_ID,
+  updatedAt: NOW,
+};
+
 const CREATE_INPUT = {
   durationMinutes: SERIES.durationMinutes,
   focusText: SERIES.focusText,
@@ -44,6 +54,7 @@ function repository(overrides: Partial<CalendarRepository> = {}): CalendarReposi
     createOwned: vi.fn().mockResolvedValue({ data: SERIES, errorCode: null }),
     deleteOwned: vi.fn().mockResolvedValue({ data: true, errorCode: null }),
     findOwned: vi.fn().mockResolvedValue({ data: SERIES, errorCode: null }),
+    listExceptionsOwned: vi.fn().mockResolvedValue({ data: [], errorCode: null }),
     listOwned: vi.fn().mockResolvedValue({ data: [SERIES], errorCode: null }),
     updateOwned: vi.fn().mockResolvedValue({ data: SERIES, errorCode: null }),
     ...overrides,
@@ -113,6 +124,69 @@ describe("CalendarService", () => {
       status: "success",
     });
     expect(store.deleteOwned).toHaveBeenCalledWith(USER_ID, SERIES_ID);
+  });
+
+  it("lists bounded effective occurrences and rejects oversized ranges", async () => {
+    const store = repository();
+    const service = new CalendarService(store, () => new Date(NOW));
+
+    const result = await service.listOccurrences(
+      USER_ID,
+      "2026-10-01T00:00:00.000Z",
+      "2026-10-31T00:00:00.000Z",
+    );
+    expect(result.status).toBe("success");
+    if (result.status === "success") {
+      expect(result.data[0]).toMatchObject({
+        originalStart: SERIES.startsAt,
+        seriesId: SERIES_ID,
+      });
+    }
+    expect(store.listExceptionsOwned).toHaveBeenCalledWith(USER_ID, [SERIES_ID]);
+    await expect(
+      service.listOccurrences(
+        USER_ID,
+        "2026-01-01T00:00:00.000Z",
+        "2027-01-03T00:00:00.000Z",
+      ),
+    ).resolves.toEqual({ code: "INVALID_INPUT", status: "error" });
+    await expect(
+      service.listOccurrences(USER_ID, "October 1, 2026", "2026-10-31T00:00:00.000Z"),
+    ).resolves.toEqual({ code: "INVALID_INPUT", status: "error" });
+  });
+
+  it("normalizes exception provider failures without leaking details", async () => {
+    const store = repository({
+      listExceptionsOwned: vi.fn().mockResolvedValue({
+        data: null,
+        errorCode: "private provider detail",
+      }),
+    });
+
+    const result = await new CalendarService(store).listOccurrences(
+      USER_ID,
+      "2026-10-01T00:00:00.000Z",
+      "2026-10-31T00:00:00.000Z",
+    );
+
+    expect(result).toEqual({ code: "STORAGE_UNAVAILABLE", status: "error" });
+    expect(JSON.stringify(result)).not.toContain("private provider detail");
+  });
+
+  it("rejects schedule rewrites that would orphan stored exceptions", async () => {
+    const store = repository({
+      listExceptionsOwned: vi.fn().mockResolvedValue({
+        data: [EXCEPTION],
+        errorCode: null,
+      }),
+    });
+
+    await expect(
+      new CalendarService(store).update(USER_ID, SERIES_ID, {
+        recurrenceRule: "FREQ=DAILY;COUNT=4",
+      }),
+    ).resolves.toEqual({ code: "INVALID_INPUT", status: "error" });
+    expect(store.updateOwned).not.toHaveBeenCalled();
   });
 
   it("fails closed for malformed actors and identifiers", async () => {

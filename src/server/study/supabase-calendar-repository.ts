@@ -3,15 +3,21 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
+  CalendarException,
   CalendarSeries,
   CalendarSeriesCreate,
   CalendarSeriesWriteUpdate,
 } from "./calendar-domain";
-import { calendarSeriesRecordSchema } from "./calendar-domain";
+import {
+  calendarExceptionRecordSchema,
+  calendarSeriesRecordSchema,
+} from "./calendar-domain";
 import type { CalendarRepository } from "./calendar-service";
 
 const CALENDAR_SERIES_COLUMNS =
   "id, subject_id, kind, title, starts_at, duration_minutes, timezone, recurrence_rule, location, professor, focus_text, notes_items, created_at, updated_at";
+const CALENDAR_EXCEPTION_COLUMNS =
+  "id, series_id, original_start, action, override_payload, created_at, updated_at";
 
 type CalendarSeriesRow = Readonly<{
   created_at: string;
@@ -27,6 +33,16 @@ type CalendarSeriesRow = Readonly<{
   subject_id: string;
   timezone: string;
   title: string;
+  updated_at: string;
+}>;
+
+type CalendarExceptionRow = Readonly<{
+  action: string;
+  created_at: string;
+  id: string;
+  original_start: string;
+  override_payload: unknown;
+  series_id: string;
   updated_at: string;
 }>;
 
@@ -51,6 +67,19 @@ function toCalendarSeries(row: CalendarSeriesRow): CalendarSeries | null {
     subjectId: row.subject_id,
     timezone: row.timezone,
     title: row.title,
+    updatedAt: row.updated_at,
+  });
+  return parsed.success ? parsed.data : null;
+}
+
+function toCalendarException(row: CalendarExceptionRow): CalendarException | null {
+  const parsed = calendarExceptionRecordSchema.safeParse({
+    action: row.action,
+    createdAt: row.created_at,
+    id: row.id,
+    originalStart: row.original_start,
+    overridePayload: row.override_payload,
+    seriesId: row.series_id,
     updatedAt: row.updated_at,
   });
   return parsed.success ? parsed.data : null;
@@ -96,6 +125,26 @@ export function createSupabaseCalendarRepository(
         ? { data: null, errorCode: "provider_error" }
         : {
             data: series as CalendarSeries[],
+            errorCode: errorCode(error),
+          };
+    },
+
+    async listExceptionsOwned(userId, seriesIds) {
+      if (seriesIds.length === 0) return { data: [], errorCode: null };
+      const { data, error } = await supabase
+        .from("calendar_exceptions")
+        .select(CALENDAR_EXCEPTION_COLUMNS)
+        .eq("user_id", userId)
+        .in("series_id", [...seriesIds])
+        .order("original_start", { ascending: true });
+      if (!data) return { data: null, errorCode: errorCode(error) };
+      const exceptions = (data as unknown as CalendarExceptionRow[]).map(
+        toCalendarException,
+      );
+      return exceptions.some((item) => item === null)
+        ? { data: null, errorCode: "provider_error" }
+        : {
+            data: exceptions as CalendarException[],
             errorCode: errorCode(error),
           };
     },

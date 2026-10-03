@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   calendarExceptionInputSchema,
+  calendarExceptionRecordSchema,
   calendarSeriesCreateInputSchema,
   calendarSeriesRecordSchema,
 } from "./calendar-domain";
@@ -99,6 +100,24 @@ describe("calendar session contracts", () => {
     ).toBe(false);
   });
 
+  it("accepts RFC 5545 recurrence values and rejects malformed rules", () => {
+    expect(
+      calendarSeriesCreateInputSchema.safeParse({
+        ...BASE,
+        recurrenceRule: "FREQ=WEEKLY;COUNT=3;BYDAY=MO",
+      }).success,
+    ).toBe(true);
+    expect(
+      calendarSeriesCreateInputSchema.safeParse({
+        ...BASE,
+        recurrenceRule: "FREQ=NEVER;COUNT=three",
+      }).success,
+    ).toBe(false);
+    for (const recurrenceRule of ["FREQ=DAILY;INTERVAL=0", "FREQ=DAILY;COUNT=-1", "FREQ=DAILY;DTSTART=20261001T000000Z", "FREQ=DAILY;COUNT=2;UNTIL=20261001T000000Z"]) {
+      expect(calendarSeriesCreateInputSchema.safeParse({ ...BASE, recurrenceRule }).success).toBe(false);
+    }
+  });
+
   it("rejects malformed repository records at the provider boundary", () => {
     const record = {
       ...BASE,
@@ -111,5 +130,27 @@ describe("calendar session contracts", () => {
       Object.entries(record).filter(([key]) => key !== "notesItems"),
     );
     expect(calendarSeriesRecordSchema.safeParse(withoutNotes).success).toBe(false);
+    expect(
+      calendarExceptionRecordSchema.safeParse({
+        action: "modified",
+        createdAt: record.createdAt,
+        id: "44444444-4444-4444-8444-444444444444",
+        originalStart: BASE.startsAt,
+        overridePayload: { location: "Room 401" },
+        seriesId: record.id,
+        updatedAt: record.updatedAt,
+      }).success,
+    ).toBe(true);
+    expect(
+      calendarExceptionRecordSchema.safeParse({
+        action: "cancelled",
+        createdAt: record.createdAt,
+        id: "not-an-id",
+        originalStart: BASE.startsAt,
+        overridePayload: {},
+        seriesId: record.id,
+        updatedAt: record.updatedAt,
+      }).success,
+    ).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RRule } from "rrule";
 
 const normalizedText = (maximum: number) =>
   z
@@ -36,7 +37,26 @@ const nullableRecurrenceRule = z
     const normalized = value.trim();
     return normalized.length === 0 ? null : normalized;
   })
-  .pipe(z.string().max(2048).nullable())
+  .pipe(
+    z
+      .string()
+      .max(2048)
+      .refine((value) => {
+        if (/[\r\n]/.test(value)) return false;
+        try {
+          const options = RRule.parseString(value);
+          if (options.freq == null || options.dtstart || options.tzid) return false;
+          if (options.count != null && options.until != null) return false;
+          if (options.interval != null && (!Number.isInteger(options.interval) || options.interval < 1)) return false;
+          if (options.count != null && (!Number.isInteger(options.count) || options.count < 1)) return false;
+          new RRule({ ...options, dtstart: new Date(0) });
+          return true;
+        } catch {
+          return false;
+        }
+      })
+      .nullable(),
+  )
   .nullable();
 
 const notesItemsSchema = z.array(normalizedText(500)).max(50);
@@ -161,6 +181,31 @@ export const calendarExceptionInputSchema = z.discriminatedUnion("action", [
     .strict(),
 ]);
 
+const exceptionRecordFields = {
+  createdAt: dateTimeSchema,
+  id: z.string().uuid(),
+  updatedAt: dateTimeSchema,
+};
+
+export const calendarExceptionRecordSchema = z.discriminatedUnion("action", [
+  z
+    .object({
+      ...exceptionIdentity,
+      ...exceptionRecordFields,
+      action: z.literal("cancelled"),
+      overridePayload: z.object({}).strict(),
+    })
+    .strict(),
+  z
+    .object({
+      ...exceptionIdentity,
+      ...exceptionRecordFields,
+      action: z.literal("modified"),
+      overridePayload: calendarOverridePayloadSchema,
+    })
+    .strict(),
+]);
+
 export type CalendarSessionKind = z.infer<typeof calendarSessionKindSchema>;
 export type CalendarSeriesCreate = z.infer<typeof calendarSeriesCreateInputSchema>;
 export type CalendarSeriesUpdate = z.infer<typeof calendarSeriesUpdateInputSchema>;
@@ -170,10 +215,4 @@ export type CalendarExceptionInput = z.infer<typeof calendarExceptionInputSchema
 
 export type CalendarSeries = Readonly<z.infer<typeof calendarSeriesRecordSchema>>;
 
-export type CalendarException = Readonly<
-  CalendarExceptionInput & {
-    createdAt: string;
-    id: string;
-    updatedAt: string;
-  }
->;
+export type CalendarException = Readonly<z.infer<typeof calendarExceptionRecordSchema>>;

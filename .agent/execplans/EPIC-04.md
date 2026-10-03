@@ -28,4 +28,6 @@ Moved/cancelled/overridden occurrences behave correctly; detail matches live des
 
 ## Progress
 
+- `04-02` complete on 2026-10-03: added bounded timezone-aware RRULE expansion, DST-preserved wall time, UTC UNTIL handling, canonical stable identities, modified/cancelled exception overlays and moved-in occurrences. `CalendarService.listOccurrences` validates ISO ranges up to 366 days and caps returned occurrences at 500; expansion limits historical evaluation to 10,000 candidates. Added validated owner-filtered exception repository reads and reject schedule rewrites when stored exceptions exist. All 23 focused calendar tests, full `pnpm check`, 42 pgTAP tests, Supabase advisors and dependency audit pass. UI wiring remains in subsequent stories.
+
 - `04-01` complete on 2026-10-02: added private typed session-series and stable occurrence-exception persistence with owner-aware foreign keys, least-privilege grants, full owner RLS, bounded Notes & Reminders, allowlisted override JSON, and query indexes; implemented validated Exam/University/Revision contracts, provider-neutral `CalendarService` CRUD/detail operations, and a Supabase repository adapter with provider-boundary record validation. All 13 focused tests, 42 full pgTAP tests, Supabase advisors, dependency audit, lint, typecheck, all 119 Vitest tests, and the production build pass.
