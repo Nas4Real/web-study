@@ -1,6 +1,6 @@
 import type { StudyResult } from "./study-domain";
 import { dateInputToEndOfDayIso } from "./task-date";
-import type { Task } from "./task-domain";
+import { taskCreateInputSchema, type Task } from "./task-domain";
 
 export type TaskActionState =
   | Readonly<{ code: "IDLE"; status: "idle" }>
@@ -68,6 +68,12 @@ export async function createTaskMutationHandler(
     return errorState("STORAGE_UNAVAILABLE");
   }
   if (!context) return errorState("UNAUTHENTICATED");
+  const priority = formData.get("priority") ?? "normal";
+  const subtasks = formData.getAll("subtaskTitle").map(title => ({ title }));
+  if (!taskCreateInputSchema.shape.priority.safeParse(priority).success ||
+      !taskCreateInputSchema.shape.subtasks.safeParse(subtasks).success) {
+    return errorState("INVALID_INPUT");
+  }
   const dueDate = textField(formData, "dueDate");
   const dueAt = dueDate
     ? dateInputToEndOfDayIso(dueDate, context.timeZone)
@@ -78,10 +84,10 @@ export async function createTaskMutationHandler(
     result = await context.taskService.create(context.actorId, {
       description: textField(formData, "description"),
       dueAt,
-      priority: "normal",
+      priority,
       status: "pending",
       subjectId: textField(formData, "subjectId"),
-      subtasks: [],
+      subtasks,
       title: textField(formData, "title"),
     });
   } catch {

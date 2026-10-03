@@ -107,7 +107,10 @@ function taskRepository(scope: string): TaskRepository {
         priority: input.priority,
         status: "pending",
         subjectId: input.subjectId,
-        subtasks: [],
+        subtasks: input.subtasks.map((subtask, position) => ({
+          completedAt: null, createdAt: now, id: randomUUID(), position,
+          title: subtask.title, updatedAt: now,
+        })),
         title: input.title,
         updatedAt: now,
       };

@@ -38,6 +38,40 @@ function context(): TaskActionContext {
 }
 
 describe("task mutation handlers", () => {
+  it("passes high priority and ordered authoring subtasks to the shared service", async () => {
+    const requestContext = context();
+    const formData = new FormData();
+    formData.set("title", "Prepare exam");
+    formData.set("subjectId", SUBJECT_ID);
+    formData.set("priority", "high");
+    formData.append("subtaskTitle", " Review notes ");
+    formData.append("subtaskTitle", "Solve exercises");
+
+    expect(await createTaskMutationHandler(async () => requestContext, formData))
+      .toMatchObject({ status: "success" });
+    expect(requestContext.taskService.create).toHaveBeenCalledWith(ACTOR_ID,
+      expect.objectContaining({ priority: "high", dueAt: null,
+        subtasks: [{ title: " Review notes " }, { title: "Solve exercises" }] }));
+  });
+
+  it.each(["invalid priority", "file priority", "file subtask", "too many subtasks", "blank subtask", "long subtask"])(
+    "rejects %s before calling the mutation service", async (invalid) => {
+      const requestContext = context();
+      const formData = new FormData();
+      formData.set("title", "Prepare exam");
+      formData.set("subjectId", SUBJECT_ID);
+      if (invalid === "invalid priority") formData.set("priority", "urgent");
+      if (invalid === "file priority") formData.set("priority", new Blob(["high"]), "priority.txt");
+      if (invalid === "file subtask") formData.append("subtaskTitle", new Blob(["notes"]), "notes.txt");
+      if (invalid === "too many subtasks") for (let i = 0; i < 101; i++) formData.append("subtaskTitle", "Notes");
+      if (invalid === "blank subtask") formData.append("subtaskTitle", "   ");
+      if (invalid === "long subtask") formData.append("subtaskTitle", "x".repeat(301));
+      expect(await createTaskMutationHandler(async () => requestContext, formData))
+        .toMatchObject({ code: "INVALID_INPUT", status: "error" });
+      expect(requestContext.taskService.create).not.toHaveBeenCalled();
+    },
+  );
+
   it("authenticates, converts form input, and delegates creation to TaskService", async () => {
     const requestContext = context();
     const resolveContext = vi.fn().mockResolvedValue(requestContext);
