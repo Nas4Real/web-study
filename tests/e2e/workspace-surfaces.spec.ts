@@ -100,9 +100,16 @@ test.describe("workspace surfaces", () => {
     await page.getByRole("button", { name: "Open Complete Chapter 4 Exercises" }).click();
     await expect(page.getByRole("dialog", { name: "Complete Chapter 4 Exercises" })).toBeVisible();
     await hideNextDevTools(page);
-    await expect(page).toHaveScreenshot("task-details-1440x1200.png", {
+    // Preserve the original approved fixture image; canonical text/dates now replace its hardcoded content.
+    await expect(page.getByRole("dialog").getByText("Due Yesterday, 11:59 PM", { exact: true })).toBeVisible();
+    await expect(page).toHaveScreenshot("task-details-canonical-1440x1200.png", {
       animations: "disabled",
       fullPage: true,
+    });
+    await page.getByRole("dialog").getByRole("button", { name: "Delete Task", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: "Delete task?", exact: true })).toBeVisible();
+    await expect(page).toHaveScreenshot("task-delete-confirmation-1440x1200.png", {
+      animations: "disabled", fullPage: true,
     });
   });
 

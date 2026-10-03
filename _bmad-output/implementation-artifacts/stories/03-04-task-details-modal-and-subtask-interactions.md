@@ -53,3 +53,13 @@ TaskDetail DTO/query, dialog component/behavior, task/subtask service methods, q
 
 - User rejected the repaired draft's pink palette. Exact main-live Task Details DOM and design-system v10 were inspected; use main-live evidence rather than the obsolete standalone overlay styling.
 - Revised same-project preview: https://p.superdesign.dev/draft/fec4830f-529a-41e3-a71d-1d45afa12c0e. Computed browser styles verify #101012 surface, #2a2a2e border, Poppins, and neutral primary #f4f4f5 / #09090b. Pink is removed from confirmation; red is a small destructive cue. No approved main-draft or app styling changes. Await user review before porting.
+
+## Tasks integration checkpoint
+
+- User continued after the revised preview; the earlier review waits are superseded. Ported only the revised neutral confirmation, leaving approved main screens unchanged.
+- Tasks opens the selected canonical task rather than a fixture. The per-mounted-surface TanStack Query cache synchronizes complete/reopen and independent subtasks, snapshots optimistic state, and rolls back failed requests. Mutation callbacks capture the explicit task ID; a synchronous guard prevents concurrent rollback races.
+- Confirmation deletion waits for server success before removing the task. Nested dialog Escape/Cancel restores Delete focus; normal closure restores the task invoker, including recreated DOM nodes. Reference-counted background isolation and scroll locking release when both layers unmount together.
+- Added four optimistic/timezone projection tests and three browser tests covering canonical selection, persistence, parent/subtask independence, confirmation, cleanup and transport rollback. Focused E2E, full `pnpm check` and full `pnpm test:e2e` pass after the final cleanup change.
+- Pinned `@tanstack/react-query` 5.104.1 with only query-core added transitively; MIT, React 19 compatible, production audit clean. No new persistence or authorization rules.
+- Original approved fixture baseline retained unchanged. New separately named canonical-content and delete-confirmation images were manually compared; due date/description come from stored data rather than hardcoded demo prose. Existing Tasks/New Task baselines still pass unchanged.
+- Story remains in-progress: supported Dashboard task/assignment launch surfaces and shared mutation synchronization are the next slice. Completion count remains 17/45.

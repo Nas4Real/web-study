@@ -40,7 +40,7 @@ function dateDistance(left: string, right: string) {
   );
 }
 
-function dueLabel(task: Task, timeZone: string, now: Date) {
+export function taskDueLabel(task: Pick<Task, "dueAt">, timeZone: string, now: Date) {
   if (task.dueAt === null) return "No due date";
   const due = new Date(task.dueAt);
   const distance = dateDistance(dateKey(due, timeZone), dateKey(now, timeZone));
@@ -78,7 +78,7 @@ export function toTaskListViewModel(
       const subject = subjectsById.get(task.subjectId);
       return {
         description: task.description ?? "",
-        dueLabel: dueLabel(task, timeZone, now),
+        dueLabel: taskDueLabel(task, timeZone, now),
         group,
         id: task.id,
         status: task.status,

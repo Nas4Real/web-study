@@ -38,6 +38,12 @@ function initialTasks(): Task[] {
       description: "Finish all odd-numbered problems before the next tutorial session.",
       dueAt: "2026-10-01T22:59:00.000Z",
       id: "20000000-0000-4000-8000-000000000001",
+      priority: "high",
+      subtasks: [
+        { id: "30000000-0000-4000-8000-000000000001", title: "Review lecture notes", position: 0, completedAt: "2026-10-01T08:00:00.000Z", createdAt: base.createdAt, updatedAt: base.updatedAt },
+        { id: "30000000-0000-4000-8000-000000000002", title: "Solve problems 1–15", position: 1, completedAt: null, createdAt: base.createdAt, updatedAt: base.updatedAt },
+        { id: "30000000-0000-4000-8000-000000000003", title: "Write down proofs for integrals", position: 2, completedAt: null, createdAt: base.createdAt, updatedAt: base.updatedAt },
+      ],
       subjectId: SUBJECTS[0].id,
       title: "Complete Chapter 4 Exercises",
     },
@@ -126,8 +132,11 @@ function taskRepository(scope: string): TaskRepository {
         ? save({ ...task, completedAt, status, updatedAt: new Date().toISOString() })
         : { data: null, errorCode: null };
     },
-    async toggleSubtaskOwned() {
-      return { data: null, errorCode: null };
+    async toggleSubtaskOwned(_userId, taskId, subtaskId, completedAt) {
+      const task = find(taskId);
+      if (!task?.subtasks.some(subtask => subtask.id === subtaskId)) return { data: null, errorCode: null };
+      const now = new Date().toISOString();
+      return save({ ...task, updatedAt: now, subtasks: task.subtasks.map(subtask => subtask.id === subtaskId ? { ...subtask, completedAt, updatedAt: now } : subtask) });
     },
     async updateOwned(_userId, taskId, input) {
       const task = find(taskId);

@@ -20,9 +20,9 @@ const emptyGroups: TaskGroups = {
   today: [],
 };
 
-export async function loadTaskPageData(): Promise<TaskPageData> {
+export async function loadTaskPageData(requestedScope?: string): Promise<TaskPageData> {
   try {
-    const context = await resolveTaskRequestContext();
+    const context = await resolveTaskRequestContext(requestedScope);
     if (!context) {
       return {
         errorCode: "UNAUTHENTICATED",
