@@ -24,7 +24,7 @@ export type TaskRequestContext = Readonly<{
   timeZone: string;
 }>;
 
-async function e2eScope() {
+async function e2eScope(requestedScope?: string) {
   const requestHeaders = await headers();
   const authenticated = isE2eAuthenticatedRequest({
     configuredToken: process.env.WEB_STUDY_E2E_AUTH_TOKEN,
@@ -32,6 +32,7 @@ async function e2eScope() {
     requestToken: requestHeaders.get("x-web-study-e2e-auth"),
   });
   if (!authenticated) return null;
+  if (requestedScope) return requestedScope.slice(0, 120);
   const referer = requestHeaders.get("referer");
   if (!referer) return "visual-baseline";
   try {
@@ -43,11 +44,11 @@ async function e2eScope() {
   }
 }
 
-export async function resolveTaskRequestContext(): Promise<TaskRequestContext | null> {
+export async function resolveTaskRequestContext(requestedScope?: string): Promise<TaskRequestContext | null> {
   const actor = await getVerifiedActor();
   if (!actor) return null;
 
-  const scope = await e2eScope();
+  const scope = await e2eScope(requestedScope);
   let profileService: ProfileService;
   let subjectService: SubjectService;
   let taskService: TaskService;

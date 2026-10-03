@@ -1,7 +1,7 @@
 # Story 03-03: Dashboard derived queries
 
 Epic: epic-03
-Status: ready-for-dev
+Status: done
 Dependencies: 03-01,04-02
 
 ## Purpose
@@ -47,3 +47,12 @@ Query/service tests, dashboard E2E.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion evidence — 2026-10-03
+
+- Added a derived DashboardService using the canonical actor-scoped task, subject and effective calendar-occurrence services; no new persistence or schema changes.
+- Counts exclude Someday; progress, upcoming tasks, next exam/session, today's university classes and month markers use the profile timezone. Calendar expansion uses one bounded query, with deterministic instant-based ordering.
+- Authenticated server rendering supplies the existing approved components. Production does not use screenshot fixtures or E2E repositories. Empty selections do not substitute demo data; failures return normalized errors without partial private data.
+- Nine focused service/projection tests cover timezone boundaries, effective overrides, empty data, invalid actors/timezones, offset ordering and provider errors.
+- `pnpm check` passed (lint, typecheck, full unit suite and production build); all 53 Playwright tests passed, including dashboard creation/read integration, clean browser console, responsive checks and unchanged approved screenshot baselines.
+- Manually inspected the derived-dashboard screenshot. Detail interactions remain scoped to stories 03-04 and 04-06; authoring extensions remain scoped to 03-05.

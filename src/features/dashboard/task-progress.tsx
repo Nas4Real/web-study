@@ -23,7 +23,7 @@ export function TaskProgress({ completed, tasks }: { completed: number; tasks: r
           </span>
         </div>
         <div className="mt-4 h-1 overflow-hidden rounded-full bg-border-base">
-          <div className="h-full w-1/3 rounded-full bg-mechanics shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+          <div className="h-full rounded-full bg-mechanics shadow-[0_0_8px_rgba(59,130,246,0.5)]" style={{ width: `${tasks.length ? completed / tasks.length * 100 : 0}%` }} />
         </div>
         <ul className="mt-8 space-y-3">
           {tasks.map((task) => (
