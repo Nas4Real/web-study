@@ -1,7 +1,7 @@
 # Story 03-04: Task Details modal and subtask interactions
 
 Epic: epic-03
-Status: ready-for-dev
+Status: in-progress
 Dependencies: 03-01,03-02,01-05
 
 ## Purpose
@@ -34,3 +34,11 @@ TaskDetail DTO/query, dialog component/behavior, task/subtask service methods, q
 5. Delete uses approved destructive flow and removes detail/list/dashboard state.
 6. Another user cannot GET/mutate task or subtask by guessed ID.
 7. Visual comparison matches approved Task Details.
+
+## Implementation checkpoint — 2026-10-03
+
+- Added canonical detail projection and strict complete/reopen/delete/subtask commands, delegating to existing actor-owned task services.
+- Added verified-request handlers and server actions with safe errors and Tasks/Dashboard revalidation. Subject metadata is resolved before mutation to avoid reporting a committed write as a failed read.
+- Fourteen focused service/handler tests passed, including foreign-ID denial, malformed commands, independent subtasks, parent completion/reopening, deletion and provider failure. Full `pnpm check` passed (lint, typecheck, unit tests, production build).
+- Backend-only checkpoint: actions are not yet connected to the UI. Story is not complete; shared modal/cache integration, optimistic rollback, focus/inert behavior and E2E/visual verification remain.
+- Live Delete Task only closes the detail dialog. Created a separate same-project confirmation draft: https://p.superdesign.dev/draft/856f365f-b044-4db2-bfae-2cd0af7a1901 (original approved drafts unchanged). Browser inspection found malformed generated Tailwind configuration and incomplete underlying detail content; this draft is not approved or suitable to port. Repair and review it before implementing confirmation.
