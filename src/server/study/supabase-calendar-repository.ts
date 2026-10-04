@@ -124,21 +124,16 @@ export function createSupabaseCalendarRepository(
   supabase: SupabaseClient,
 ): CalendarRepository {
   return {
-    async saveExceptionOwned(userId, input) {
-      // ON CONFLICT upsert would also UPDATE immutable identity columns, which
-      // intentionally lack UPDATE grants. Retry only the mutable fields instead.
-      let result = await supabase.from("calendar_exceptions").insert({
-        user_id: userId, series_id: input.seriesId, original_start: input.originalStart,
-        action: input.action, override_payload: translateOverride(input.overridePayload, true),
+    async saveExceptionOwned(userId, input, expectedSchedule) {
+      // Invoker RPC locks the owned master and checks the validated schedule in
+      // the same transaction as the mutable-only insert/conflict update.
+      const result = await supabase.rpc("save_calendar_exception", {
+        p_user_id: userId, p_series_id: input.seriesId, p_original_start: input.originalStart,
+        p_action: input.action, p_override_payload: translateOverride(input.overridePayload, true),
+        p_expected_starts_at: expectedSchedule.startsAt,
+        p_expected_timezone: expectedSchedule.timezone,
+        p_expected_recurrence_rule: expectedSchedule.recurrenceRule,
       }).select(CALENDAR_EXCEPTION_COLUMNS).maybeSingle();
-      if (errorCode(result.error) === "23505") {
-        let update = supabase.from("calendar_exceptions")
-          .update({ action: input.action, override_payload: translateOverride(input.overridePayload, true) })
-          .eq("user_id", userId).eq("series_id", input.seriesId).eq("original_start", input.originalStart);
-        // Cancellation wins over a stale edit, including a concurrent insert race.
-        if (input.action === "modified") update = update.neq("action", "cancelled");
-        result = await update.select(CALENDAR_EXCEPTION_COLUMNS).maybeSingle();
-      }
       const row = result.data as unknown as CalendarExceptionRow | null;
       const data = row ? toCalendarException(row) : null;
       return { data, errorCode: errorCode(result.error) ?? (row && !data ? "provider_error" : null) };

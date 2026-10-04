@@ -26,8 +26,10 @@ import {
   expandCalendarOccurrences,
 } from "./calendar-recurrence";
 
+export type CalendarSchedule = Pick<CalendarSeries, "startsAt" | "timezone" | "recurrenceRule">;
+
 export type CalendarRepository = Readonly<{
-  saveExceptionOwned(userId: string, input: CalendarExceptionInput): Promise<RepositoryResult<CalendarException>>;
+  saveExceptionOwned(userId: string, input: CalendarExceptionInput, expectedSchedule: CalendarSchedule): Promise<RepositoryResult<CalendarException>>;
   createOwned(
     userId: string,
     input: CalendarSeriesCreate,
@@ -50,6 +52,7 @@ export type CalendarRepository = Readonly<{
 }>;
 
 function repositoryError(errorCode: string | null) {
+  if (errorCode === "23514") return INVALID_INPUT;
   if (
     errorCode === "23503" ||
     errorCode === "foreign_key_violation" ||
@@ -244,7 +247,7 @@ export class CalendarService {
         if (!effective.success) return INVALID_INPUT;
         write = { ...write, overridePayload };
       }
-      const result = await this.repository.saveExceptionOwned(actor.data, write);
+      const result = await this.repository.saveExceptionOwned(actor.data, write, existing.data);
       if (result.errorCode) return repositoryError(result.errorCode);
       return result.data ? { status: "success", data: result.data } : NOT_FOUND;
     } catch (error) {

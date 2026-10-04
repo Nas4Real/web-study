@@ -46,8 +46,13 @@ export function createE2eCalendarRepository(scope = "visual-baseline"): Calendar
   return {
     async listOwned(userId) { return { data: structuredClone(storeFor(userId)), errorCode: null }; },
     async listExceptionsOwned(userId, seriesIds) { return { data: structuredClone(exceptionsFor(userId).filter(item => seriesIds.includes(item.seriesId) && storeFor(userId).some(series => series.id === item.seriesId))), errorCode: null }; },
-    async saveExceptionOwned(userId, input) {
-      if (!storeFor(userId).some(series => series.id === input.seriesId)) return { data: null, errorCode: "23503" };
+    async saveExceptionOwned(userId, input, expectedSchedule) {
+      const master = storeFor(userId).find(series => series.id === input.seriesId);
+      if (!master) return { data: null, errorCode: "23503" };
+      if (!master.recurrenceRule || new Date(master.startsAt).getTime() !== new Date(expectedSchedule.startsAt).getTime()
+        || master.timezone !== expectedSchedule.timezone || master.recurrenceRule !== expectedSchedule.recurrenceRule) {
+        return { data: null, errorCode: "23514" };
+      }
       const exceptions = exceptionsFor(userId);
       const index = exceptions.findIndex(item => item.seriesId === input.seriesId && item.originalStart === input.originalStart);
       const previous = exceptions[index];
@@ -70,6 +75,13 @@ export function createE2eCalendarRepository(scope = "visual-baseline"): Calendar
       const series = storeFor(userId);
       const index = series.findIndex(item => item.id === seriesId);
       if (index < 0) return { data: null, errorCode: null };
+      const existing = series[index];
+      const scheduleChanged = (input.startsAt !== undefined && new Date(input.startsAt).getTime() !== new Date(existing.startsAt).getTime())
+        || (input.timezone !== undefined && input.timezone !== existing.timezone)
+        || (input.recurrenceRule !== undefined && input.recurrenceRule !== existing.recurrenceRule);
+      if (scheduleChanged && exceptionsFor(userId).some(item => item.seriesId === seriesId)) {
+        return { data: null, errorCode: "23514" };
+      }
       const subjects = await createE2eStudyRepositories(scope).subjectRepository.listOwned(userId);
       if (!subjects.data?.some(subject => subject.id === input.subjectId)) return { data: null, errorCode: "23503" };
       series[index] = { ...series[index], ...structuredClone(input), updatedAt: new Date().toISOString() };

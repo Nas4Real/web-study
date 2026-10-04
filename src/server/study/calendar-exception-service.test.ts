@@ -32,6 +32,31 @@ async function occurrences(service: CalendarService, id: string) {
 }
 
 describe("owned occurrence mutations", () => {
+  it("rejects a stale occurrence write when a schedule change wins after validation", async () => {
+    const { service, repository, id } = await setup();
+    const save = repository.saveExceptionOwned.bind(repository);
+    vi.spyOn(repository, "saveExceptionOwned").mockImplementation(async (actor, input, schedule) => {
+      expect((await service.update(actor, id, { startsAt: "2026-10-06T08:00:00Z" })).status).toBe("success");
+      return save(actor, input, schedule);
+    });
+    expect(await service.saveException(ACTOR, { action: "cancelled", seriesId: id, originalStart: ORIGINAL }))
+      .toEqual({ status: "error", code: "INVALID_INPUT" });
+    expect((await repository.listExceptionsOwned(ACTOR, [id])).data).toEqual([]);
+  });
+
+  it("blocks a schedule rewrite when an exception wins after the service precheck", async () => {
+    const { service, repository, id } = await setup();
+    const update = repository.updateOwned.bind(repository);
+    const series = (await repository.findOwned(ACTOR, id)).data!;
+    vi.spyOn(repository, "updateOwned").mockImplementation(async (actor, seriesId, input) => {
+      await repository.saveExceptionOwned(actor, { action: "cancelled", seriesId, originalStart: ORIGINAL, overridePayload: {} }, series);
+      return update(actor, seriesId, input);
+    });
+    expect(await service.update(ACTOR, id, { startsAt: "2026-10-06T08:00:00Z" }))
+      .toEqual({ status: "error", code: "INVALID_INPUT" });
+    expect((await repository.findOwned(ACTOR, id)).data?.startsAt).toEqual(series.startsAt);
+  });
+
   it("moves one occurrence while preserving its identity and siblings after readback", async () => {
     const { service, id, scope } = await setup();
     const result = await service.saveException(ACTOR, {
@@ -100,9 +125,9 @@ describe("owned occurrence mutations", () => {
   it("does not resurrect an occurrence if cancellation wins a concurrent edit", async () => {
     const { service, repository, id } = await setup();
     const save = repository.saveExceptionOwned.bind(repository);
-    vi.spyOn(repository, "saveExceptionOwned").mockImplementation(async (actor, input) => {
-      await save(actor, { action: "cancelled", seriesId: id, originalStart: ORIGINAL, overridePayload: {} });
-      return save(actor, input);
+    vi.spyOn(repository, "saveExceptionOwned").mockImplementation(async (actor, input, schedule) => {
+      await save(actor, { action: "cancelled", seriesId: id, originalStart: ORIGINAL, overridePayload: {} }, schedule);
+      return save(actor, input, schedule);
     });
     expect(await service.saveException(ACTOR, { action: "modified", seriesId: id, originalStart: ORIGINAL, overridePayload: { title: "Racing edit" } })).toEqual({ status: "error", code: "NOT_FOUND" });
     expect(await occurrences(service, id)).toHaveLength(2);

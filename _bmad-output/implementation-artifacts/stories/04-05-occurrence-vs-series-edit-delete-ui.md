@@ -62,6 +62,15 @@ E2E modify/cancel one occurrence vs series.
 - Remaining before story acceptance: atomic reconciliation of whole-series schedule changes with concurrent exception insertion, authenticated action adapter, approved edit authoring reference, scope/UI wiring and actual occurrence-versus-series mutation E2E proof. Application-level read/check alone does not serialize the schedule race; concurrent partial overrides remain last-write-wins.
 - Story remains in-progress; 21/45 complete, 24 remaining.
 
+## Atomicity checkpoint — 2026-10-04
+
+- Reproduced schedule-wins and exception-wins races with failing service tests. The repository now receives the exact validated master schedule; an invoker RPC locks the owned master, compares that snapshot and persists the exception in one transaction. SQL check violations map to stable `INVALID_INPUT` rather than provider messages.
+- Added schedule-guard and parent-lock triggers so persisted exceptions prevent unsafe schedule rewrites and direct inserts also serialize. Preserved owner RLS/FKs, prior negative-test errors, immutable identity grants, metadata edits and cancellation-wins semantics. No SECURITY DEFINER, table grant widening or data rewrite.
+- Created and replayed local migration `20261004124427_calendar_mutation_serialization.sql`; local history matches. Data-preserving rollback and migration-before-adapter deployment order are documented in the recurrence contract. Replay removed/recreated only the new triggers/functions, not stored data.
+- All 343 unit tests/build in `pnpm check`, all 62 database assertions, three real two-connection lock tests and all 96 browser tests pass. Supabase advisors report no issues; production audit is clean. Existing UI and visual baselines remain unchanged. Known development-server aborted/stream-closed diagnostics remain observed.
+- Five-axis review covers schedule identity, race ordering, existing service/repository layering, ownership/ACLs and short parent-first transactions. Partial metadata/override modifications remain last-write-wins, not general optimistic versioning.
+- Remaining: authenticated action/context integration, approved edit authoring state, scope/UI wiring and actual occurrence/series mutation E2E acceptance. Story remains in-progress; 21/45 done, 24 remaining.
+
 ## Done when
 
 - acceptance behavior matches PRD and engineering contract
