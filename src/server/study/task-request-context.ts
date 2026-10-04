@@ -18,6 +18,7 @@ import { TaskService } from "./task-service";
 
 export type TaskRequestContext = Readonly<{
   actorId: string;
+  displayName: string;
   now: () => Date;
   subjectService: SubjectService;
   taskService: TaskService;
@@ -70,6 +71,7 @@ export async function resolveTaskRequestContext(requestedScope?: string): Promis
   if (profile.status === "error") throw new Error(profile.code);
   return {
     actorId: actor.userId,
+    displayName: profile.data.displayName,
     now: scope
       ? () => new Date("2026-10-02T10:00:00.000Z")
       : () => new Date(),

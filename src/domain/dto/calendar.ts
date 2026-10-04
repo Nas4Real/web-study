@@ -67,6 +67,7 @@ export interface CalendarMonthCellDTO {
   outsideMonth: boolean;
   isToday: boolean;
   event: Pick<CalendarVisualEventDTO, "title" | "tone" | "inProgress"> | null;
+  events?: readonly CalendarVisualEventDTO[];
 }
 
 export interface CalendarViewFixtureDTO {
@@ -75,4 +76,11 @@ export interface CalendarViewFixtureDTO {
   weekDays: readonly CalendarWeekDayDTO[];
   daySections: readonly CalendarDaySectionDTO[];
   monthCells: readonly CalendarMonthCellDTO[];
+}
+
+export interface CalendarPageDataDTO extends CalendarViewFixtureDTO {
+  date: string;
+  view: CalendarView;
+  fixture: boolean;
+  subjects: readonly SubjectSummaryDTO[];
 }

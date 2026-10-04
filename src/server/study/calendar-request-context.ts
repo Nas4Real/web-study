@@ -16,6 +16,7 @@ export async function resolveCalendarRequestContext(requestedScope?: string) {
     : createSupabaseCalendarRepository(await createClient());
   return {
     actorId: context.actorId, now: context.now,
+    displayName: context.displayName,
     taskService: context.taskService,
     subjectService: context.subjectService, timeZone: context.timeZone,
     calendarService: new CalendarService(repository, context.now),
