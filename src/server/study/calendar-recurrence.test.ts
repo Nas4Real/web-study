@@ -44,6 +44,16 @@ function exception(
 }
 
 describe("calendar recurrence expansion", () => {
+  it("skips nonexistent local times without consuming COUNT", () => {
+    const occurrences = expandCalendarOccurrences({
+      ...SERIES, startsAt: "2026-03-01T07:30:15.250Z", timezone: "America/New_York",
+      recurrenceRule: "FREQ=WEEKLY;COUNT=3",
+    }, [], { from: new Date("2026-03-01T00:00:00Z"), to: new Date("2026-04-01T00:00:00Z") }, new Date("2026-02-01T00:00:00Z"));
+    expect(occurrences.map(event => event.startsAt)).toEqual([
+      "2026-03-01T07:30:15.250Z", "2026-03-15T06:30:15.250Z", "2026-03-22T06:30:15.250Z",
+    ]);
+  });
+
   it("includes moved-in occurrences and leaves siblings and the master unchanged", () => {
     const occurrences = expandCalendarOccurrences(SERIES, [exception({
       originalStart: "2026-10-12T08:00:00+00:00",

@@ -1,7 +1,7 @@
 # Story 04-04: Recurring session creation UI
 
 Epic: epic-04
-Status: ready-superdesign-first
+Status: in-progress
 Dependencies: 04-02
 
 ## Purpose
@@ -42,6 +42,14 @@ Before coding this UI, inspect the live Web Study Superdesign project. If the re
 ## Test plan
 
 Visual + recurrence E2E after unblock.
+
+## Reference checkpoint — 2026-10-04
+
+- Main live draft remains v96 with no recurrence controls.
+- Same-project recurrence authoring reference: https://p.superdesign.dev/draft/74ce705b-0f0d-4a89-bd7e-36b09841a650 (v2; approved by the subsequent continue).
+- Reuses approved form styling and mobile reflow; adds daily/weekly/monthly interval, weekly weekdays and end conditions. Production default remains Does not repeat.
+- Desktop/mobile prototype inspection confirms control switching, 320px horizontal containment, footer reachability, focus wrapping and Escape restoration. This is reference-only verification, not persisted recurrence acceptance.
+- Backend checkpoint: structured settings now flow through the existing trusted action/service; malformed/duplicate/File input is rejected. Created rules pass monthly/end-date/fold readback tests; recurrence expansion now uses deterministic fold/gap semantics. `pnpm check` passes (330 tests/build) and LA/Tokyo focused checks pass. Approved UI integration and complete browser gates remain. No schema, dependency or screenshot baseline changed.
 
 ## Done when
 

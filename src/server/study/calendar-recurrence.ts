@@ -1,5 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 import { RRule } from "rrule";
+import { sessionDateTimeToIso } from "./calendar-date";
 
 import type {
   CalendarException,
@@ -45,17 +46,10 @@ function toFloating(date: Date, timezone: string) {
 }
 
 function fromFloating(date: Date, timezone: string) {
-  const zoned = new TZDate(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    date.getUTCHours(),
-    date.getUTCMinutes(),
-    date.getUTCSeconds(),
-    date.getUTCMilliseconds(),
-    timezone,
-  );
-  return new Date(zoned.getTime());
+  const civil = date.toISOString();
+  const instant = sessionDateTimeToIso(civil.slice(0, 10), civil.slice(11, 16), timezone);
+  // Reuse creation's deterministic earliest-fold/gap-rejection policy.
+  return instant ? new Date(new Date(instant).getTime() + date.getUTCSeconds() * 1000 + date.getUTCMilliseconds()) : null;
 }
 
 function createRule(series: CalendarSeries) {
@@ -65,10 +59,13 @@ function createRule(series: CalendarSeries) {
   if (options.until && /UNTIL=\d{8}T\d{6}Z/.test(series.recurrenceRule)) {
     options.until = toFloating(options.until, series.timezone);
   }
-  return new RRule({
-    ...options,
-    dtstart: toFloating(new Date(series.startsAt), series.timezone),
-  });
+  return {
+    count: options.count ?? null,
+    rule: new RRule({
+      ...options, count: null,
+      dtstart: toFloating(new Date(series.startsAt), series.timezone),
+    }),
+  };
 }
 
 function effectiveOccurrence(
@@ -121,10 +118,15 @@ export function expandCalendarOccurrences(
     });
     const latest = Math.max(range.to.getTime(), ...movedIn.map(([start]) => new Date(start).getTime()));
     const movedInStarts = new Set(movedIn.map(([start]) => start));
-    rule.all((floating, evaluated) => {
-      const start = fromFloating(floating, series.timezone);
-      if (start.getTime() > latest) return false;
+    let validCount = 0;
+    rule.rule.all((floating, evaluated) => {
+      if (rule.count !== null && validCount >= rule.count) return false;
       if (evaluated >= MAX_EVALUATED_OCCURRENCES) throw new CalendarExpansionLimitError();
+      const start = fromFloating(floating, series.timezone);
+      // RFC 5545: nonexistent local times are ignored and do not consume COUNT.
+      if (!start) return true;
+      if (start.getTime() > latest) return false;
+      validCount += 1;
       const originalStart = start.toISOString();
       if ((start >= range.from && start < range.to) || movedInStarts.has(originalStart)) {
         originalStarts.add(originalStart);

@@ -1,4 +1,5 @@
 import { sessionDateTimeToIso } from "./calendar-date";
+import { parseRecurrenceForm } from "./calendar-recurrence-form";
 import type { CalendarSeries } from "./calendar-domain";
 import type { StudyResult } from "./study-domain";
 
@@ -31,7 +32,8 @@ export async function createSessionMutationHandler(
   try {
     const context = await resolveContext();
     if (!context) return error("UNAUTHENTICATED");
-    const fields = ["kind", "title", "subjectId", "date", "startTime", "durationMinutes", "location", "professor", "focusText"] as const;
+    const fields = ["kind", "title", "subjectId", "date", "startTime", "durationMinutes", "location", "professor", "focusText",
+      "repeatFrequency", "repeatInterval", "repeatEnd", "repeatCount", "repeatUntil"] as const;
     const values: Partial<Record<typeof fields[number], string>> = {};
     for (const name of fields) {
       const entries = formData.getAll(name);
@@ -40,6 +42,8 @@ export async function createSessionMutationHandler(
     }
     const startsAt = sessionDateTimeToIso(values.date ?? "", values.startTime ?? "", context.timeZone);
     if (!startsAt) return error("INVALID_INPUT");
+    const recurrence = parseRecurrenceForm(values, formData.getAll("repeatWeekday"), context.timeZone);
+    if (!recurrence.success) return error("INVALID_INPUT");
     const result = await context.calendarService.create(context.actorId, {
       kind: values.kind, title: values.title, subjectId: values.subjectId, startsAt,
       timezone: context.timeZone,
@@ -47,7 +51,7 @@ export async function createSessionMutationHandler(
       location: values.location ?? null,
       professor: values.professor ?? null,
       focusText: values.focusText ?? null,
-      recurrenceRule: null, notesItems: [],
+      recurrenceRule: recurrence.rule, notesItems: [],
     });
     if (result.status === "success") return { code: "SESSION_CREATED", status: "success" };
     if (result.code === "INVALID_ACTOR") return error("UNAUTHENTICATED");
