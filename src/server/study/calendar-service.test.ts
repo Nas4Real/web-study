@@ -51,6 +51,7 @@ const CREATE_INPUT = {
 
 function repository(overrides: Partial<CalendarRepository> = {}): CalendarRepository {
   return {
+    saveExceptionOwned: vi.fn().mockResolvedValue({ data: EXCEPTION, errorCode: null }),
     createOwned: vi.fn().mockResolvedValue({ data: SERIES, errorCode: null }),
     deleteOwned: vi.fn().mockResolvedValue({ data: true, errorCode: null }),
     findOwned: vi.fn().mockResolvedValue({ data: SERIES, errorCode: null }),

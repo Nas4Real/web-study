@@ -25,6 +25,14 @@ Session Details must call/derive the effective occurrence, not read `calendar_se
 
 Write `action='modified'` with an allowlisted override payload. Payload may override the fields supported by the product, including `notes_items`. Never store arbitrary client JSON without schema validation.
 
+`CalendarService.saveException(actorId, input)` validates the owned master and generated original-start membership before accepting a modification/cancellation. It canonicalizes identity to UTC, validates the merged effective fields against the stored session kind, and merges partial modifications with an existing override. One-time sessions use series mutation instead. A cancelled occurrence cannot be silently restored by an edit; repeated cancellation succeeds without adding another exception.
+
+Domain overrides use camelCase; the Supabase adapter translates `startsAt`, `durationMinutes`, `focusText` and `notesItems` to/from the database JSON keys `starts_at`, `duration_minutes`, `focus_text` and `notes_items`. Unknown keys are preserved for strict validation to reject, not silently dropped.
+
+The adapter inserts first and retries only a unique-key conflict with an owned, original-identity-filtered UPDATE of `action` and `override_payload`. This avoids widening immutable-column UPDATE grants. Modification updates additionally exclude already-cancelled rows so a concurrent cancellation wins over a stale edit. Existing owner RLS and composite foreign keys remain authoritative.
+
+Before exposing schedule-changing whole-series actions alongside occurrence mutations, complete the atomic schedule/exception reconciliation review: the existing application-level read/check alone does not serialize concurrent schedule rewrites and exception insertion. Concurrent partial modifications currently use last-write-wins semantics; no optimistic version protection is claimed by this checkpoint.
+
 ## Single-occurrence delete
 
 Write `action='cancelled'`. Preserve the original series master.

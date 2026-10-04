@@ -12,6 +12,8 @@ import {
 } from "./study-domain";
 import {
   type CalendarException,
+  type CalendarExceptionInput,
+  calendarExceptionInputSchema,
   type CalendarSeries,
   type CalendarSeriesCreate,
   calendarSeriesCreateInputSchema,
@@ -25,6 +27,7 @@ import {
 } from "./calendar-recurrence";
 
 export type CalendarRepository = Readonly<{
+  saveExceptionOwned(userId: string, input: CalendarExceptionInput): Promise<RepositoryResult<CalendarException>>;
   createOwned(
     userId: string,
     input: CalendarSeriesCreate,
@@ -208,6 +211,44 @@ export class CalendarService {
       return { data: null, status: "success" };
     } catch {
       return STORAGE_UNAVAILABLE;
+    }
+  }
+
+  /** Patch one generated occurrence by original identity; never rewrite its series. */
+  async saveException(actorId: unknown, input: unknown): Promise<StudyResult<CalendarException>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    if (!actor.success) return INVALID_ACTOR;
+    const parsed = calendarExceptionInputSchema.safeParse(input);
+    if (!parsed.success) return INVALID_INPUT;
+    const existing = await this.find(actor.data, parsed.data.seriesId);
+    if (existing.status === "error") return existing;
+    if (!existing.data.recurrenceRule) return INVALID_INPUT;
+    const original = new Date(parsed.data.originalStart);
+    const originalStart = original.toISOString();
+    try {
+      // Validate membership against the master, not a moved/cancelled effective start.
+      const generated = expandCalendarOccurrences(existing.data, [], {
+        from: original, to: new Date(original.getTime() + 1),
+      }, this.now());
+      if (!generated.some(item => item.originalStart === originalStart)) return NOT_FOUND;
+      const exceptions = await this.repository.listExceptionsOwned(actor.data, [existing.data.id]);
+      if (exceptions.errorCode) return repositoryError(exceptions.errorCode);
+      const previous = exceptions.data?.find(item => new Date(item.originalStart).toISOString() === originalStart);
+      if (previous?.action === "cancelled") {
+        return parsed.data.action === "cancelled" ? { status: "success", data: previous } : NOT_FOUND;
+      }
+      let write: CalendarExceptionInput = { ...parsed.data, originalStart };
+      if (write.action === "modified") {
+        const overridePayload = { ...(previous?.action === "modified" ? previous.overridePayload : {}), ...write.overridePayload };
+        const effective = calendarSeriesCreateInputSchema.safeParse({ ...createShape(existing.data), startsAt: originalStart, ...overridePayload });
+        if (!effective.success) return INVALID_INPUT;
+        write = { ...write, overridePayload };
+      }
+      const result = await this.repository.saveExceptionOwned(actor.data, write);
+      if (result.errorCode) return repositoryError(result.errorCode);
+      return result.data ? { status: "success", data: result.data } : NOT_FOUND;
+    } catch (error) {
+      return error instanceof CalendarExpansionLimitError ? INVALID_INPUT : STORAGE_UNAVAILABLE;
     }
   }
 

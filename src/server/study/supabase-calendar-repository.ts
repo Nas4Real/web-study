@@ -19,6 +19,18 @@ const CALENDAR_SERIES_COLUMNS =
 const CALENDAR_EXCEPTION_COLUMNS =
   "id, series_id, original_start, action, override_payload, created_at, updated_at";
 
+const overrideNames = [["startsAt", "starts_at"], ["durationMinutes", "duration_minutes"],
+  ["focusText", "focus_text"], ["notesItems", "notes_items"]] as const;
+
+function translateOverride(value: unknown, toDatabase: boolean): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  // Preserve unknown keys so strict domain/database validation rejects them.
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => {
+    const pair = overrideNames.find(names => names[toDatabase ? 0 : 1] === key);
+    return [pair?.[toDatabase ? 1 : 0] ?? key, item];
+  }));
+}
+
 type CalendarSeriesRow = Readonly<{
   created_at: string;
   duration_minutes: number | null;
@@ -78,7 +90,7 @@ function toCalendarException(row: CalendarExceptionRow): CalendarException | nul
     createdAt: row.created_at,
     id: row.id,
     originalStart: row.original_start,
-    overridePayload: row.override_payload,
+    overridePayload: translateOverride(row.override_payload, false),
     seriesId: row.series_id,
     updatedAt: row.updated_at,
   });
@@ -112,6 +124,26 @@ export function createSupabaseCalendarRepository(
   supabase: SupabaseClient,
 ): CalendarRepository {
   return {
+    async saveExceptionOwned(userId, input) {
+      // ON CONFLICT upsert would also UPDATE immutable identity columns, which
+      // intentionally lack UPDATE grants. Retry only the mutable fields instead.
+      let result = await supabase.from("calendar_exceptions").insert({
+        user_id: userId, series_id: input.seriesId, original_start: input.originalStart,
+        action: input.action, override_payload: translateOverride(input.overridePayload, true),
+      }).select(CALENDAR_EXCEPTION_COLUMNS).maybeSingle();
+      if (errorCode(result.error) === "23505") {
+        let update = supabase.from("calendar_exceptions")
+          .update({ action: input.action, override_payload: translateOverride(input.overridePayload, true) })
+          .eq("user_id", userId).eq("series_id", input.seriesId).eq("original_start", input.originalStart);
+        // Cancellation wins over a stale edit, including a concurrent insert race.
+        if (input.action === "modified") update = update.neq("action", "cancelled");
+        result = await update.select(CALENDAR_EXCEPTION_COLUMNS).maybeSingle();
+      }
+      const row = result.data as unknown as CalendarExceptionRow | null;
+      const data = row ? toCalendarException(row) : null;
+      return { data, errorCode: errorCode(result.error) ?? (row && !data ? "provider_error" : null) };
+    },
+
     async listOwned(userId) {
       const { data, error } = await supabase
         .from("calendar_series")

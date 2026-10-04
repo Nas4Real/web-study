@@ -52,6 +52,16 @@ E2E modify/cancel one occurrence vs series.
 - Browser inspected desktop and 320x720; mobile panel client/scroll width both 286px and footer is reachable. Tab wraps to Close; Escape restores the launching button. Pending focus stays inside the dialog. Saved ignored desktop/mobile proof under `.superdesign/tmp/`.
 - Await approval before production implementation. This reference covers scope/confirmation only: the edit-form authoring state must also be inspected/approved before UI wiring. No application code, schema, dependency or screenshot baseline changed; persistence acceptance is not claimed. Count stays 21/45 done, 24 remaining.
 
+## Backend checkpoint — 2026-10-04
+
+- User continued after the v4 preview; scope/confirmation reference is approved. The edit-form reference is still required before UI wiring.
+- Added shared-service owned occurrence modification/cancellation, generated original-start membership checks, canonical UTC identity, merged effective-kind validation and partial override preservation. One-time sessions use series mutations; cancellation is idempotent and stale edits cannot restore cancelled occurrences.
+- Supabase persistence inserts first and retries only a unique conflict with owner/series/original-start-filtered updates of the two granted mutable columns. Domain/SQL JSON translation preserves the existing database contract; grants and schema remain unchanged.
+- Added seven service tests, four adapter tests and five database assertions. `pnpm check` passes with 341 unit tests and production build; all 47 database tests and all 96 browser tests pass. Local advisors have no issues and production audit reports no known vulnerabilities. Existing visual baselines were not updated. Dev-server stream-closed diagnostics remain observed.
+- Reviewed correctness, readability, architecture, security and performance for this additive, unexposed backend slice. No UI, auth, schema, grants or dependencies changed.
+- Remaining before story acceptance: atomic reconciliation of whole-series schedule changes with concurrent exception insertion, authenticated action adapter, approved edit authoring reference, scope/UI wiring and actual occurrence-versus-series mutation E2E proof. Application-level read/check alone does not serialize the schedule race; concurrent partial overrides remain last-write-wins.
+- Story remains in-progress; 21/45 complete, 24 remaining.
+
 ## Done when
 
 - acceptance behavior matches PRD and engineering contract

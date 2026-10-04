@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(23);
+select plan(28);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -249,6 +249,41 @@ select throws_ok(
   '23505',
   'duplicate key value violates unique constraint "calendar_exceptions_series_id_original_start_key"',
   'one stable occurrence identity has at most one exception'
+);
+
+select lives_ok(
+  $$ update public.calendar_exceptions
+     set action = 'modified', override_payload = '{"starts_at":"2026-10-13T09:00:00Z","duration_minutes":60,"notes_items":["Lab sheet"]}'::jsonb
+     where user_id = '11111111-1111-4111-8111-111111111111'
+       and series_id = 'aaaaaaaa-1111-4111-8111-111111111111'
+       and original_start = '2026-10-12T08:00:00Z' $$,
+  'owner can retry an existing exception by updating only granted mutable fields'
+);
+select is(
+  (select override_payload ->> 'starts_at' from public.calendar_exceptions
+   where series_id = 'aaaaaaaa-1111-4111-8111-111111111111'),
+  '2026-10-13T09:00:00Z', 'moved occurrence payload persists using SQL keys'
+);
+select lives_ok(
+  $$ update public.calendar_exceptions set action = 'cancelled', override_payload = '{}'::jsonb
+     where user_id = '11111111-1111-4111-8111-111111111111'
+       and series_id = 'aaaaaaaa-1111-4111-8111-111111111111'
+       and original_start = '2026-10-12T08:00:00Z' $$,
+  'owner can cancel the existing occurrence without rewriting its identity'
+);
+select is(
+  (select count(*) from public.calendar_exceptions
+   where series_id = 'aaaaaaaa-1111-4111-8111-111111111111'
+     and original_start = '2026-10-12T08:00:00Z' and action = 'cancelled'),
+  1::bigint, 'retry preserves a single stable cancelled exception'
+);
+
+select is_empty(
+  $$ update public.calendar_exceptions set action = 'modified', override_payload = '{"title":"Stale edit"}'::jsonb
+     where user_id = '11111111-1111-4111-8111-111111111111'
+       and series_id = 'aaaaaaaa-1111-4111-8111-111111111111'
+       and original_start = '2026-10-12T08:00:00Z' and action <> 'cancelled' returning id $$,
+  'guarded stale edit cannot resurrect a cancelled occurrence'
 );
 
 select * from finish();

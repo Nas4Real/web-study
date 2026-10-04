@@ -11,6 +11,7 @@ const NOW = "2026-10-04T12:00:00.000Z";
 function setup() {
   const saved: CalendarSeries[] = [];
   const repository: CalendarRepository = {
+    saveExceptionOwned: vi.fn().mockResolvedValue({ data: null, errorCode: null }),
     createOwned: vi.fn(async (_actor, input) => {
       const series = { ...input, id: "33333333-3333-4333-8333-333333333333", createdAt: NOW, updatedAt: NOW };
       saved.push(series);

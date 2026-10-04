@@ -3,10 +3,11 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 
 import type { CalendarRepository } from "./calendar-service";
-import type { CalendarSeries } from "./calendar-domain";
+import type { CalendarException, CalendarSeries } from "./calendar-domain";
 import { createE2eStudyRepositories } from "./e2e-task-repositories";
 
 const stores = new Map<string, Map<string, CalendarSeries[]>>();
+const exceptionStores = new Map<string, Map<string, CalendarException[]>>();
 
 export function createE2eCalendarRepository(scope = "visual-baseline"): CalendarRepository {
   const base: CalendarSeries = {
@@ -31,13 +32,31 @@ export function createE2eCalendarRepository(scope = "visual-baseline"): Calendar
     }
     return series;
   };
+  const exceptionsFor = (userId: string) => {
+    let actors = exceptionStores.get(scope);
+    if (!actors) { actors = new Map(); exceptionStores.set(scope, actors); }
+    let exceptions = actors.get(userId);
+    if (!exceptions) {
+      exceptions = [{ id: "40000000-0000-4000-8000-000000000001", action: "modified", seriesId: base.id,
+        originalStart: base.startsAt, overridePayload: { location: "Room 401" }, createdAt: base.createdAt, updatedAt: base.updatedAt }];
+      actors.set(userId, exceptions);
+    }
+    return exceptions;
+  };
   return {
     async listOwned(userId) { return { data: structuredClone(storeFor(userId)), errorCode: null }; },
-    async listExceptionsOwned(userId, seriesIds) { return { data: seriesIds.includes(base.id) && storeFor(userId).some(series => series.id === base.id) ? [{
-      id: "40000000-0000-4000-8000-000000000001", action: "modified",
-      seriesId: base.id, originalStart: base.startsAt, overridePayload: { location: "Room 401" },
-      createdAt: base.createdAt, updatedAt: base.updatedAt,
-    }] : [], errorCode: null }; },
+    async listExceptionsOwned(userId, seriesIds) { return { data: structuredClone(exceptionsFor(userId).filter(item => seriesIds.includes(item.seriesId) && storeFor(userId).some(series => series.id === item.seriesId))), errorCode: null }; },
+    async saveExceptionOwned(userId, input) {
+      if (!storeFor(userId).some(series => series.id === input.seriesId)) return { data: null, errorCode: "23503" };
+      const exceptions = exceptionsFor(userId);
+      const index = exceptions.findIndex(item => item.seriesId === input.seriesId && item.originalStart === input.originalStart);
+      const previous = exceptions[index];
+      if (previous?.action === "cancelled" && input.action === "modified") return { data: null, errorCode: null };
+      const now = new Date().toISOString();
+      const saved: CalendarException = { ...structuredClone(input), id: previous?.id ?? randomUUID(), createdAt: previous?.createdAt ?? now, updatedAt: now };
+      if (index < 0) exceptions.push(saved); else exceptions[index] = saved;
+      return { data: structuredClone(saved), errorCode: null };
+    },
     async findOwned(userId, seriesId) { return { data: structuredClone(storeFor(userId).find(series => series.id === seriesId) ?? null), errorCode: null }; },
     async createOwned(userId, input) {
       const subjects = await createE2eStudyRepositories(scope).subjectRepository.listOwned(userId);
@@ -47,7 +66,15 @@ export function createE2eCalendarRepository(scope = "visual-baseline"): Calendar
       storeFor(userId).push(created);
       return { data: structuredClone(created), errorCode: null };
     },
-    async updateOwned() { return { data: null, errorCode: "provider_error" }; },
+    async updateOwned(userId, seriesId, input) {
+      const series = storeFor(userId);
+      const index = series.findIndex(item => item.id === seriesId);
+      if (index < 0) return { data: null, errorCode: null };
+      const subjects = await createE2eStudyRepositories(scope).subjectRepository.listOwned(userId);
+      if (!subjects.data?.some(subject => subject.id === input.subjectId)) return { data: null, errorCode: "23503" };
+      series[index] = { ...series[index], ...structuredClone(input), updatedAt: new Date().toISOString() };
+      return { data: structuredClone(series[index]), errorCode: null };
+    },
     async deleteOwned() { return { data: false, errorCode: "provider_error" }; },
   };
 }
