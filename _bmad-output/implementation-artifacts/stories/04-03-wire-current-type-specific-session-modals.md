@@ -1,7 +1,7 @@
 # Story 04-03: Wire current type-specific session modals
 
 Epic: epic-04
-Status: in-progress
+Status: done
 Dependencies: 04-01,01-05
 
 ## Purpose
@@ -104,3 +104,11 @@ E2E create each kind and view it.
 - Created a separate same-project, credit-free reference for Calendar controls and New Session only: https://p.superdesign.dev/draft/eadcf1dc-7074-4fb0-8940-43d946fbad3e (v1). Agenda content is intentionally omitted from this scoped reference. Existing main draft is untouched. Reused approved markup, fonts, colors, borders and icons; proposed wrapping controls and single-column type/field grids below 640px with vertically scrollable dialog/footer.
 - Import returned no warnings. Browser inspected all three kinds at 320px with no horizontal panel overflow (clientWidth and scrollWidth both 286px), accessible footer scrolling, keyboard focus wrap and Escape restoration. At 768/1024/1440px panel clientWidth/scrollWidth remain 598px and the original three-column type grid is preserved. These checks cover the reference only, not the application.
 - Application code and visual baselines remain unchanged. User approval is required before implementation under the Superdesign skill. Story remains in-progress; 19/45 done, 26 remaining. After approval, port mobile-only changes, add responsive app E2E coverage, and rerun project/visual gates before marking completion.
+
+## Completion — 2026-10-04
+
+- The user's continuation after mobile-preview review approved the scoped reference. Ported its below-640px reflow into CalendarHeader and NewSessionModal: fully visible wrapped New Session/view controls, reserved notification/close space, single-column type/field grids, 16px side padding and stacked footer. At larger widths the approved desktop layout remains unchanged. No new navigation, recurrence controls or unrelated UI was introduced.
+- Added four responsive E2E cases (320x720, 768, 1024, 1440), each creating and reloading University, Exam and Revision. They check full header control visibility, horizontal panel/control containment, scroll-to-submit, Tab focus wrap and Escape restoration. The 320px case first failed with only 52.8% of New Session visible, then passed after the port; all four widths pass. Added and manually inspected three new mobile-only baselines. Hid Next dev tools after each reload to keep their badge out of reference captures; existing desktop/historical baselines were not modified.
+- Full project check passes: lint, typecheck, 291 unit tests and production build. Final full browser suite passes all 87 tests, including new mobile and existing desktop visual comparisons. Production dependency audit reports no known vulnerabilities. Manually inspected header, all three mobile forms and reachable footer against the approved same-project reference.
+- A follow-up typecheck found malformed generated development route types. Preserved the generated file in ignored `.superdesign/tmp/routes-malformed-20261004.d.ts.txt`; restarting the test server regenerated it and typechecking passed. No application source/configuration was changed to bypass the error. Dev server still reports occasional aborted ECONNRESET diagnostics during the passing suite; no clean-server-log claim is made.
+- Reviewed correctness, scope, accessibility, security and performance: styling-only production changes; existing authenticated service/action and error handling remain authoritative. No database schema, permissions, auth flow, service or dependencies changed. Story 04-03 is complete: 20/45 stories done, 25 remaining. Next is 04-04 recurrence authoring, subject to the existing Superdesign-first contract.

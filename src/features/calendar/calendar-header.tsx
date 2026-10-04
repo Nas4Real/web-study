@@ -21,11 +21,11 @@ export function CalendarHeader({ greetingName, onNewSession, onShift, onViewChan
   return (
     <>
       <header className="flex shrink-0 items-start justify-between gap-4 px-4 pb-5 pt-6 sm:px-8 sm:pt-8">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 max-sm:min-w-0">
           <h1 className="text-[22px] font-bold tracking-tight text-white">Good Morning, {greetingName}!</h1>
           <p className="text-[13px] font-medium text-text-muted">Here&apos;s what&apos;s happening with your studies today.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 max-sm:shrink-0">
           <button
             className="hidden items-center gap-2 rounded-md border border-border-hover bg-card-hover px-4 py-2 text-[13px] font-semibold text-zinc-200 shadow-sm transition-colors hover:bg-border-panel sm:flex"
             type="button"
@@ -68,7 +68,7 @@ export function CalendarHeader({ greetingName, onNewSession, onShift, onViewChan
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 max-sm:flex-wrap">
           <div aria-label="Calendar view" className="flex items-center rounded-md border border-border-panel bg-card p-0.5 shadow-sm" role="group">
             {views.map((option) => (
               <button
@@ -85,7 +85,7 @@ export function CalendarHeader({ greetingName, onNewSession, onShift, onViewChan
             ))}
           </div>
           <button
-            className="flex items-center gap-2 rounded-md bg-zinc-100 px-4 py-2 text-[13px] font-bold text-black shadow-sm transition-colors hover:bg-white"
+            className="flex items-center gap-2 rounded-md bg-zinc-100 px-4 py-2 text-[13px] font-bold text-black shadow-sm transition-colors hover:bg-white max-sm:shrink-0 max-sm:rounded-full max-sm:bg-white max-sm:px-6 max-sm:py-2.5 max-sm:text-[14px] max-sm:hover:bg-zinc-200"
             onClick={onNewSession}
             type="button"
           >
