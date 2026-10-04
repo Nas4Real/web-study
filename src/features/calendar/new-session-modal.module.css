@@ -1,0 +1,34 @@
+.label {
+  display: block;
+  margin-bottom: 8px;
+  color: #f4f4f5;
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #2f2f34;
+  border-radius: 8px;
+  background: #0b0b0d;
+  padding: 0 12px;
+  color: #f4f4f5;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  color-scheme: dark;
+}
+.input:hover, .input:focus { border-color: #fff; box-shadow: 0 0 0 1px #fff; }
+.input::placeholder { color: #a1a1aa; }
+.typeCard {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #2f2f34;
+  border-radius: 10px;
+  background: #141416;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.typeCard:hover { border-color: #52525b; background: #18181b; }
+.typeCard.selected { border-color: #a1a1aa; background: #1c1c1f; box-shadow: inset 0 0 0 1px rgba(161,161,170,.12); }

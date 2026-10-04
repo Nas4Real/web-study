@@ -13,6 +13,8 @@ interface ModalFrameProps {
   footerClass?: string;
   closeClass?: string;
   overlayClass?: string;
+  closeDisabled?: boolean;
+  descriptionId?: string;
 }
 
 const openDialogs: HTMLElement[] = [];
@@ -20,7 +22,7 @@ const isolation = new Map<HTMLElement, { count: number; original: boolean }>();
 let scrollLocks = 0;
 let originalOverflow = "";
 
-export function ModalFrame({ children, footer, labelId, onClose, widthClass = "max-w-[600px]", panelClass = "rounded-2xl shadow-2xl border-border-hover bg-card", footerClass = "border-border-panel bg-panel/50 px-6 py-4", closeClass = "right-5 top-5 size-10 border-border-panel bg-card-hover text-text-muted", overlayClass = "bg-black/80 p-4 backdrop-blur-sm" }: ModalFrameProps) {
+export function ModalFrame({ children, footer, labelId, onClose, closeDisabled = false, descriptionId, widthClass = "max-w-[600px]", panelClass = "rounded-2xl shadow-2xl border-border-hover bg-card", footerClass = "border-border-panel bg-panel/50 px-6 py-4", closeClass = "right-5 top-5 size-10 border-border-panel bg-card-hover text-text-muted", overlayClass = "bg-black/80 p-4 backdrop-blur-sm" }: ModalFrameProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
@@ -105,6 +107,7 @@ export function ModalFrame({ children, footer, labelId, onClose, widthClass = "m
     <div className={`fixed inset-0 z-50 grid place-items-center overflow-y-auto ${overlayClass}`} ref={overlayRef}>
       <section
         aria-labelledby={labelId}
+        aria-describedby={descriptionId}
         aria-modal="true"
         className={`relative my-auto w-full overflow-hidden border ${panelClass} ${widthClass}`}
         role="dialog"
@@ -113,6 +116,7 @@ export function ModalFrame({ children, footer, labelId, onClose, widthClass = "m
       >
         <button
           aria-label="Close dialog"
+          disabled={closeDisabled}
           className={`absolute z-10 grid place-items-center rounded-lg border transition-colors hover:text-white ${closeClass}`}
           onClick={onClose}
           ref={closeRef}

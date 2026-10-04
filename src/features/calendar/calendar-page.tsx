@@ -52,7 +52,7 @@ export function CalendarPage({ data, scope }: { data: CalendarPageDataDTO; scope
       {view === "month" ? (
         <MonthView cells={data.monthCells} label={periodLabel} />
       ) : null}
-      {dialog === "new" ? <NewSessionModal onClose={() => setDialog(null)} /> : null}
+      {dialog === "new" ? <NewSessionModal onClose={() => setDialog(null)} subjects={data.subjects} /> : null}
       {dialog === "detail" ? <SessionDetailsModal onClose={() => setDialog(null)} /> : null}
     </div>
   );
