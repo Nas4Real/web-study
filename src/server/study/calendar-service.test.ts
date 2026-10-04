@@ -156,6 +156,67 @@ describe("CalendarService", () => {
     ).resolves.toEqual({ code: "INVALID_INPUT", status: "error" });
   });
 
+  it("resolves one effective occurrence by stable original identity", async () => {
+    const recurring = { ...SERIES, recurrenceRule: "FREQ=WEEKLY;COUNT=3" };
+    const moved: CalendarException = {
+      ...EXCEPTION,
+      overridePayload: {
+        location: "Room 401",
+        notesItems: ["Bring the lab report", "Ask about chapter 4"],
+        startsAt: "2026-10-13T10:00:00.000Z",
+        title: "Moved physics lecture",
+      },
+    };
+    const store = repository({
+      findOwned: vi.fn().mockResolvedValue({ data: recurring, errorCode: null }),
+      listExceptionsOwned: vi.fn().mockResolvedValue({ data: [moved], errorCode: null }),
+    });
+    const service = new CalendarService(store, () => new Date(NOW));
+
+    await expect(service.findOccurrence(USER_ID, SERIES_ID, EXCEPTION.originalStart)).resolves.toMatchObject({
+      status: "success",
+      data: {
+        location: "Room 401",
+        notesItems: ["Bring the lab report", "Ask about chapter 4"],
+        originalStart: EXCEPTION.originalStart,
+        recurrenceRule: "FREQ=WEEKLY;COUNT=3",
+        startsAt: "2026-10-13T10:00:00.000Z",
+        title: "Moved physics lecture",
+      },
+    });
+    await expect(service.findOccurrence(USER_ID, SERIES_ID, "2026-10-19T08:00:00.000Z")).resolves.toMatchObject({
+      status: "success",
+      data: { location: SERIES.location, startsAt: "2026-10-19T08:00:00.000Z", title: SERIES.title },
+    });
+  });
+
+  it("hides cancelled, non-generated, malformed, and foreign occurrence identities", async () => {
+    const recurring = { ...SERIES, recurrenceRule: "FREQ=WEEKLY;COUNT=3" };
+    const cancelled: CalendarException = { ...EXCEPTION, action: "cancelled", overridePayload: {} };
+    const store = repository({
+      findOwned: vi.fn().mockResolvedValue({ data: recurring, errorCode: null }),
+      listExceptionsOwned: vi.fn().mockResolvedValue({ data: [cancelled], errorCode: null }),
+    });
+    const service = new CalendarService(store, () => new Date(NOW));
+
+    await expect(service.findOccurrence(USER_ID, SERIES_ID, EXCEPTION.originalStart)).resolves.toEqual({ code: "NOT_FOUND", status: "error" });
+    await expect(service.findOccurrence(USER_ID, SERIES_ID, "2026-10-13T08:00:00.000Z")).resolves.toEqual({ code: "NOT_FOUND", status: "error" });
+    await expect(service.findOccurrence(USER_ID, SERIES_ID, "not-an-instant")).resolves.toEqual({ code: "INVALID_INPUT", status: "error" });
+
+    const foreign = repository({ findOwned: vi.fn().mockResolvedValue({ data: null, errorCode: null }) });
+    await expect(new CalendarService(foreign).findOccurrence(USER_ID, SERIES_ID, SERIES.startsAt)).resolves.toEqual({ code: "NOT_FOUND", status: "error" });
+    expect(foreign.listExceptionsOwned).not.toHaveBeenCalled();
+  });
+
+  it("resolves a one-time session only at its original start", async () => {
+    const service = new CalendarService(repository(), () => new Date(NOW));
+    await expect(service.findOccurrence(USER_ID, SERIES_ID, SERIES.startsAt)).resolves.toMatchObject({
+      status: "success",
+      data: { originalStart: SERIES.startsAt, recurrenceRule: null, startsAt: SERIES.startsAt },
+    });
+    await expect(service.findOccurrence(USER_ID, SERIES_ID, "2026-10-06T08:00:00.000Z")).resolves.toEqual({ code: "NOT_FOUND", status: "error" });
+  });
+
   it("normalizes exception provider failures without leaking details", async () => {
     const store = repository({
       listExceptionsOwned: vi.fn().mockResolvedValue({

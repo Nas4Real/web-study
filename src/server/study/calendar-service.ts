@@ -27,6 +27,7 @@ import {
 } from "./calendar-recurrence";
 
 export type CalendarSchedule = Pick<CalendarSeries, "startsAt" | "timezone" | "recurrenceRule">;
+export type CalendarOccurrenceDetailRecord = CalendarOccurrence & Pick<CalendarSeries, "recurrenceRule">;
 
 export type CalendarRepository = Readonly<{
   saveExceptionOwned(userId: string, input: CalendarExceptionInput, expectedSchedule: CalendarSchedule): Promise<RepositoryResult<CalendarException>>;
@@ -158,6 +159,53 @@ export class CalendarService {
       return error instanceof CalendarExpansionLimitError
         ? INVALID_INPUT
         : STORAGE_UNAVAILABLE;
+    }
+  }
+
+  async findOccurrence(
+    actorId: unknown,
+    seriesId: unknown,
+    originalStart: unknown,
+  ): Promise<StudyResult<CalendarOccurrenceDetailRecord>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    if (!actor.success) return INVALID_ACTOR;
+    const id = entityIdSchema.safeParse(seriesId);
+    const instant = z.iso.datetime({ offset: true }).safeParse(originalStart);
+    if (!id.success || !instant.success) return INVALID_INPUT;
+
+    const series = await this.find(actor.data, id.data);
+    if (series.status === "error") return series;
+    try {
+      const exceptionResult = await this.repository.listExceptionsOwned(actor.data, [id.data]);
+      if (exceptionResult.errorCode) return repositoryError(exceptionResult.errorCode);
+      const canonicalStart = new Date(instant.data).toISOString();
+      const original = new Date(canonicalStart);
+      const membership = expandCalendarOccurrences(
+        series.data,
+        [],
+        { from: original, to: new Date(original.getTime() + 1) },
+        this.now(),
+      ).find(occurrence => occurrence.originalStart === canonicalStart);
+      if (!membership) return NOT_FOUND;
+
+      const exception = exceptionResult.data?.find(
+        item => new Date(item.originalStart).toISOString() === canonicalStart,
+      );
+      if (exception?.action === "cancelled") return NOT_FOUND;
+      if (!exception) return { data: { ...membership, recurrenceRule: series.data.recurrenceRule }, status: "success" };
+
+      const effectiveStart = new Date(exception.overridePayload.startsAt ?? canonicalStart);
+      const effective = expandCalendarOccurrences(
+        series.data,
+        [exception],
+        { from: effectiveStart, to: new Date(effectiveStart.getTime() + 1) },
+        this.now(),
+      ).find(occurrence => occurrence.originalStart === canonicalStart);
+      return effective
+        ? { data: { ...effective, recurrenceRule: series.data.recurrenceRule }, status: "success" }
+        : NOT_FOUND;
+    } catch (cause) {
+      return cause instanceof CalendarExpansionLimitError ? INVALID_INPUT : STORAGE_UNAVAILABLE;
     }
   }
 
