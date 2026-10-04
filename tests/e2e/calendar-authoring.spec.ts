@@ -82,11 +82,17 @@ test("locks pending controls and prevents dismissing an in-flight save", async (
   await dialog.getByLabel("Subject", { exact: true }).selectOption({ label: "Physics" });
   await dialog.getByLabel("Date", { exact: true }).fill("2026-10-06");
   await dialog.getByLabel("Start time", { exact: true }).fill("14:00");
+  await dialog.getByLabel("Repeat", { exact: true }).selectOption("weekly");
+  await dialog.getByLabel("Ends", { exact: true }).selectOption("count");
+  await dialog.getByLabel("Occurrences", { exact: true }).fill("2");
   try {
     await dialog.getByRole("button", { name: "Add session", exact: true }).click();
     await expect(dialog.locator("form")).toHaveAttribute("aria-busy", "true");
     await expect(dialog.getByRole("button", { name: "Saving...", exact: true })).toBeDisabled();
     await expect(dialog.getByLabel("Subject", { exact: true })).toBeDisabled();
+    await expect(dialog.getByLabel("Repeat", { exact: true })).toBeDisabled();
+    await expect(dialog.getByLabel("Occurrences", { exact: true })).toBeDisabled();
+    await expect(dialog.getByRole("button", { name: "Tuesday", exact: true })).toBeDisabled();
     await expect(dialog.getByRole("button", { name: /^Exam/ })).toBeDisabled();
     await expect(dialog.getByRole("button", { name: "Close dialog", exact: true })).toBeDisabled();
     await expect(dialog.getByRole("button", { name: "Cancel", exact: true })).toBeDisabled();
@@ -97,6 +103,8 @@ test("locks pending controls and prevents dismissing an in-flight save", async (
   } finally { release(); }
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Pending session", { exact: true })).toHaveCount(1);
+  await page.getByRole("button", { name: "Month", exact: true }).click();
+  await expect(page.getByText("Pending session", { exact: true })).toHaveCount(2);
 });
 
 test("uses approved duration choices and submits only the active kind's fields", async ({ page }) => {

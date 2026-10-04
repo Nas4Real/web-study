@@ -8,6 +8,7 @@ import type { CalendarSessionKind } from "@/domain/dto";
 import type { CalendarActionState } from "@/server/study/calendar-action-handlers";
 import { createSessionAction } from "@/server/study/calendar-actions";
 import styles from "./new-session-modal.module.css";
+import { SessionRecurrenceFields } from "./session-recurrence-fields";
 
 const sessionTypes = [
   { id: "exam", label: "Exam", description: "Test or mock", icon: ClipboardCheck },
@@ -28,9 +29,10 @@ async function saveSession(previous: CalendarActionState, formData: FormData): P
   catch { return { code: "STORAGE_UNAVAILABLE", status: "error", message: "Sessions are temporarily unavailable. Please try again." }; }
 }
 
-export function NewSessionModal({ onClose, subjects }: {
+export function NewSessionModal({ onClose, subjects, timeZone }: {
   onClose: () => void;
   subjects: readonly Readonly<{ id: string; name: string }>[];
+  timeZone: string;
 }) {
   const [state, formAction, pending] = useActionState(saveSession, initialState);
   const [kind, setKind] = useState<CalendarSessionKind>("university");
@@ -117,6 +119,7 @@ export function NewSessionModal({ onClose, subjects }: {
               <input className={styles.input} id="session-focus" maxLength={80} name="focusText" onChange={event => setFocusText(event.target.value)} placeholder="e.g. Chapter 4 · integrals" value={focusText} />
             </div> : null}
           </div>
+          <SessionRecurrenceFields date={date} timeZone={timeZone} />
           {state.status === "error" ? <p className="text-[14px] leading-5 text-zinc-300" role="alert">{state.message}</p> : null}
         </fieldset>
         <footer className="flex flex-col items-stretch justify-between gap-3 border-t border-[#27272a] px-4 py-4 sm:flex-row sm:items-center sm:px-6">

@@ -79,6 +79,7 @@ export interface CalendarViewFixtureDTO {
 }
 
 export interface CalendarPageDataDTO extends CalendarViewFixtureDTO {
+  timeZone: string;
   date: string;
   view: CalendarView;
   fixture: boolean;

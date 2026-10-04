@@ -21,7 +21,7 @@ export async function loadCalendarPageData(query: Partial<CalendarQuery>): Promi
     // The scope resolver verifies the development-only test credential.
     if (scope === "visual-baseline" && !requestedScope) {
       return { ...calendarViewFixture, date: calendarViewFixture.anchorDate.slice(0, 10),
-        view: "week", fixture: true, greetingName: context.displayName, subjects: subjects.data };
+        view: "week", fixture: true, greetingName: context.displayName, subjects: subjects.data, timeZone: context.timeZone };
     }
 
     const now = context.now();
@@ -37,7 +37,7 @@ export async function loadCalendarPageData(query: Partial<CalendarQuery>): Promi
     const days = projectCalendarDays(window.dates, occurrences.data, subjects.data, context.timeZone, now);
     const events = days[window.dates.indexOf(date)]?.events ?? [];
     return {
-      date, view, fixture: false, subjects: subjects.data,
+      date, view, fixture: false, subjects: subjects.data, timeZone: context.timeZone,
       anchorDate: `${date}T00:00:00.000Z`, greetingName: context.displayName,
       weekDays: days,
       daySections: [

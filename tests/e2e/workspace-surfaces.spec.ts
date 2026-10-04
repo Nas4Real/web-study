@@ -123,8 +123,8 @@ test.describe("workspace surfaces", () => {
       await page.getByRole("button", { name: "New Session" }).click();
       await page.getByRole("button", { name: sessionType.button }).click();
       await hideNextDevTools(page);
-      // Retain historical images; this port follows the newly inspected live v96 modal.
-      await expect(page).toHaveScreenshot(`new-session-${sessionType.name}-live-v96-1440x1200.png`, {
+      // Keep v96 images unchanged; the approved v2 recurrence section adds one-time default controls.
+      await expect(page).toHaveScreenshot(`new-session-${sessionType.name}-recurrence-v2-1440x1200.png`, {
         animations: "disabled",
         fullPage: true,
       });

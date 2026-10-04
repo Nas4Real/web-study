@@ -21,7 +21,7 @@ describe("calendar page loader", () => {
   });
   it("defaults to the actual profile-local date and an owned bounded week read", async () => {
     const data = await loadCalendarPageData({});
-    expect(data).toMatchObject({ date: "2026-10-03", view: "week", greetingName: "Nas", fixture: false, subjects });
+    expect(data).toMatchObject({ date: "2026-10-03", view: "week", greetingName: "Nas", fixture: false, subjects, timeZone: "Africa/Tunis" });
     expect(data.weekDays).toHaveLength(7);
     expect(data.weekDays.every(day => day.events.length === 0)).toBe(true);
     expect(list).toHaveBeenCalledWith("actor-1");
@@ -30,7 +30,7 @@ describe("calendar page loader", () => {
   it("preserves screenshots only for authenticated development requests without a scope", async () => {
     mocks.scope.mockResolvedValue("visual-baseline");
     const data = await loadCalendarPageData({});
-    expect(data).toMatchObject({ date: "2026-05-07", fixture: true, greetingName: "Nas" });
+    expect(data).toMatchObject({ date: "2026-05-07", fixture: true, greetingName: "Nas", timeZone: "Africa/Tunis" });
     expect(data.weekDays[0].events[0].title).toBe("Réduction des endomorphismes");
     expect(listOccurrences).not.toHaveBeenCalled();
   });
