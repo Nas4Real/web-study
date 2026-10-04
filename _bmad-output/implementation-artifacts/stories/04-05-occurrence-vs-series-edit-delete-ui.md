@@ -89,6 +89,15 @@ E2E modify/cancel one occurrence vs series.
 - Remaining before acceptance: create and approve the edit-authoring state in the existing Superdesign project, wire the approved scope/form UI, and prove real occurrence-versus-series mutations in browser E2E. Story remains in progress; 21/45 done, 24 remaining.
 
 ## Done when
+## Edit-authoring reference checkpoint — 2026-10-04
+
+- Published the missing edit form in the existing Web Study Superdesign project: https://p.superdesign.dev/draft/aca9acce-9efc-48e8-938d-08d12df96472 (v4).
+- The reference mechanically reuses the approved visual system and existing New Session/recurrence primitives. It keeps the session kind fixed and makes the previously selected scope explicit.
+- “This session” exposes only occurrence-safe fields. “Entire series” additionally exposes subject and structured recurrence. Both include ordered editable Notes & Reminders and a stable Save changes footer.
+- The reference-only state switch sits outside the production modal and must not be ported. Desktop and 320 px mobile were manually inspected; document and dialog widths show no horizontal overflow.
+- Await user approval before implementation. No production UI, schema, auth, dependency, or visual baseline changed. Story remains in progress; 21/45 done, 24 remaining.
+
+## Done when
 
 - acceptance behavior matches PRD and engineering contract
 - no cross-user access is possible
