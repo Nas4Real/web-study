@@ -24,7 +24,7 @@ export type TaskRequestContext = Readonly<{
   timeZone: string;
 }>;
 
-async function e2eScope(requestedScope?: string) {
+export async function resolveE2eStudyScope(requestedScope?: string) {
   const requestHeaders = await headers();
   const authenticated = isE2eAuthenticatedRequest({
     configuredToken: process.env.WEB_STUDY_E2E_AUTH_TOKEN,
@@ -48,7 +48,7 @@ export async function resolveTaskRequestContext(requestedScope?: string): Promis
   const actor = await getVerifiedActor();
   if (!actor) return null;
 
-  const scope = await e2eScope(requestedScope);
+  const scope = await resolveE2eStudyScope(requestedScope);
   let profileService: ProfileService;
   let subjectService: SubjectService;
   let taskService: TaskService;
