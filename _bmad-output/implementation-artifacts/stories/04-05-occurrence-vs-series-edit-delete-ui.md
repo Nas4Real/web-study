@@ -88,6 +88,16 @@ E2E modify/cancel one occurrence vs series.
 - Added 41 handler tests, six action tests, two adapter regressions, two pgTAP assertions, and a fourth real two-connection lock proof. Focused edit tests also pass with Los Angeles and Tokyo host timezones. `pnpm check` passes 428 unit tests and the production build; all 70 database assertions, all four concurrency proofs, and all 96 browser tests pass. No UI, schema, grant, auth, dependency, or visual-baseline change was made.
 - Remaining before acceptance: create and approve the edit-authoring state in the existing Superdesign project, wire the approved scope/form UI, and prove real occurrence-versus-series mutations in browser E2E. Story remains in progress; 21/45 done, 24 remaining.
 
+## Production UI checkpoint — 2026-10-04
+
+- User continued after reviewing the v4 edit-authoring draft, approving implementation. Ported the approved neutral Calendar modal system into the existing fixture Session Details entry without changing the approved detail screen or inventing Month behavior.
+- Recurring edits now require an explicit, retained `This session only` / `Entire series` choice. Occurrence forms expose only occurrence-safe content and schedule fields; series forms additionally expose owned Subject and structured recurrence controls. Session kind stays fixed, effective content pre-fills the form, and ordered Notes & Reminders remain editable.
+- Edit and delete controls call the authenticated `editSessionAction` / `deleteSessionAction` target contracts. One-time sessions skip scope selection and mutate the whole session. Pending mutations lock dismissal and fields; safe failures retain form data, selected scope, and retry controls. Cancel paths restore focus to their Session Details invoker.
+- Added nine Playwright checks covering both scopes, series-only fields, cancel/scope retention, failed-delete retry state, focus restoration, 320/768/1024/1440 containment, and four approved-state screenshots. Manually compared the generated scope/edit/delete captures with Superdesign v4; the 320px dialogs measure the approved 302px with no document overflow.
+- Five-axis review fixed two pre-merge edge cases: one-time copy no longer implies a recurring series, and uncommon existing durations plus timezone-derived RRULE `UNTIL` dates are preserved instead of silently changing.
+- `pnpm check` passes (428 unit tests, lint, typecheck, production build). Full Playwright passes with no failed tests (105 tests). As in earlier successful runs, Next development-server output still includes an occasional destination-stream-closed diagnostic; no clean-log claim is made.
+- Remaining before story acceptance: wire canonical effective-occurrence Session Details data/click surfaces in 04-06, then prove successful occurrence-versus-series persistence through those real browser surfaces. Story remains in progress; 21/45 complete, 24 remaining.
+
 ## Done when
 ## Edit-authoring reference checkpoint — 2026-10-04
 

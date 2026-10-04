@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { CalendarPageDataDTO, CalendarView } from "@/domain/dto";
+import { sessionDetailFixture } from "@/fixtures";
 
 import { CalendarHeader } from "./calendar-header";
 import { NewSessionModal } from "./new-session-modal";
@@ -53,7 +54,7 @@ export function CalendarPage({ data, scope }: { data: CalendarPageDataDTO; scope
         <MonthView cells={data.monthCells} label={periodLabel} />
       ) : null}
       {dialog === "new" ? <NewSessionModal onClose={() => setDialog(null)} subjects={data.subjects} timeZone={data.timeZone} /> : null}
-      {dialog === "detail" ? <SessionDetailsModal onClose={() => setDialog(null)} /> : null}
+      {dialog === "detail" ? <SessionDetailsModal onClose={() => setDialog(null)} session={sessionDetailFixture} subjects={data.subjects} timeZone={data.timeZone} /> : null}
     </div>
   );
 }

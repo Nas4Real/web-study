@@ -11,13 +11,26 @@ const weekdays = [
 ];
 const units: Record<string, string> = { daily: "day", weekly: "week", monthly: "month" };
 
-export function SessionRecurrenceFields({ date, timeZone }: { date: string; timeZone: string }) {
-  const [frequency, setFrequency] = useState("none");
-  const [interval, setInterval] = useState("1");
-  const [end, setEnd] = useState("never");
-  const [count, setCount] = useState("12");
-  const [until, setUntil] = useState("");
-  const [customDays, setCustomDays] = useState<string[] | null>(null);
+export interface SessionRecurrenceValue {
+  frequency: "none" | "daily" | "weekly" | "monthly";
+  interval?: number;
+  weekdays?: string[];
+  end?: "never" | "date" | "count";
+  count?: number;
+  until?: string;
+}
+
+export function SessionRecurrenceFields({ date, initialValue, timeZone }: {
+  date: string;
+  initialValue?: SessionRecurrenceValue;
+  timeZone: string;
+}) {
+  const [frequency, setFrequency] = useState(initialValue?.frequency ?? "none");
+  const [interval, setInterval] = useState(String(initialValue?.interval ?? 1));
+  const [end, setEnd] = useState(initialValue?.end ?? "never");
+  const [count, setCount] = useState(String(initialValue?.count ?? 12));
+  const [until, setUntil] = useState(initialValue?.until ?? "");
+  const [customDays, setCustomDays] = useState<string[] | null>(initialValue?.weekdays ?? null);
   // Civil-date selection must not depend on the browser's local timezone.
   const weekdayIndex = new Date(`${date}T00:00:00Z`).getUTCDay();
   const defaultDay = weekdays[(weekdayIndex + 6) % 7]?.code ?? "MO";
@@ -39,7 +52,7 @@ export function SessionRecurrenceFields({ date, timeZone }: { date: string; time
     <div className="space-y-4 border-t border-[#27272a] pt-5" id="session-recurrence">
       <div>
         <label className={styles.label} htmlFor="repeat-frequency">Repeat</label>
-        <select className={styles.input} id="repeat-frequency" name="repeatFrequency" onChange={event => setFrequency(event.target.value)} value={frequency}>
+        <select className={styles.input} id="repeat-frequency" name="repeatFrequency" onChange={event => setFrequency(event.target.value as SessionRecurrenceValue["frequency"])} value={frequency}>
           <option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>
         </select>
       </div>
@@ -61,7 +74,7 @@ export function SessionRecurrenceFields({ date, timeZone }: { date: string; time
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className={styles.label} htmlFor="repeat-end">Ends</label>
-            <select className={styles.input} id="repeat-end" name="repeatEnd" onChange={event => setEnd(event.target.value)} value={end}>
+            <select className={styles.input} id="repeat-end" name="repeatEnd" onChange={event => setEnd(event.target.value as NonNullable<SessionRecurrenceValue["end"]>)} value={end}>
               <option value="never">Never</option><option value="date">On a date</option><option value="count">After occurrences</option>
             </select>
           </div>
