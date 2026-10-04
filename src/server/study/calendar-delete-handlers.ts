@@ -1,16 +1,8 @@
-import { z } from "zod";
-import { entityIdSchema } from "./study-domain";
+import { calendarMutationTargetSchema as calendarDeleteTargetSchema, type CalendarMutationTarget } from "./calendar-mutation-target";
 import type { CalendarService } from "./calendar-service";
 
-// Explicit scope is mandatory. Series requests cannot carry occurrence identity,
-// and no client-provided ownership, schedule snapshot or override is accepted.
-export const calendarDeleteTargetSchema = z.discriminatedUnion("scope", [
-  z.object({ scope: z.literal("series"), seriesId: entityIdSchema }).strict(),
-  z.object({ scope: z.literal("occurrence"), seriesId: entityIdSchema,
-    originalStart: z.iso.datetime({ offset: true }) }).strict(),
-]);
-
-export type CalendarDeleteTarget = z.infer<typeof calendarDeleteTargetSchema>;
+export { calendarDeleteTargetSchema };
+export type CalendarDeleteTarget = CalendarMutationTarget;
 export type CalendarDeleteState =
   | Readonly<{ status: "success"; code: "SESSION_DELETED" }>
   | Readonly<{ status: "error"; code: "UNAUTHENTICATED" | "INVALID_INPUT" | "NOT_FOUND" | "STORAGE_UNAVAILABLE"; message: string }>;

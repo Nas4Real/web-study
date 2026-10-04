@@ -31,6 +31,22 @@ function clientWith(data: unknown) {
 }
 
 describe("Supabase calendar exception repository", () => {
+  it.each([null, "FREQ=WEEKLY;COUNT=3"])("guards series writes against the validated schedule including nullable RRULE: %s", async recurrenceRule => {
+    const builder = { update: vi.fn(), eq: vi.fn(), is: vi.fn(), select: vi.fn(), maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) };
+    for (const method of [builder.update, builder.eq, builder.is, builder.select]) method.mockReturnValue(builder);
+    const client = { from: vi.fn().mockReturnValue(builder) };
+    const write = { ...SCHEDULE, title: "Changed", subjectId: USER_ID, durationMinutes: 45,
+      focusText: null, location: null, professor: null, notesItems: [] };
+    const result = await createSupabaseCalendarRepository(client as never).updateOwned(USER_ID, SERIES_ID, write, { ...SCHEDULE, recurrenceRule });
+    expect(result).toEqual({ data: null, errorCode: "23514" });
+    expect(builder.eq.mock.calls).toContainEqual(["id", SERIES_ID]);
+    expect(builder.eq.mock.calls).toContainEqual(["user_id", USER_ID]);
+    expect(builder.eq.mock.calls).toContainEqual(["starts_at", SCHEDULE.startsAt]);
+    expect(builder.eq.mock.calls).toContainEqual(["timezone", SCHEDULE.timezone]);
+    if (recurrenceRule === null) expect(builder.is).toHaveBeenCalledWith("recurrence_rule", null);
+    else expect(builder.eq).toHaveBeenCalledWith("recurrence_rule", recurrenceRule);
+  });
+
   it.each([
     [{ id: SERIES_ID }, null, { data: true, errorCode: null }],
     [null, null, { data: false, errorCode: null }],

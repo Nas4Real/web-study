@@ -41,7 +41,17 @@ Migration `20261004124427_calendar_mutation_serialization.sql` adds only functio
 
 Write `action='cancelled'`. Preserve the original series master.
 
-## Whole-series edit/delete
+## Authenticated scoped edit transport
+
+The authenticated edit action accepts exactly one explicit target: `{ scope: 'series', seriesId, changes }` or `{ scope: 'occurrence', seriesId, originalStart, changes }`. Actor identity, ownership, timezone, session kind, and the schedule snapshot are server-derived. The client cannot submit raw `startsAt`, timezone, RRULE, kind, ownership, or schedule-snapshot fields.
+
+Content changes are partial and allowlisted: title, duration, location, professor, focus text, and ordered Notes & Reminders. Civil date and start time must be supplied together and are converted in the stored master timezone. Series edits may additionally change subject and structured recurrence; occurrence edits may not. Structured recurrence is compiled through the existing recurrence parser rather than accepting client-authored RRULE text. Omitting recurrence preserves the stored rule.
+
+Both occurrence and series paths compare the server-read schedule snapshot again at the service/repository boundary. Occurrence persistence retains the RPC's transactional master lock. Series persistence includes exact `starts_at`, timezone, and nullable RRULE predicates, so a schedule changed after form preparation cannot receive a stale timezone-derived write. This is schedule-conflict protection only: unrelated metadata and partial occurrence overrides remain last-write-wins.
+
+The database suite now includes four real two-connection concurrency proofs. The fourth holds a schedule rewrite lock while an update guarded by the old schedule waits, then confirms that the stale write affects zero rows. Only a successful edit returns `SESSION_UPDATED` and invalidates `/calendar` and `/`; failures return stable safe errors without raw records or provider details.
+
+## Whole-series edit/delete policy
 
 Update/delete series master. Existing exceptions need an explicit reconciliation policy if a recurrence-rule edit makes an exception no longer addressable. V1 service should either preserve valid exceptions and reject unsafe schedule rewrites, or deterministically clean orphaned exceptions in one transaction. Do not silently misapply an exception to a different occurrence.
 

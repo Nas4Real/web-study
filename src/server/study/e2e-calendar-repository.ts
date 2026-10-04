@@ -71,11 +71,15 @@ export function createE2eCalendarRepository(scope = "visual-baseline"): Calendar
       storeFor(userId).push(created);
       return { data: structuredClone(created), errorCode: null };
     },
-    async updateOwned(userId, seriesId, input) {
+    async updateOwned(userId, seriesId, input, expectedSchedule) {
       const series = storeFor(userId);
       const index = series.findIndex(item => item.id === seriesId);
       if (index < 0) return { data: null, errorCode: null };
       const existing = series[index];
+      if (expectedSchedule && (new Date(existing.startsAt).getTime() !== new Date(expectedSchedule.startsAt).getTime()
+        || existing.timezone !== expectedSchedule.timezone || existing.recurrenceRule !== expectedSchedule.recurrenceRule)) {
+        return { data: null, errorCode: "23514" };
+      }
       const scheduleChanged = (input.startsAt !== undefined && new Date(input.startsAt).getTime() !== new Date(existing.startsAt).getTime())
         || (input.timezone !== undefined && input.timezone !== existing.timezone)
         || (input.recurrenceRule !== undefined && input.recurrenceRule !== existing.recurrenceRule);

@@ -80,3 +80,28 @@ for (const first of ["occurrence", "direct occurrence", "schedule"]) {
     }
   });
 }
+
+test("guarded series UPDATE rechecks schedule after a concurrent winner commits", { timeout: 30000 }, async () => {
+  const f = await fixture();
+  let release;
+  try {
+    release = await hold(`${f.auth} ${f.rewrite}`);
+    const name = `calendar-proof-${randomUUID()}`;
+    const pending = query(`set application_name = '${name}'; begin; ${f.auth}
+      with changed as (update public.calendar_series set title = 'Stale edit'
+        where id = '${f.series}' and user_id = '${f.actor}'
+          and starts_at = '2026-10-05T08:00:00Z' and timezone = 'Africa/Tunis'
+          and recurrence_rule = 'FREQ=WEEKLY;COUNT=3' returning id)
+      select count(*) from changed; commit;`)
+      .then(stdout => ({ stdout }), error => ({ error }));
+    await assertBlocked(name);
+    await release(true); release = null;
+    const result = await pending;
+    assert.equal(result.error, undefined);
+    assert.equal(result.stdout.split(/\r?\n/).at(-1), "0");
+    assert.equal(await query(`select title from public.calendar_series where id = '${f.series}';`), "Concurrency proof");
+  } finally {
+    if (release) await release(false);
+    await f.cleanup();
+  }
+});

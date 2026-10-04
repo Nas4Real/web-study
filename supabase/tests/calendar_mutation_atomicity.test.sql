@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(21);
+select plan(23);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('55555555-5555-4555-8555-555555555555', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'calendar-atomic@example.test', '', now(), '{}', '{}', now(), now());
@@ -18,6 +18,12 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
 
 select lives_ok($$ update public.calendar_series set starts_at = '2026-10-06T08:00:00Z' where id = '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb' $$, 'schedule can change before exceptions exist');
+select is_empty($$ update public.calendar_series set title = 'Stale timezone conversion'
+  where id = '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+    and user_id = '55555555-5555-4555-8555-555555555555'
+    and starts_at = '2026-10-05T08:00:00Z' and timezone = 'Africa/Tunis'
+    and recurrence_rule = 'FREQ=WEEKLY;COUNT=3' returning id $$, 'guarded series update rejects a stale schedule snapshot');
+select is((select title from public.calendar_series where id = '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), 'Atomic lecture', 'stale guarded write preserved metadata');
 select throws_ok($$ select * from public.save_calendar_exception('55555555-5555-4555-8555-555555555555', '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '2026-10-12T08:00:00Z', 'cancelled', '{}', '2026-10-05T08:00:00Z', 'Africa/Tunis', 'FREQ=WEEKLY;COUNT=3') $$, '23514', 'Calendar schedule changed', 'old schedule snapshot cannot insert an exception');
 select is((select count(*) from public.calendar_exceptions), 0::bigint, 'stale write left no exception');
 select lives_ok($$ select * from public.save_calendar_exception('55555555-5555-4555-8555-555555555555', '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '2026-10-13T08:00:00Z', 'modified', '{"location":"Room B"}', '2026-10-06T08:00:00Z', 'Africa/Tunis', 'FREQ=WEEKLY;COUNT=3') $$, 'current schedule writes an occurrence using existing column grants');

@@ -199,14 +199,20 @@ export function createSupabaseCalendarRepository(
       return mapped(data as unknown as CalendarSeriesRow | null, error);
     },
 
-    async updateOwned(userId, seriesId, input) {
-      const { data, error } = await supabase
+    async updateOwned(userId, seriesId, input, expectedSchedule) {
+      let update = supabase
         .from("calendar_series")
         .update(calendarWrite(input))
         .eq("id", seriesId)
-        .eq("user_id", userId)
-        .select(CALENDAR_SERIES_COLUMNS)
-        .maybeSingle();
+        .eq("user_id", userId);
+      if (expectedSchedule) {
+        update = update.eq("starts_at", expectedSchedule.startsAt).eq("timezone", expectedSchedule.timezone);
+        update = expectedSchedule.recurrenceRule === null
+          ? update.is("recurrence_rule", null)
+          : update.eq("recurrence_rule", expectedSchedule.recurrenceRule);
+      }
+      const { data, error } = await update.select(CALENDAR_SERIES_COLUMNS).maybeSingle();
+      if (expectedSchedule && data === null && !error) return { data: null, errorCode: "23514" };
       return mapped(data as unknown as CalendarSeriesRow | null, error);
     },
 

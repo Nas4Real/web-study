@@ -79,6 +79,15 @@ E2E modify/cancel one occurrence vs series.
 - Added 36 unit tests and six pgTAP assertions. `pnpm check` passes (379 unit tests/build), all 68 database assertions and all 96 browser tests pass, advisors and production audit are clean. Production UI is not yet bound and no actual UI deletion acceptance is claimed. Five-axis review found no blocking issue for this additive backend slice; known dev-server stream-closed diagnostics remain observed.
 - No UI, auth, schema, grants, dependencies or screenshot baselines changed. Remaining: edit action adapter, approved edit-form reference, scope/UI binding, real mutation E2E acceptance. Story remains in-progress; 21/45 done, 24 remaining.
 
+## Authenticated edit-action checkpoint — 2026-10-04
+
+- Added strict explicit series/occurrence edit targets and authenticated action delegation through the existing actor/context resolver and CalendarService. No client actor, ownership, kind, timezone, RRULE text, or schedule snapshot is accepted.
+- Partial allowlisted content changes preserve omitted fields and ordered Notes & Reminders. Date/time are paired and interpreted in the stored master timezone. Whole-series edits may change subject and structured recurrence; occurrence edits may not.
+- Added stale-schedule protection to both paths: the occurrence RPC retains its transactional master comparison, while series updates recheck exact start, timezone, and nullable recurrence rule in the database write predicate. This protects timezone-derived edits from concurrent schedule rewrites; metadata and partial override concurrency remain last-write-wins.
+- Successful edits return only `SESSION_UPDATED` and invalidate `/calendar` and `/`; failures stay stable, safe, and do not invalidate. Shared target extraction leaves the previously verified deletion interface intact.
+- Added 41 handler tests, six action tests, two adapter regressions, two pgTAP assertions, and a fourth real two-connection lock proof. Focused edit tests also pass with Los Angeles and Tokyo host timezones. `pnpm check` passes 428 unit tests and the production build; all 70 database assertions, all four concurrency proofs, and all 96 browser tests pass. No UI, schema, grant, auth, dependency, or visual-baseline change was made.
+- Remaining before acceptance: create and approve the edit-authoring state in the existing Superdesign project, wire the approved scope/form UI, and prove real occurrence-versus-series mutations in browser E2E. Story remains in progress; 21/45 done, 24 remaining.
+
 ## Done when
 
 - acceptance behavior matches PRD and engineering contract

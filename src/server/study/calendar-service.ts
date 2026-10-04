@@ -48,6 +48,7 @@ export type CalendarRepository = Readonly<{
     userId: string,
     seriesId: string,
     input: CalendarSeriesWriteUpdate,
+    expectedSchedule?: CalendarSchedule,
   ): Promise<RepositoryResult<CalendarSeries>>;
 }>;
 
@@ -61,6 +62,11 @@ function repositoryError(errorCode: string | null) {
     return NOT_FOUND;
   }
   return STORAGE_UNAVAILABLE;
+}
+
+function scheduleMatches(current: CalendarSchedule, expected: CalendarSchedule) {
+  return new Date(current.startsAt).getTime() === new Date(expected.startsAt).getTime()
+    && current.timezone === expected.timezone && current.recurrenceRule === expected.recurrenceRule;
 }
 
 function writeUpdate(series: CalendarSeriesCreate): CalendarSeriesWriteUpdate {
@@ -170,6 +176,7 @@ export class CalendarService {
     actorId: unknown,
     seriesId: unknown,
     input: unknown,
+    expectedSchedule?: CalendarSchedule,
   ): Promise<StudyResult<CalendarSeries>> {
     const actor = actorIdSchema.safeParse(actorId);
     if (!actor.success) return INVALID_ACTOR;
@@ -180,6 +187,7 @@ export class CalendarService {
       this.repository.findOwned(actor.data, id.data),
     );
     if (existing.status === "error") return existing;
+    if (expectedSchedule && !scheduleMatches(existing.data, expectedSchedule)) return INVALID_INPUT;
     const merged = calendarSeriesCreateInputSchema.safeParse({
       ...createShape(existing.data),
       ...update.data,
@@ -198,7 +206,9 @@ export class CalendarService {
       }
     }
     return this.readOne(() =>
-      this.repository.updateOwned(actor.data, id.data, writeUpdate(merged.data)),
+      expectedSchedule
+        ? this.repository.updateOwned(actor.data, id.data, writeUpdate(merged.data), expectedSchedule)
+        : this.repository.updateOwned(actor.data, id.data, writeUpdate(merged.data)),
     );
   }
 
@@ -218,13 +228,14 @@ export class CalendarService {
   }
 
   /** Patch one generated occurrence by original identity; never rewrite its series. */
-  async saveException(actorId: unknown, input: unknown): Promise<StudyResult<CalendarException>> {
+  async saveException(actorId: unknown, input: unknown, expectedSchedule?: CalendarSchedule): Promise<StudyResult<CalendarException>> {
     const actor = actorIdSchema.safeParse(actorId);
     if (!actor.success) return INVALID_ACTOR;
     const parsed = calendarExceptionInputSchema.safeParse(input);
     if (!parsed.success) return INVALID_INPUT;
     const existing = await this.find(actor.data, parsed.data.seriesId);
     if (existing.status === "error") return existing;
+    if (expectedSchedule && !scheduleMatches(existing.data, expectedSchedule)) return INVALID_INPUT;
     if (!existing.data.recurrenceRule) return INVALID_INPUT;
     const original = new Date(parsed.data.originalStart);
     const originalStart = original.toISOString();
