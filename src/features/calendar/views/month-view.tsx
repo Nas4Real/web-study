@@ -5,6 +5,7 @@ import { calendarToneStyles } from "../calendar-styles";
 const weekdays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"] as const;
 
 export function MonthView({ cells, label }: { cells: readonly CalendarMonthCellDTO[]; label: string }) {
+  const rows = cells.length === 28 ? "grid-rows-4" : cells.length === 42 ? "grid-rows-6" : "grid-rows-5";
   return (
     <section aria-label="Month calendar" className="flex flex-1 overflow-x-auto px-4 pb-8 pt-6 sm:px-8">
       <div aria-label={label} className="flex min-w-[840px] flex-1 flex-col overflow-hidden rounded-xl border border-border-panel bg-card shadow-inner" role="grid">
@@ -19,11 +20,11 @@ export function MonthView({ cells, label }: { cells: readonly CalendarMonthCellD
             </span>
           ))}
         </div>
-        <div className="grid flex-1 grid-cols-7 grid-rows-5 bg-panel">
+        <div className={`grid flex-1 grid-cols-7 ${rows} bg-panel`}>
           {cells.map((cell, index) => {
-            const tone = cell.event ? calendarToneStyles[cell.event.tone] : null;
+            const events = cell.events ?? (cell.event ? [{ ...cell.event, id: `${cell.id}:fixture` }] : []);
             const isLastColumn = index % 7 === 6;
-            const isLastRow = index >= 28;
+            const isLastRow = index >= cells.length - 7;
             return (
               <div
                 aria-current={cell.isToday ? "date" : undefined}
@@ -43,18 +44,19 @@ export function MonthView({ cells, label }: { cells: readonly CalendarMonthCellD
                   >
                     {cell.day}
                   </span>
-                  {cell.event?.inProgress ? <span aria-hidden="true" className="size-1.5 animate-pulse rounded-full bg-analysis" /> : null}
+                  {events.some(event => event.inProgress) ? <span aria-hidden="true" className="size-1.5 animate-pulse rounded-full bg-analysis" /> : null}
                 </div>
-                {cell.event && tone ? (
+                {events.map(event => (
                   <div
+                    key={event.id}
                     className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 ${
-                      cell.event.inProgress ? "border-analysis/40 bg-[#001f29]" : "border-border-panel bg-card"
+                      event.inProgress ? "border-analysis/40 bg-[#001f29]" : "border-border-panel bg-card"
                     }`}
                   >
-                    <span aria-hidden="true" className={`size-1.5 shrink-0 rounded-full ${tone.dot}`} />
-                    <span className="truncate text-[12px] font-semibold leading-tight text-white">{cell.event.title}</span>
+                    <span aria-hidden="true" className={`size-1.5 shrink-0 rounded-full ${calendarToneStyles[event.tone].dot}`} />
+                    <span className="truncate text-[12px] font-semibold leading-tight text-white">{event.title}</span>
                   </div>
-                ) : null}
+                ))}
               </div>
             );
           })}

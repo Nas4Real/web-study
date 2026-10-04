@@ -13,6 +13,7 @@ export function WeekEventCard({ event, onOpen }: { event: CalendarVisualEventDTO
         event.inProgress ? `border-analysis/30 bg-[#001f29]` : "border-border-panel bg-card"
       }`}
       onClick={onOpen}
+      disabled={!onOpen}
       type="button"
     >
       <span className="flex w-full items-center justify-between gap-1.5 leading-none">
@@ -48,6 +49,7 @@ export function DayEventCard({ event, onOpen }: { event: CalendarVisualEventDTO;
           event.inProgress ? "border-analysis/30 bg-[#001f29]" : "border-border-panel bg-card"
         }`}
         onClick={onOpen}
+        disabled={!onOpen}
         type="button"
       >
         {event.inProgress ? (
