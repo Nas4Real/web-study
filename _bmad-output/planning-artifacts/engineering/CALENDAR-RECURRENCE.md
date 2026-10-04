@@ -49,6 +49,15 @@ Update/delete series master. Existing exceptions need an explicit reconciliation
 
 For recurring occurrences, obtain scope before mutation. For one-time sessions, no scope question is needed. The scope UI must be approved in live Superdesign.
 
+### Deletion action boundary
+
+`deleteSessionAction(input)` resolves the existing authenticated calendar context on every call and delegates to `deleteSessionMutationHandler`, which validates a strict discriminated target before using the shared service:
+
+- `{ scope: 'occurrence', seriesId, originalStart }` writes a cancellation through `CalendarService.saveException`. The identity is the original generated start, not an effective moved start. Retry succeeds with the stable cancellation record; siblings and the master remain unchanged.
+- `{ scope: 'series', seriesId }` calls `CalendarService.delete`. One-time sessions use this path too. Stored exceptions cascade through the existing owner-aware FK. A retry after successful series deletion returns `NOT_FOUND`; it cannot delete a different record.
+
+There is no default scope or fallback from an invalid occurrence to series deletion. Missing/extra target fields, client actor ownership and mixed series/occurrence identity are rejected. Actor and repository/test scope are derived only from the existing context resolver, not mutation arguments. Successful responses contain only `SESSION_DELETED`; failures contain a fixed safe message and stable error code. The Supabase delete adapter requires the returned ID to match the requested owned series before reporting success. Only successful actions invalidate `/calendar` and `/`; no UI binding is claimed by this backend checkpoint.
+
 ## Testing
 
 DST/timezone boundaries, moved occurrences, cancelled occurrences, overridden notes/location/professor, range limits, and original-start stability are mandatory test classes.

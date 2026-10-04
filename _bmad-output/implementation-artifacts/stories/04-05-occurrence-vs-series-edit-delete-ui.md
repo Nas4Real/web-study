@@ -71,6 +71,14 @@ E2E modify/cancel one occurrence vs series.
 - Five-axis review covers schedule identity, race ordering, existing service/repository layering, ownership/ACLs and short parent-first transactions. Partial metadata/override modifications remain last-write-wins, not general optimistic versioning.
 - Remaining: authenticated action/context integration, approved edit authoring state, scope/UI wiring and actual occurrence/series mutation E2E acceptance. Story remains in-progress; 21/45 done, 24 remaining.
 
+## Deletion action checkpoint — 2026-10-04
+
+- Added `deleteSessionAction` and a narrow strict target contract through the existing authenticated context and shared CalendarService. Scope is mandatory; series targets cannot carry an occurrence identity and client actor/extra fields are rejected. No new authentication path or trust in client test scope.
+- Occurrence deletion writes a cancellation under its original generated identity, preserving master/siblings; a moved effective start is not an identity. Whole-series deletion uses the owned master/FK cascade and also handles one-time sessions. Cancellation retries succeed; series-deletion retries return safe NOT_FOUND without affecting another record.
+- Success invalidates `/calendar` and `/`; errors use fixed safe messages/codes and never invalidate. No raw provider records are returned. Added isolated fake deletion/cascade for future browser integration. Red provider-boundary tests reproduced malformed/undefined delete rows being reported as success; the adapter now requires an exact returned identity.
+- Added 36 unit tests and six pgTAP assertions. `pnpm check` passes (379 unit tests/build), all 68 database assertions and all 96 browser tests pass, advisors and production audit are clean. Production UI is not yet bound and no actual UI deletion acceptance is claimed. Five-axis review found no blocking issue for this additive backend slice; known dev-server stream-closed diagnostics remain observed.
+- No UI, auth, schema, grants, dependencies or screenshot baselines changed. Remaining: edit action adapter, approved edit-form reference, scope/UI binding, real mutation E2E acceptance. Story remains in-progress; 21/45 done, 24 remaining.
+
 ## Done when
 
 - acceptance behavior matches PRD and engineering contract

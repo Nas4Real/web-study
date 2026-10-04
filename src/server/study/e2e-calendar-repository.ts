@@ -87,6 +87,16 @@ export function createE2eCalendarRepository(scope = "visual-baseline"): Calendar
       series[index] = { ...series[index], ...structuredClone(input), updatedAt: new Date().toISOString() };
       return { data: structuredClone(series[index]), errorCode: null };
     },
-    async deleteOwned() { return { data: false, errorCode: "provider_error" }; },
+    async deleteOwned(userId, seriesId) {
+      const series = storeFor(userId);
+      const index = series.findIndex(item => item.id === seriesId);
+      if (index < 0) return { data: false, errorCode: null };
+      series.splice(index, 1);
+      const exceptions = exceptionsFor(userId);
+      for (let index = exceptions.length - 1; index >= 0; index--) {
+        if (exceptions[index].seriesId === seriesId) exceptions.splice(index, 1);
+      }
+      return { data: true, errorCode: null };
+    },
   };
 }

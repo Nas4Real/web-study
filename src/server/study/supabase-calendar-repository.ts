@@ -218,7 +218,9 @@ export function createSupabaseCalendarRepository(
         .eq("user_id", userId)
         .select("id")
         .maybeSingle();
-      return { data: data !== null, errorCode: errorCode(error) };
+      const valid = data !== null && typeof data === "object" && data.id === seriesId;
+      const code = errorCode(error);
+      return { data: !code && valid, errorCode: code ?? (data !== null && !valid ? "provider_error" : null) };
     },
   };
 }

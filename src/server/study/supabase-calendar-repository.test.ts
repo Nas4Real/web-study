@@ -31,6 +31,22 @@ function clientWith(data: unknown) {
 }
 
 describe("Supabase calendar exception repository", () => {
+  it.each([
+    [{ id: SERIES_ID }, null, { data: true, errorCode: null }],
+    [null, null, { data: false, errorCode: null }],
+    [null, { code: "42501" }, { data: false, errorCode: "42501" }],
+    [{ id: "wrong" }, null, { data: false, errorCode: "provider_error" }],
+    [undefined, null, { data: false, errorCode: "provider_error" }],
+  ])("deletes only the owned series and validates returned identity: %j", async (data, error, expected) => {
+    const builder = { delete: vi.fn(), eq: vi.fn(), select: vi.fn(), maybeSingle: vi.fn().mockResolvedValue({ data, error }) };
+    for (const method of [builder.delete, builder.eq, builder.select]) method.mockReturnValue(builder);
+    const client = { from: vi.fn().mockReturnValue(builder) };
+    expect(await createSupabaseCalendarRepository(client as never).deleteOwned(USER_ID, SERIES_ID)).toEqual(expected);
+    expect(client.from).toHaveBeenCalledWith("calendar_series");
+    expect(builder.eq.mock.calls).toEqual([["id", SERIES_ID], ["user_id", USER_ID]]);
+    expect(builder.select).toHaveBeenCalledWith("id");
+  });
+
   it("translates allowlisted SQL JSON keys in both directions without dropping unknown keys", async () => {
     const sqlPayload = { starts_at: "2026-10-13T08:00:00Z", duration_minutes: 60, focus_text: null, notes_items: ["Bring lab sheet"] };
     const row = { id: "44444444-4444-4444-8444-444444444444", series_id: SERIES_ID, original_start: "2026-10-12T08:00:00Z", action: "modified", override_payload: sqlPayload, created_at: "2026-10-04T12:00:00Z", updated_at: "2026-10-04T12:00:00Z" };

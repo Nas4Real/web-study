@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(15);
+select plan(21);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values ('55555555-5555-4555-8555-555555555555', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'calendar-atomic@example.test', '', now(), '{}', '{}', now(), now());
@@ -33,5 +33,13 @@ select throws_ok($$ update public.calendar_series set timezone = 'Europe/Paris' 
 select throws_ok($$ update public.calendar_series set recurrence_rule = null where id = '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb' $$, '23514', 'Calendar schedule has exceptions', 'recurrence removal is guarded');
 set local role anon;
 select throws_ok($$ select * from public.save_calendar_exception('55555555-5555-4555-8555-555555555555', '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '2026-10-13T08:00:00Z', 'cancelled', '{}', '2026-10-06T08:00:00Z', 'Africa/Tunis', 'FREQ=WEEKLY;COUNT=3') $$, '42501', 'permission denied for function save_calendar_exception', 'anonymous invocation actually fails');
+set local role authenticated;
+select is_empty($$ delete from public.calendar_series where id = '66666666-bbbb-4bbb-8bbb-bbbbbbbbbbbb' returning id $$, 'foreign whole-series deletion returns no row');
+select results_eq($$ delete from public.calendar_series where id = '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb' and user_id = '55555555-5555-4555-8555-555555555555' returning id $$, $$ values ('55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid) $$, 'owner can delete the exact series with existing grants');
+select is((select count(*) from public.calendar_series where id = '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), 0::bigint, 'whole-series deletion removes its master');
+select is((select count(*) from public.calendar_exceptions where series_id = '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), 0::bigint, 'whole-series deletion cascades its occurrence exceptions');
+select is_empty($$ delete from public.calendar_series where id = '55555555-bbbb-4bbb-8bbb-bbbbbbbbbbbb' returning id $$, 'retried series deletion safely reports no row');
+reset role;
+select is((select count(*) from public.calendar_series where id = '66666666-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), 1::bigint, 'foreign series was preserved');
 select * from finish();
 rollback;
