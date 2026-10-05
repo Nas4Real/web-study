@@ -4,7 +4,10 @@ import type { CalendarVisualEventDTO } from "@/domain/dto";
 
 import { calendarToneStyles } from "./calendar-styles";
 
-export function WeekEventCard({ event, onOpen }: { event: CalendarVisualEventDTO; onOpen?: () => void }) {
+export function WeekEventCard({ event, onOpen }: {
+  event: CalendarVisualEventDTO;
+  onOpen?: (event: CalendarVisualEventDTO) => void;
+}) {
   const tone = calendarToneStyles[event.tone];
   return (
     <button
@@ -12,7 +15,7 @@ export function WeekEventCard({ event, onOpen }: { event: CalendarVisualEventDTO
       className={`flex w-full cursor-pointer flex-col rounded-lg border p-2.5 text-left transition-all hover:-translate-y-0.5 hover:border-border-hover hover:bg-card-hover ${
         event.inProgress ? `border-analysis/30 bg-[#001f29]` : "border-border-panel bg-card"
       }`}
-      onClick={onOpen}
+      onClick={() => onOpen?.(event)}
       disabled={!onOpen}
       type="button"
     >
@@ -31,7 +34,10 @@ export function WeekEventCard({ event, onOpen }: { event: CalendarVisualEventDTO
   );
 }
 
-export function DayEventCard({ event, onOpen }: { event: CalendarVisualEventDTO; onOpen?: () => void }) {
+export function DayEventCard({ event, onOpen }: {
+  event: CalendarVisualEventDTO;
+  onOpen?: (event: CalendarVisualEventDTO) => void;
+}) {
   const tone = calendarToneStyles[event.tone];
   return (
     <div className="group flex flex-col gap-3 sm:flex-row sm:gap-6">
@@ -48,7 +54,7 @@ export function DayEventCard({ event, onOpen }: { event: CalendarVisualEventDTO;
         className={`relative flex min-w-0 flex-1 cursor-pointer flex-col overflow-hidden rounded-lg border p-5 text-left transition-all hover:-translate-y-0.5 hover:border-border-hover hover:bg-card-hover ${
           event.inProgress ? "border-analysis/30 bg-[#001f29]" : "border-border-panel bg-card"
         }`}
-        onClick={onOpen}
+        onClick={() => onOpen?.(event)}
         disabled={!onOpen}
         type="button"
       >

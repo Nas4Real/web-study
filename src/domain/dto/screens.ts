@@ -34,6 +34,9 @@ export interface DashboardClassDTO {
 
 export interface DashboardFixtureDTO {
   date: string;
+  fixture: boolean;
+  timeZone: string;
+  subjects: readonly SubjectSummaryDTO[];
   upcomingExam: { title: string; dueLabel: string };
   nextSession: { title: string; location: string; timeLabel: string };
   taskSummary: { total: number; dueToday: number; completedToday: number };

@@ -369,6 +369,9 @@ export const documentsPageFixture = {
 
 export const dashboardFixture = {
   date: "2026-08-10",
+  fixture: true,
+  timeZone: "Africa/Tunis",
+  subjects: subjectsFixture,
   upcomingExam: { title: "Algèbre Linéaire", dueLabel: "in 2 days" },
   nextSession: { title: "Mathematics", location: "Room 27", timeLabel: "11:00 AM" },
   taskSummary: { total: 4, dueToday: 2, completedToday: 1 },

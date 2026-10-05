@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { dashboardFixture } from "@/fixtures";
+import { dashboardFixture, sessionDetailFixture } from "@/fixtures";
 import type { DashboardFixtureDTO } from "@/domain/dto";
+import { SessionDetailsModal } from "@/features/calendar/session-details-modal";
+import { useSessionDetail } from "@/features/calendar/use-session-detail";
+import type { SessionOccurrenceTarget } from "@/server/study/session-detail-service";
 import { TaskDetailProvider, useTaskDetail } from "@/features/tasks/use-task-detail";
 import { TaskDetailsModal } from "@/features/tasks/task-details-modal";
 
@@ -21,6 +24,8 @@ export function Dashboard({ dashboard = dashboardFixture }: { dashboard?: Dashbo
 function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
   const router = useRouter();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedSession, setSelectedSession] = useState<SessionOccurrenceTarget | null>(null);
+  const sessionDetail = useSessionDetail(dashboard.fixture ? null : selectedSession);
   const detail = useTaskDetail(selectedTaskId, (updated, id) => {
     if (!updated && selectedTaskId === id) setSelectedTaskId(null);
     // Recompute summary, assignments, today's tasks and calendar markers from the same domain.
@@ -30,7 +35,12 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
     detail.mutation.reset();
     setSelectedTaskId(id);
   }
+  function closeSession() {
+    setSelectedSession(null);
+    if (!dashboard.fixture) router.refresh();
+  }
   const error = detail.query.error?.message ?? detail.mutation.error?.message;
+  const session = dashboard.fixture && selectedSession ? sessionDetailFixture : sessionDetail.data?.detail;
   return (
     <div className="min-h-full space-y-8 overflow-y-auto p-4 sm:p-6 xl:p-8">
       <DashboardHeader />
@@ -43,7 +53,10 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
             onToggle={task => detail.mutate({ type: task.completed ? "reopen" : "complete" }, task.id)} />
         </div>
         <div className="space-y-8">
-          <TodayClasses classes={dashboard.todayClasses} />
+          <TodayClasses
+            classes={dashboard.todayClasses}
+            onOpen={item => setSelectedSession({ seriesId: item.seriesId, originalStart: item.originalStart })}
+          />
           <MiniCalendar calendar={dashboard.calendar} />
         </div>
       </div>
@@ -53,6 +66,23 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
         detail={detail.query.data.detail} now={detail.query.data.now} timeZone={detail.query.data.timeZone}
         pending={detail.mutation.isPending} error={detail.mutation.error?.message ?? null}
         onMutate={detail.mutate} onClose={() => setSelectedTaskId(null)} /> : null}
+      {selectedSession && !dashboard.fixture && sessionDetail.isPending ? (
+        <p className="sr-only" role="status">Loading session details.</p>
+      ) : null}
+      {selectedSession && sessionDetail.error && !session ? (
+        <p className="text-sm font-semibold text-red-400" role="alert">
+          {sessionDetail.error.message}{" "}
+          <button className="underline" onClick={() => sessionDetail.refetch()} type="button">Try again</button>
+        </p>
+      ) : null}
+      {selectedSession && session ? (
+        <SessionDetailsModal
+          onClose={closeSession}
+          session={session}
+          subjects={dashboard.subjects}
+          timeZone={dashboard.fixture ? dashboard.timeZone : sessionDetail.data!.timeZone}
+        />
+      ) : null}
     </div>
   );
 }

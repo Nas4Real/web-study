@@ -2,7 +2,10 @@ import { ChevronRight } from "lucide-react";
 
 import type { DashboardClassDTO } from "@/domain/dto";
 
-export function TodayClasses({ classes }: { classes: readonly DashboardClassDTO[] }) {
+export function TodayClasses({ classes, onOpen }: {
+  classes: readonly DashboardClassDTO[];
+  onOpen?: (session: DashboardClassDTO) => void;
+}) {
   return (
     <section className="rounded-2xl border border-border-base bg-card p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -14,7 +17,12 @@ export function TodayClasses({ classes }: { classes: readonly DashboardClassDTO[
       <ul className="divide-y divide-border-base">
         {classes.map((session) => (
           <li key={session.id}>
-            <a className="flex items-center gap-6 py-4" href={`#${session.id}`}>
+            <button
+              aria-label={`Open ${session.title}`}
+              className="flex w-full items-center gap-6 py-4 text-left"
+              onClick={() => onOpen?.(session)}
+              type="button"
+            >
               <time className="w-12 font-mono text-xs text-text-muted">{session.timeLabel}</time>
               <span className="flex flex-1 items-center justify-between">
                 <span>
@@ -23,7 +31,7 @@ export function TodayClasses({ classes }: { classes: readonly DashboardClassDTO[
                 </span>
                 <ChevronRight aria-hidden="true" className="text-text-disabled" size={16} />
               </span>
-            </a>
+            </button>
           </li>
         ))}
       </ul>

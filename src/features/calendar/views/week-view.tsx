@@ -1,8 +1,11 @@
-import type { CalendarWeekDayDTO } from "@/domain/dto";
+import type { CalendarVisualEventDTO, CalendarWeekDayDTO } from "@/domain/dto";
 
 import { WeekEventCard } from "../calendar-event-card";
 
-export function WeekView({ days, onOpenEvent }: { days: readonly CalendarWeekDayDTO[]; onOpenEvent?: () => void }) {
+export function WeekView({ days, onOpenEvent }: {
+  days: readonly CalendarWeekDayDTO[];
+  onOpenEvent?: (event: CalendarVisualEventDTO) => void;
+}) {
   return (
     <section aria-label="Week calendar" className="flex flex-1 overflow-x-auto px-4 pb-8 pt-6 sm:px-8">
       <div className="grid min-w-[840px] flex-1 grid-cols-7 divide-x divide-border-panel overflow-hidden rounded-xl border border-border-panel bg-panel shadow-inner">

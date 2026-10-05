@@ -36,6 +36,9 @@ export function toDashboardViewModel(model: DashboardReadModel): DashboardFixtur
   model.monthExams.forEach(s => { events[local(s.startsAt).getDate()] = "exam"; });
   return {
     date: model.now,
+    fixture: false,
+    timeZone: model.timeZone,
+    subjects: model.subjects.map(subject => ({ id: subject.id, name: subject.name, color: subject.color })),
     upcomingExam: { title: model.upcomingExam?.title ?? "—",
       dueLabel: model.upcomingExam ? (distance(model.upcomingExam.startsAt) === 0 ? "Today" :
         `in ${distance(model.upcomingExam.startsAt)} days`) : "—" },
