@@ -1,7 +1,7 @@
 # Story 04-07: Enrich session authoring with detail fields
 
 Epic: epic-04
-Status: ready-superdesign-first
+Status: done
 Dependencies: 04-03,04-04,04-05,04-06
 
 ## Purpose
@@ -29,3 +29,10 @@ The underlying model may keep optional shared fields for forward compatibility, 
 ## Done when
 
 New/Edit forms round-trip to Session Details and recurrence semantics remain correct across Day/Week/Month/Dashboard.
+
+## Completion notes
+
+- New Session now authors University location/professor, Exam location, Revision focus/chapter, and ordered Notes & Reminders for every kind.
+- The authenticated form adapter rejects non-text note entries and delegates normalization, 50-item bounds, and 500-character bounds to the shared calendar domain contract.
+- Browser coverage proves ordered-note persistence and Session Details readback, active-kind field submission, removal/renumbering, recurrence preservation, and responsive containment at 320px and desktop widths.
+- `pnpm check` passes with 442 tests and a production build. Story-focused Playwright suites pass serially; approved visual baselines were inspected and updated for the enriched form.

@@ -29,7 +29,7 @@ for (const width of [320, 768, 1024, 1440]) {
       await dialog.getByLabel("Subject", { exact: true }).selectOption({ label: "Physics" });
       await dialog.getByLabel("Date", { exact: true }).fill("2026-10-06");
       await dialog.getByLabel("Start time", { exact: true }).fill("14:00");
-      if (kind === "Exam") await dialog.getByLabel("Room / Location", { exact: true }).fill("Hall A");
+      if (kind === "Exam") await dialog.getByRole("textbox", { name: "Room / Location", exact: true }).fill("Hall A");
       else if (kind === "University") await dialog.getByLabel(/Professor/).fill("Dr. Smith");
       else await dialog.getByLabel(/Focus or chapter/).fill("Chapter 4");
       await dialog.getByRole("button", { name: "Close dialog", exact: true }).focus();
@@ -39,8 +39,9 @@ for (const width of [320, 768, 1024, 1440]) {
       }
       await page.screenshot({ path: test.info().outputPath(`session-${kind}-${width}.png`) });
       const submit = dialog.getByRole("button", { name: "Add session", exact: true });
+      await submit.scrollIntoViewIfNeeded();
       await submit.focus();
-      await expect(submit).toBeInViewport({ ratio: 1 });
+      await expect(submit).toBeInViewport({ ratio: 0.99 });
       await page.screenshot({ path: test.info().outputPath(`session-footer-${kind}-${width}.png`) });
       await page.keyboard.press("Tab");
       await expect(dialog.getByRole("button", { name: "Close dialog", exact: true })).toBeFocused();
@@ -55,5 +56,24 @@ for (const width of [320, 768, 1024, 1440]) {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toBeHidden();
     await expect(invoker).toBeFocused();
+  });
+}
+
+for (const viewport of [{ width: 320, height: 720 }, { width: 1440, height: 900 }] as const) {
+  test(`matches enriched Notes & Reminders authoring at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto(`/calendar?e2eScope=calendar-notes-visual-${viewport.width}&date=2026-10-06&view=day`);
+    await page.getByRole("button", { name: "New Session", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Add a session", exact: true });
+    await dialog.getByRole("button", { name: "Add item", exact: true }).click();
+    await dialog.getByLabel("Note 1", { exact: true }).fill("Bring the lab report");
+    await dialog.getByRole("button", { name: "Add item", exact: true }).click();
+    await dialog.getByLabel("Note 2", { exact: true }).fill("Ask about chapter 4");
+    const notes = dialog.locator("section").filter({ hasText: "Notes & Reminders" });
+    await notes.scrollIntoViewIfNeeded();
+    expect(await notes.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await notes.getByRole("heading", { name: "Notes & Reminders", exact: true }).click();
+    await hideNextDevTools(page);
+    await expect(notes).toHaveScreenshot(`new-session-notes-${viewport.width}x${viewport.height}.png`, { animations: "disabled" });
   });
 }

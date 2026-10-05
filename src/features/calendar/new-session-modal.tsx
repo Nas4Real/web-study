@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenCheck, CalendarPlus, ClipboardCheck, LoaderCircle, Plus, School } from "lucide-react";
+import { BookOpenCheck, CalendarPlus, ClipboardCheck, GripVertical, LoaderCircle, Plus, School, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
 import { ModalFrame } from "@/components/modal-frame";
@@ -45,6 +45,7 @@ export function NewSessionModal({ onClose, subjects, timeZone }: {
   const [location, setLocation] = useState("");
   const [professor, setProfessor] = useState("");
   const [focusText, setFocusText] = useState("");
+  const [notes, setNotes] = useState<string[]>([]);
   const copy = kindCopy[kind];
   const close = () => { if (!pending) onClose(); };
 
@@ -103,13 +104,14 @@ export function NewSessionModal({ onClose, subjects, timeZone }: {
               <label className={styles.label} htmlFor="session-start">Start time</label>
               <input className={styles.input} id="session-start" name="startTime" onChange={event => setStartTime(event.target.value)} required type="time" value={startTime} />
             </div>
-            {kind === "exam" ? <div>
-              <label className={styles.label} htmlFor="session-location">Room / Location</label>
-              <input className={styles.input} id="session-location" maxLength={500} name="location" onChange={event => setLocation(event.target.value)} placeholder="e.g. Hall A" value={location} />
-            </div> : <div>
+            {kind !== "exam" ? <div>
               <label className={styles.label} htmlFor="session-duration">Duration</label>
               <select className={styles.input} id="session-duration" name="durationMinutes" onChange={event => kind === "university" ? setUniversityDuration(event.target.value) : setRevisionDuration(event.target.value)} value={kind === "university" ? universityDuration : revisionDuration}>{durations[kind].map(minutes => <option key={minutes} value={minutes}>{durationLabels[minutes]}</option>)}</select>
-            </div>}
+            </div> : null}
+            {kind !== "revision" ? <div>
+              <label className={styles.label} htmlFor="session-location">Room / Location <span aria-hidden="true" className="font-normal text-zinc-500">— optional</span></label>
+              <input className={styles.input} id="session-location" maxLength={500} name="location" onChange={event => setLocation(event.target.value)} placeholder="e.g. Hall A" value={location} />
+            </div> : null}
             {kind === "university" ? <div className="sm:col-span-2">
               <label className={styles.label} htmlFor="session-professor">Professor <span className="font-normal text-zinc-500">— optional</span></label>
               <input className={styles.input} id="session-professor" maxLength={500} name="professor" onChange={event => setProfessor(event.target.value)} placeholder="e.g. Dr. Smith" value={professor} />
@@ -119,6 +121,20 @@ export function NewSessionModal({ onClose, subjects, timeZone }: {
               <input className={styles.input} id="session-focus" maxLength={80} name="focusText" onChange={event => setFocusText(event.target.value)} placeholder="e.g. Chapter 4 · integrals" value={focusText} />
             </div> : null}
           </div>
+          <section className="border-t border-[#27272a] pt-5">
+            <div className="flex items-center justify-between gap-3">
+              <div><h3 className="text-[14px] font-bold text-white">Notes &amp; Reminders</h3><p className="mt-1 text-[11px] text-zinc-500">Keep these in the order you need them.</p></div>
+              <button className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#343438] bg-[#171719] px-3 py-2 text-[12px] font-bold text-white hover:bg-[#222225]" onClick={() => setNotes(items => [...items, ""])} type="button"><Plus aria-hidden="true" size={14} />Add item</button>
+            </div>
+            <div className="mt-3 space-y-2">
+              {notes.map((note, index) => <div className="flex items-center gap-2" key={index}>
+                <GripVertical aria-hidden="true" className="shrink-0 text-zinc-600" size={16} />
+                <span className="w-5 shrink-0 text-center text-[12px] font-bold text-zinc-500">{index + 1}</span>
+                <input aria-label={`Note ${index + 1}`} className={styles.input} maxLength={500} name="notesItem" onChange={event => setNotes(items => items.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} required value={note} />
+                <button aria-label={`Remove note ${index + 1}`} className="grid size-10 shrink-0 place-items-center rounded-lg text-zinc-500 hover:bg-[#202023] hover:text-red-400" onClick={() => setNotes(items => items.filter((_, itemIndex) => itemIndex !== index))} type="button"><Trash2 aria-hidden="true" size={15} /></button>
+              </div>)}
+            </div>
+          </section>
           <SessionRecurrenceFields date={date} timeZone={timeZone} />
           {state.status === "error" ? <p className="text-[14px] leading-5 text-zinc-300" role="alert">{state.message}</p> : null}
         </fieldset>

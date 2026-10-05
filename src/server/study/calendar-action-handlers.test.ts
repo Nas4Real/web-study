@@ -142,7 +142,7 @@ describe("session creation form adapter", () => {
     const { context, form, saved, repository } = setup();
     form.set("kind", kind);
     if (kind === "exam") { form.delete("durationMinutes"); form.set("location", " Hall A "); }
-    if (kind === "university") form.set("professor", " Dr. Smith ");
+    if (kind === "university") { form.set("location", " Room 304 "); form.set("professor", " Dr. Smith "); }
     if (kind === "revision") form.set("focusText", " Chapter 4 ");
     // Hidden client values cannot change the verified actor, profile timezone or add recurrence/content.
     form.set("userId", "untrusted-actor"); form.set("timezone", "America/New_York");
@@ -150,9 +150,26 @@ describe("session creation form adapter", () => {
     expect(await createSessionMutationHandler(async () => context, form)).toEqual({ code: "SESSION_CREATED", status: "success" });
     expect(saved[0]).toMatchObject({ kind, title: "Physics lecture", startsAt: "2026-10-05T08:30:00.000Z",
       timezone: "Africa/Tunis", recurrenceRule: null, notesItems: [],
-      durationMinutes: kind === "exam" ? null : 45, location: kind === "exam" ? "Hall A" : null,
+      durationMinutes: kind === "exam" ? null : 45, location: kind === "exam" ? "Hall A" : kind === "university" ? "Room 304" : null,
       professor: kind === "university" ? "Dr. Smith" : null, focusText: kind === "revision" ? "Chapter 4" : null });
     expect(repository.createOwned).toHaveBeenCalledWith(ACTOR, expect.anything());
+  });
+
+  it("creates ordered Notes & Reminders after normalizing each item", async () => {
+    const { context, form, saved } = setup();
+    form.append("notesItem", "  Bring   the lab report  ");
+    form.append("notesItem", "Ask about chapter 4");
+
+    expect(await createSessionMutationHandler(async () => context, form)).toEqual({ code: "SESSION_CREATED", status: "success" });
+    expect(saved[0].notesItems).toEqual(["Bring the lab report", "Ask about chapter 4"]);
+  });
+
+  it("rejects non-text Notes & Reminders before writing", async () => {
+    const { context, form, saved } = setup();
+    form.append("notesItem", new Blob(["untrusted"]), "note.txt");
+
+    expect(await createSessionMutationHandler(async () => context, form)).toMatchObject({ code: "INVALID_INPUT", status: "error" });
+    expect(saved).toHaveLength(0);
   });
 
   it.each(["45", "60", "90", "120"])("accepts approved duration %s", async duration => {

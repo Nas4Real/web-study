@@ -40,6 +40,8 @@ export async function createSessionMutationHandler(
       if (entries.length > 1 || (entries.length === 1 && typeof entries[0] !== "string")) return error("INVALID_INPUT");
       if (typeof entries[0] === "string") values[name] = entries[0];
     }
+    const noteEntries = formData.getAll("notesItem");
+    if (noteEntries.some(item => typeof item !== "string")) return error("INVALID_INPUT");
     const startsAt = sessionDateTimeToIso(values.date ?? "", values.startTime ?? "", context.timeZone);
     if (!startsAt) return error("INVALID_INPUT");
     const recurrence = parseRecurrenceForm(values, formData.getAll("repeatWeekday"), context.timeZone);
@@ -51,7 +53,7 @@ export async function createSessionMutationHandler(
       location: values.location ?? null,
       professor: values.professor ?? null,
       focusText: values.focusText ?? null,
-      recurrenceRule: recurrence.rule, notesItems: [],
+      recurrenceRule: recurrence.rule, notesItems: noteEntries,
     });
     if (result.status === "success") return { code: "SESSION_CREATED", status: "success" };
     if (result.code === "INVALID_ACTOR") return error("UNAUTHENTICATED");

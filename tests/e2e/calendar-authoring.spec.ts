@@ -17,17 +17,32 @@ for (const kind of ["Exam", "University", "Revision"] as const) {
     await dialog.getByLabel("Start time", { exact: true }).fill("14:00");
     if (kind === "Exam") {
       await expect(dialog.getByLabel("Duration", { exact: true })).toHaveCount(0);
-      await dialog.getByLabel("Room / Location", { exact: true }).fill("Hall A");
+      await dialog.getByRole("textbox", { name: "Room / Location", exact: true }).fill("Hall A");
     } else {
       await dialog.getByLabel("Duration", { exact: true }).selectOption("60");
-      if (kind === "University") await dialog.getByLabel(/Professor/).fill("Dr. Smith");
+      if (kind === "University") {
+        await dialog.getByRole("textbox", { name: "Room / Location", exact: true }).fill("Room 304");
+        await dialog.getByLabel(/Professor/).fill("Dr. Smith");
+      }
       else await dialog.getByLabel(/Focus or chapter/).fill("Chapter 4");
     }
+    await dialog.getByRole("button", { name: "Add item", exact: true }).click();
+    await dialog.getByLabel("Note 1", { exact: true }).fill(`${kind} first reminder`);
+    await dialog.getByRole("button", { name: "Add item", exact: true }).click();
+    await dialog.getByLabel("Note 2", { exact: true }).fill(`${kind} second reminder`);
     await dialog.getByRole("button", { name: "Add session", exact: true }).click();
     await expect(dialog).toBeHidden();
     await expect(page.getByText(title, { exact: true })).toBeVisible();
     if (kind === "Exam") await expect(page.getByText("Hall A", { exact: true })).toBeVisible();
+    else if (kind === "University") await expect(page.getByText("Room 304", { exact: true })).toBeVisible();
     else await expect(page.getByText("60m", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: `Open ${title}`, exact: true }).click();
+    const detail = page.getByRole("dialog", { name: title, exact: true });
+    const noteRows = detail.locator("section").filter({ hasText: "Notes & Reminders" }).locator("div > p");
+    await expect(noteRows).toHaveCount(2);
+    await expect(noteRows.nth(0)).toContainText(`${kind} first reminder`);
+    await expect(noteRows.nth(1)).toContainText(`${kind} second reminder`);
+    await detail.getByRole("button", { name: "Close", exact: true }).click();
     await page.reload();
     await expect(page.getByText(title, { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Month", exact: true }).click();
@@ -114,15 +129,24 @@ test("uses approved duration choices and submits only the active kind's fields",
   await expect(dialog.getByLabel("Duration", { exact: true })).toHaveValue("45");
   expect(await dialog.getByLabel("Duration", { exact: true }).locator("option").evaluateAll(options => options.map(option => (option as HTMLOptionElement).value))).toEqual(["45", "60", "90", "120"]);
   await dialog.getByLabel(/Professor/).fill("Not a revision professor");
+  await dialog.getByRole("button", { name: "Add item", exact: true }).click();
+  await dialog.getByLabel("Note 1", { exact: true }).fill("Keep across type changes");
+  await dialog.getByRole("button", { name: "Add item", exact: true }).click();
+  await dialog.getByLabel("Note 2", { exact: true }).fill("Keep after removal");
   await dialog.getByRole("button", { name: /^Exam/ }).click();
-  await dialog.getByLabel("Room / Location", { exact: true }).fill("Not a revision room");
+  await dialog.getByRole("textbox", { name: "Room / Location", exact: true }).fill("Not a revision room");
   await dialog.getByRole("button", { name: /^Revision/ }).click();
   await expect(dialog.getByLabel("Duration", { exact: true })).toHaveValue("90");
   await expect(dialog.getByLabel("Duration", { exact: true }).locator("option")).toHaveCount(5);
   expect(await dialog.getByLabel("Duration", { exact: true }).locator("option").evaluateAll(options => options.map(option => (option as HTMLOptionElement).value))).toEqual(["30", "60", "90", "120", "180"]);
   await dialog.getByLabel("Duration", { exact: true }).selectOption("180");
   await expect(dialog.getByLabel(/Professor/)).toHaveCount(0);
-  await expect(dialog.getByLabel("Room / Location", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("textbox", { name: "Room / Location", exact: true })).toHaveCount(0);
+  await expect(dialog.getByLabel("Note 1", { exact: true })).toHaveValue("Keep across type changes");
+  await expect(dialog.getByLabel("Note 2", { exact: true })).toHaveValue("Keep after removal");
+  await dialog.getByRole("button", { name: "Remove note 1", exact: true }).click();
+  await expect(dialog.getByLabel("Note 1", { exact: true })).toHaveValue("Keep after removal");
+  await expect(dialog.getByLabel("Note 2", { exact: true })).toHaveCount(0);
   await dialog.getByRole("textbox").first().fill("Switched revision");
   await dialog.getByLabel("Subject", { exact: true }).selectOption({ label: "Physics" });
   await dialog.getByLabel("Date", { exact: true }).fill("2026-10-06");
