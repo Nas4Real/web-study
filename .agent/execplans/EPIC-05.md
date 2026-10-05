@@ -21,3 +21,7 @@ At every story boundary run the relevant lint, typecheck, unit/integration, E2E,
 ## Design-block rule
 
 If a story is marked `ready-superdesign-first`, inspect the live Superdesign project first. If the required state is absent, create/iterate it in that same project, then implement from the resulting draft.
+
+## Progress
+
+- `05-01` complete on 2026-10-06: added owner-scoped chapters and hierarchical folders with atomic editable `Cours`/`TD`/`Resume` starter rows, owner-aware composite foreign keys, restrictive dependency deletion, case-insensitive scoped names, explicit Data API grants, and full RLS. Per-owner advisory locking plus an invoker trigger prevents self/ancestor cycles and inconsistent subject/chapter moves under concurrent writes. Strict domain contracts, application services, and provider-validating Supabase repositories expose stable non-enumerating and conflict errors. The focused 18-test suite, local migration reset, all 103 pgTAP assertions, and `pnpm check` with 460 tests/build pass. Database lint adds no finding; the existing Calendar immutable/stable warning remains. Count is now 25/45 complete, 20 remaining. Next: `05-02` private R2 client configuration.

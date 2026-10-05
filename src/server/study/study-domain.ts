@@ -85,7 +85,7 @@ export type RepositoryResult<T> = Readonly<{
   errorCode: string | null;
 }>;
 
-export type StudyResult<T> =
+export type StudyResult<T, ExtraCode extends string = never> =
   | Readonly<{ data: T; status: "success" }>
   | Readonly<{
       code:
@@ -93,7 +93,8 @@ export type StudyResult<T> =
         | "INVALID_INPUT"
         | "NOT_FOUND"
         | "DUPLICATE_NAME"
-        | "STORAGE_UNAVAILABLE";
+        | "STORAGE_UNAVAILABLE"
+        | ExtraCode;
       status: "error";
     }>;
 
