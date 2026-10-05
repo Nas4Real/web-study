@@ -122,6 +122,20 @@ export const taskDetailFixture = {
 
 export const sessionDetailFixture = {
   seriesId: "series-quantum-mechanics",
+  seriesMaster: {
+    startsAt: "2026-09-30T09:00:00.000Z",
+    title: "Quantum Mechanics Lecture",
+    durationMinutes: 90,
+    location: "Room 304",
+    professor: "Dr. Sarah Chen",
+    focusText: null,
+    notesItems: [
+      "Ask about uncertainty principle proof on slide 14.",
+      "Bring graded lab report from last week.",
+      "Check whether midterm covers chapters 4 and 5.",
+    ],
+    recurrenceRule: "FREQ=WEEKLY;BYDAY=WE",
+  },
   originalStart: "2026-09-30T08:00:00.000Z",
   title: "Quantum Mechanics Lecture",
   kind: "university",

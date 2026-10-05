@@ -20,7 +20,19 @@ export interface SessionNoteDTO {
   position: number;
 }
 
+export interface CalendarSeriesMasterDTO {
+  startsAt: IsoDateTime;
+  title: string;
+  durationMinutes: number | null;
+  location: string | null;
+  professor: string | null;
+  focusText: string | null;
+  notesItems: readonly string[];
+  recurrenceRule: string | null;
+}
+
 export interface CalendarOccurrenceDetailDTO extends CalendarOccurrenceSummaryDTO {
+  seriesMaster: CalendarSeriesMasterDTO;
   location: string | null;
   professor: string | null;
   focusText: string | null;

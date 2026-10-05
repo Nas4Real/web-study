@@ -27,7 +27,12 @@ import {
 } from "./calendar-recurrence";
 
 export type CalendarSchedule = Pick<CalendarSeries, "startsAt" | "timezone" | "recurrenceRule">;
-export type CalendarOccurrenceDetailRecord = CalendarOccurrence & Pick<CalendarSeries, "recurrenceRule">;
+export type CalendarSeriesMasterRecord = Pick<CalendarSeries,
+  "startsAt" | "title" | "durationMinutes" | "location" | "professor" | "focusText" | "notesItems" | "recurrenceRule"
+>;
+export type CalendarOccurrenceDetailRecord = CalendarOccurrence & Pick<CalendarSeries, "recurrenceRule"> & {
+  seriesMaster: CalendarSeriesMasterRecord;
+};
 
 export type CalendarRepository = Readonly<{
   saveExceptionOwned(userId: string, input: CalendarExceptionInput, expectedSchedule: CalendarSchedule): Promise<RepositoryResult<CalendarException>>;
@@ -87,6 +92,19 @@ function writeUpdate(series: CalendarSeriesCreate): CalendarSeriesWriteUpdate {
 
 function createShape(series: CalendarSeries): CalendarSeriesCreate {
   return { kind: series.kind, ...writeUpdate(series) };
+}
+
+function seriesMasterShape(series: CalendarSeries): CalendarSeriesMasterRecord {
+  return {
+    durationMinutes: series.durationMinutes,
+    focusText: series.focusText,
+    location: series.location,
+    notesItems: series.notesItems,
+    professor: series.professor,
+    recurrenceRule: series.recurrenceRule,
+    startsAt: series.startsAt,
+    title: series.title,
+  };
 }
 
 export class CalendarService {
@@ -192,7 +210,11 @@ export class CalendarService {
         item => new Date(item.originalStart).toISOString() === canonicalStart,
       );
       if (exception?.action === "cancelled") return NOT_FOUND;
-      if (!exception) return { data: { ...membership, recurrenceRule: series.data.recurrenceRule }, status: "success" };
+      if (!exception) return { data: {
+        ...membership,
+        recurrenceRule: series.data.recurrenceRule,
+        seriesMaster: seriesMasterShape(series.data),
+      }, status: "success" };
 
       const effectiveStart = new Date(exception.overridePayload.startsAt ?? canonicalStart);
       const effective = expandCalendarOccurrences(
@@ -202,7 +224,11 @@ export class CalendarService {
         this.now(),
       ).find(occurrence => occurrence.originalStart === canonicalStart);
       return effective
-        ? { data: { ...effective, recurrenceRule: series.data.recurrenceRule }, status: "success" }
+      ? { data: {
+          ...effective,
+          recurrenceRule: series.data.recurrenceRule,
+          seriesMaster: seriesMasterShape(series.data),
+        }, status: "success" }
         : NOT_FOUND;
     } catch (cause) {
       return cause instanceof CalendarExpansionLimitError ? INVALID_INPUT : STORAGE_UNAVAILABLE;

@@ -30,3 +30,7 @@ Story 03-05 authoring scenarios are executable in `tests/e2e/task-authoring.spec
 - DETAIL-A11Y-002 focus trap/restore and Escape behavior pass.
 - DETAIL-VIS-001 Task Details matches live Superdesign/V4 reference.
 - DETAIL-VIS-002 Session Details matches live Superdesign/V4 reference.
+
+## Session verification
+
+The earlier scoping note is superseded: Story 04-06 scenarios are executable in `tests/e2e/session-details.spec.ts`, with service, handler, and action boundaries covered beside the implementation. The suite verifies Day, Week, and Dashboard launch surfaces, effective exception values versus sibling series values, safe read failure/retry, and invoker-focus restoration. Story 04-05 persistence coverage in the same suite verifies occurrence, series, and one-time edit/delete behavior. Responsive visual comparisons cover 320, 768, and 1024 pixels; the existing approved 1440 Session Details baseline remains in `workspace-surfaces.spec.ts`.

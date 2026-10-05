@@ -12,6 +12,7 @@ export function WeekEventCard({ event, onOpen }: {
   return (
     <button
       aria-label={`Open ${event.title}`}
+      id={`session-open-${event.id}`}
       className={`flex w-full cursor-pointer flex-col rounded-lg border p-2.5 text-left transition-all hover:-translate-y-0.5 hover:border-border-hover hover:bg-card-hover ${
         event.inProgress ? `border-analysis/30 bg-[#001f29]` : "border-border-panel bg-card"
       }`}
@@ -51,6 +52,7 @@ export function DayEventCard({ event, onOpen }: {
       </div>
       <button
         aria-label={`Open ${event.title}`}
+        id={`session-open-${event.id}`}
         className={`relative flex min-w-0 flex-1 cursor-pointer flex-col overflow-hidden rounded-lg border p-5 text-left transition-all hover:-translate-y-0.5 hover:border-border-hover hover:bg-card-hover ${
           event.inProgress ? "border-analysis/30 bg-[#001f29]" : "border-border-panel bg-card"
         }`}

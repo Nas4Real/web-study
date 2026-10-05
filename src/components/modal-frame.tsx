@@ -15,6 +15,7 @@ interface ModalFrameProps {
   overlayClass?: string;
   closeDisabled?: boolean;
   descriptionId?: string;
+  returnFocusId?: string;
 }
 
 const openDialogs: HTMLElement[] = [];
@@ -22,10 +23,11 @@ const isolation = new Map<HTMLElement, { count: number; original: boolean }>();
 let scrollLocks = 0;
 let originalOverflow = "";
 
-export function ModalFrame({ children, footer, labelId, onClose, closeDisabled = false, descriptionId, widthClass = "max-w-[600px]", panelClass = "rounded-2xl shadow-2xl border-border-hover bg-card", footerClass = "border-border-panel bg-panel/50 px-6 py-4", closeClass = "right-5 top-5 size-10 border-border-panel bg-card-hover text-text-muted", overlayClass = "bg-black/80 p-4 backdrop-blur-sm" }: ModalFrameProps) {
+export function ModalFrame({ children, footer, labelId, onClose, closeDisabled = false, descriptionId, returnFocusId, widthClass = "max-w-[600px]", panelClass = "rounded-2xl shadow-2xl border-border-hover bg-card", footerClass = "border-border-panel bg-panel/50 px-6 py-4", closeClass = "right-5 top-5 size-10 border-border-panel bg-card-hover text-text-muted", overlayClass = "bg-black/80 p-4 backdrop-blur-sm" }: ModalFrameProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
+  const returnFocusIdRef = useRef(returnFocusId);
   const closeFromEffect = useEffectEvent(() => onClose());
 
   useEffect(() => {
@@ -97,8 +99,11 @@ export function ModalFrame({ children, footer, labelId, onClose, closeDisabled =
       }
       if (--scrollLocks === 0) document.body.style.overflow = originalOverflow;
       // A mutation may remove and recreate the same invoker while the dialog stays open.
-      const returnTarget = previouslyFocused?.isConnected ? previouslyFocused :
-        previouslyFocused?.id ? document.getElementById(previouslyFocused.id) : null;
+      const explicitReturnTarget = returnFocusIdRef.current
+        ? document.getElementById(returnFocusIdRef.current)
+        : null;
+      const returnTarget = explicitReturnTarget ?? (previouslyFocused?.isConnected ? previouslyFocused :
+        previouslyFocused?.id ? document.getElementById(previouslyFocused.id) : null);
       returnTarget?.focus();
     };
   }, []);

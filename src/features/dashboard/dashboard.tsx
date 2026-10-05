@@ -78,6 +78,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
       {selectedSession && session ? (
         <SessionDetailsModal
           onClose={closeSession}
+          invokerFocusId={`session-open-${selectedSession.seriesId}:${selectedSession.originalStart}`}
           session={session}
           subjects={dashboard.subjects}
           timeZone={dashboard.fixture ? dashboard.timeZone : sessionDetail.data!.timeZone}

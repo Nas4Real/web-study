@@ -84,6 +84,7 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
       {dialog === "detail" && session ? (
         <SessionDetailsModal
           onClose={closeDetail}
+          invokerFocusId={selectedOccurrence ? `session-open-${selectedOccurrence.seriesId}:${selectedOccurrence.originalStart}` : undefined}
           session={session}
           subjects={data.subjects}
           timeZone={data.fixture ? data.timeZone : detail.data!.timeZone}

@@ -1,7 +1,7 @@
 project: web-study
 version: v4
 status: implementation-in-progress
-updated: 2026-10-04
+updated: 2026-10-05
 source_of_truth: live-superdesign
 stories_total: 45
 stories:
@@ -35,6 +35,8 @@ completed_stories:
   - 04-02
   - 04-03
   - 04-04
+  - 04-05
+  - 04-06
 ui_stories_requiring_superdesign_first:
   - 02-05
   - 02-06

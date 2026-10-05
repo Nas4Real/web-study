@@ -1,12 +1,16 @@
 # Story 04-05: Occurrence-vs-series edit delete UI
 
 Epic: epic-04
-Status: in-progress
+Status: done
 Dependencies: 04-02
 
 ## Purpose
 
 Implement single occurrence and whole series mutations after approved scope-selection UI exists.
+
+## Completion — 2026-10-05
+
+The approved recurring scope/edit/delete UI now runs against canonical effective-occurrence details from Day, Week, and Dashboard. Browser persistence proof covers occurrence-only edit with unchanged siblings, whole-series edit across siblings, occurrence-only deletion with unchanged siblings, whole-series deletion, and direct one-time edit/delete without a recurring prompt. A browser-discovered series-edit defect was corrected by projecting the master series start separately from the effective occurrence and preserving semantically unchanged recurrence input. Story 04-05 is complete.
 
 ## Expected implementation surface
 

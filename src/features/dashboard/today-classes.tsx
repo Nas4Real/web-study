@@ -19,6 +19,7 @@ export function TodayClasses({ classes, onOpen }: {
           <li key={session.id}>
             <button
               aria-label={`Open ${session.title}`}
+              id={`session-open-${session.id}`}
               className="flex w-full items-center gap-6 py-4 text-left"
               onClick={() => onOpen?.(session)}
               type="button"

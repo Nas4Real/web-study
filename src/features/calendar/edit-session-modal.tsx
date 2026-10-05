@@ -26,7 +26,7 @@ function civilParts(value: string, timeZone: string) {
   return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` };
 }
 
-function parseRecurrence(rule: string | null, timeZone: string): SessionRecurrenceValue {
+function parseRecurrence(rule: string | null, timeZone: string, startsAt: string): SessionRecurrenceValue {
   if (!rule) return { frequency: "none" };
   const values = Object.fromEntries(rule.split(";").map(part => part.split("=", 2)));
   const frequency = values.FREQ?.toLowerCase();
@@ -36,10 +36,12 @@ function parseRecurrence(rule: string | null, timeZone: string): SessionRecurren
   const until = compactUntil
     ? civilParts(`${compactUntil[1]}-${compactUntil[2]}-${compactUntil[3]}T${compactUntil[4]}:${compactUntil[5]}:${compactUntil[6]}Z`, timeZone).date
     : undefined;
+  const start = civilParts(startsAt, timeZone);
+  const weekday = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][new Date(`${start.date}T00:00:00Z`).getUTCDay()];
   return {
     frequency,
     interval: Number(values.INTERVAL ?? 1),
-    weekdays: values.BYDAY?.split(","),
+    weekdays: values.BYDAY?.split(",") ?? (frequency === "weekly" ? [weekday] : undefined),
     end: count ? "count" : until ? "date" : "never",
     count,
     until,
@@ -60,6 +62,18 @@ function recurrenceFrom(formData: FormData) {
   };
 }
 
+function sameRecurrence(left: SessionRecurrenceValue, right: SessionRecurrenceValue) {
+  if (left.frequency !== right.frequency) return false;
+  if (left.frequency === "none") return true;
+  const leftDays = [...(left.weekdays ?? [])].sort().join(",");
+  const rightDays = [...(right.weekdays ?? [])].sort().join(",");
+  return (left.interval ?? 1) === (right.interval ?? 1)
+    && leftDays === rightDays
+    && (left.end ?? "never") === (right.end ?? "never")
+    && left.count === right.count
+    && left.until === right.until;
+}
+
 function scopeSummary(session: CalendarOccurrenceDetailDTO, scope: SessionMutationScope, timeZone: string) {
   if (!session.isRecurring) return "This session will be updated.";
   if (scope === "series") return "All sessions in this series will be updated.";
@@ -76,12 +90,18 @@ export function EditSessionModal({ onCancel, onSaved, scope, session, subjects, 
   subjects: readonly Readonly<{ id: string; name: string }>[];
   timeZone: string;
 }) {
-  const start = civilParts(session.startsAt, timeZone);
-  const duration = Math.round((new Date(session.endsAt).getTime() - new Date(session.startsAt).getTime()) / 60_000);
+  const editingSeries = scope === "series";
+  const master = session.seriesMaster;
+  const start = civilParts(editingSeries ? master.startsAt : session.startsAt, timeZone);
+  const initialRecurrence = parseRecurrence(master.recurrenceRule, timeZone, master.startsAt);
+  const occurrenceDuration = Math.round((new Date(session.endsAt).getTime() - new Date(session.startsAt).getTime()) / 60_000);
+  const duration = editingSeries ? (master.durationMinutes ?? occurrenceDuration) : occurrenceDuration;
   const durationOptions = durationLabels[duration]
     ? Object.entries(durationLabels)
     : [...Object.entries(durationLabels), [String(duration), `${duration} minutes`]].sort(([left], [right]) => Number(left) - Number(right));
-  const [notes, setNotes] = useState(() => session.notesItems.map(item => item.text));
+  const [notes, setNotes] = useState(() => editingSeries
+    ? [...master.notesItems]
+    : session.notesItems.map(item => item.text));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const titleLabel = session.kind === "university" ? "Class or Lecture Name" : session.kind === "revision" ? "Session title" : "Exam title";
@@ -102,13 +122,14 @@ export function EditSessionModal({ onCancel, onSaved, scope, session, subjects, 
       startTime: String(formData.get("startTime")),
       title: String(formData.get("title")),
     };
+    const recurrence = recurrenceFrom(formData);
     const input = scope === "series"
       ? {
           scope,
           seriesId: session.seriesId,
           changes: {
             ...common,
-            recurrence: recurrenceFrom(formData),
+            ...(sameRecurrence(recurrence, initialRecurrence) ? {} : { recurrence }),
             subjectId: String(formData.get("subjectId")),
           },
         }
@@ -158,7 +179,7 @@ export function EditSessionModal({ onCancel, onSaved, scope, session, subjects, 
           <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 [&>div]:min-w-0">
             <div className="sm:col-span-2">
               <label className={styles.label} htmlFor="edit-session-title-input">{titleLabel}</label>
-              <input className={styles.input} defaultValue={session.title} id="edit-session-title-input" maxLength={240} name="title" required />
+              <input className={styles.input} defaultValue={editingSeries ? master.title : session.title} id="edit-session-title-input" maxLength={240} name="title" required />
             </div>
             {scope === "series" ? <div className="sm:col-span-2">
               <label className={styles.label} htmlFor="edit-session-subject">Subject</label>
@@ -178,15 +199,15 @@ export function EditSessionModal({ onCancel, onSaved, scope, session, subjects, 
             </div> : null}
             {session.kind !== "revision" ? <div>
               <label className={styles.label} htmlFor="edit-session-location">Room / Location <span className="font-normal text-zinc-500">— optional</span></label>
-              <input className={styles.input} defaultValue={session.location ?? ""} id="edit-session-location" maxLength={500} name="location" />
+              <input className={styles.input} defaultValue={(editingSeries ? master.location : session.location) ?? ""} id="edit-session-location" maxLength={500} name="location" />
             </div> : null}
             {session.kind === "university" ? <div className="sm:col-span-2">
               <label className={styles.label} htmlFor="edit-session-professor">Professor <span className="font-normal text-zinc-500">— optional</span></label>
-              <input className={styles.input} defaultValue={session.professor ?? ""} id="edit-session-professor" maxLength={500} name="professor" />
+              <input className={styles.input} defaultValue={(editingSeries ? master.professor : session.professor) ?? ""} id="edit-session-professor" maxLength={500} name="professor" />
             </div> : null}
             {session.kind === "revision" ? <div className="sm:col-span-2">
               <label className={styles.label} htmlFor="edit-session-focus">Focus or chapter <span className="font-normal text-zinc-500">— optional</span></label>
-              <input className={styles.input} defaultValue={session.focusText ?? ""} id="edit-session-focus" maxLength={1000} name="focusText" />
+              <input className={styles.input} defaultValue={(editingSeries ? master.focusText : session.focusText) ?? ""} id="edit-session-focus" maxLength={1000} name="focusText" />
             </div> : null}
           </div>
           <section className="border-t border-[#27272a] pt-5">
@@ -203,7 +224,7 @@ export function EditSessionModal({ onCancel, onSaved, scope, session, subjects, 
               </div>)}
             </div>
           </section>
-          {scope === "series" ? <SessionRecurrenceFields date={start.date} initialValue={parseRecurrence(session.recurrenceRule, timeZone)} timeZone={timeZone} /> : null}
+          {scope === "series" ? <SessionRecurrenceFields date={start.date} initialValue={initialRecurrence} timeZone={timeZone} /> : null}
           {error ? <p className="text-[13px] text-red-300" role="alert">{error}</p> : null}
         </fieldset>
         <footer className="sticky bottom-0 flex flex-col items-stretch gap-3 border-t border-[#27272a] bg-[#101012] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">

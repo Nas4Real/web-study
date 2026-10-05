@@ -52,6 +52,7 @@ export class SessionDetailService {
           originalStart: occurrence.data.originalStart,
           professor: occurrence.data.professor,
           recurrenceRule: occurrence.data.recurrenceRule,
+          seriesMaster: occurrence.data.seriesMaster,
           seriesId: occurrence.data.seriesId,
           startsAt: occurrence.data.startsAt,
           subject,
