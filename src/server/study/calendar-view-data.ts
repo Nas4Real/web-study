@@ -64,7 +64,8 @@ export function projectCalendarDays(
     const inProgress = occurrence.durationMinutes !== null && start <= now && now < end;
     const events = eventsByDate.get(key) ?? [];
     events.push({
-      id: `${occurrence.seriesId}:${occurrence.originalStart}`, title: occurrence.title,
+      id: `${occurrence.seriesId}:${occurrence.originalStart}`,
+      seriesId: occurrence.seriesId, originalStart: occurrence.originalStart, title: occurrence.title,
       subjectLabel: subject.name, tone: subjectTone(subject.color),
       startLabel: clock.format(start), endLabel: clock.format(end),
       durationLabel: occurrence.durationMinutes === null ? "" : `${occurrence.durationMinutes}m`,

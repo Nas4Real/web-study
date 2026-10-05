@@ -50,6 +50,7 @@ export function toDashboardViewModel(model: DashboardReadModel): DashboardFixtur
       description: task.description, completed: task.status === "completed", highlighted: task.priority === "high",
       tone: tone(subjects.get(task.subjectId)), dueLabel: task.dueAt ? `Due ${time(task.dueAt)}` : null })),
     todayClasses: model.todayClasses.map(s => ({ id: `${s.seriesId}:${s.originalStart}`,
+      seriesId: s.seriesId, originalStart: s.originalStart,
       title: s.title, timeLabel: time(s.startsAt), location: s.location ?? "—" })),
     calendar: { label: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: model.timeZone }).format(now),
       selectedDay: now.getDate(), leadingDays: Array.from({ length: leadingCount }, (_, i) => previousMonth.getDate() - leadingCount + i + 1),

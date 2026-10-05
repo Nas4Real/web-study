@@ -25,6 +25,8 @@ export interface DashboardTaskDTO {
 
 export interface DashboardClassDTO {
   id: EntityId;
+  seriesId: EntityId;
+  originalStart: IsoDateTime;
   timeLabel: string;
   title: string;
   location: string;

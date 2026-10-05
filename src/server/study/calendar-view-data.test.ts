@@ -69,7 +69,8 @@ describe("effective-occurrence calendar projection", () => {
     expect(days[0].events).toEqual([]);
     expect(days[1]).toMatchObject({ weekdayLabel: "Lun", day: 5, isToday: true });
     expect(days[1].events[0]).toEqual({
-      id: "series-1:2026-10-04T08:00:00.000Z", title: "Effective lecture",
+      id: "series-1:2026-10-04T08:00:00.000Z",
+      seriesId: "series-1", originalStart: "2026-10-04T08:00:00.000Z", title: "Effective lecture",
       subjectLabel: "Physics", tone: "physics", startLabel: "09:30", endLabel: "11:00",
       durationLabel: "90m", location: "Room 401", inProgress: true, progressLabel: "Ends in 22 mins",
     });

@@ -162,6 +162,7 @@ export const calendarFixture = {
 const calendarEvents = {
   algebra: {
     id: "calendar-reduction-endomorphismes",
+    seriesId: "10000000-0000-4000-8000-000000000001", originalStart: "2026-05-04T07:00:00.000Z",
     title: "Réduction des endomorphismes",
     subjectLabel: "Algèbre",
     tone: "algebra",
@@ -174,6 +175,7 @@ const calendarEvents = {
   },
   analysis: {
     id: "calendar-integration-theoremes",
+    seriesId: "10000000-0000-4000-8000-000000000002", originalStart: "2026-05-05T07:00:00.000Z",
     title: "Intégration Théorèmes",
     subjectLabel: "Analyse",
     tone: "analysis",
@@ -186,6 +188,7 @@ const calendarEvents = {
   },
   mechanics: {
     id: "calendar-cinematique-pfd",
+    seriesId: "10000000-0000-4000-8000-000000000003", originalStart: "2026-05-06T13:00:00.000Z",
     title: "Cinématique PFD",
     subjectLabel: "Mécanique",
     tone: "mechanics",
@@ -198,6 +201,7 @@ const calendarEvents = {
   },
   physics: {
     id: "calendar-capacites-thermiques",
+    seriesId: "10000000-0000-4000-8000-000000000004", originalStart: "2026-05-07T07:00:00.000Z",
     title: "Capacités thermiques : modèle d'Einstein",
     subjectLabel: "Physique",
     tone: "physics",
@@ -210,6 +214,7 @@ const calendarEvents = {
   },
   current: {
     id: "calendar-topologie-evn",
+    seriesId: "10000000-0000-4000-8000-000000000005", originalStart: "2026-05-07T09:00:00.000Z",
     title: "Topologie EVN : exercices structurants",
     subjectLabel: "Analyse",
     tone: "analysis",
@@ -222,6 +227,7 @@ const calendarEvents = {
   },
   frequency: {
     id: "calendar-analyse-frequentielle",
+    seriesId: "10000000-0000-4000-8000-000000000006", originalStart: "2026-05-08T13:00:00.000Z",
     title: "Analyse fréquentielle",
     subjectLabel: "Physique",
     tone: "physics",
@@ -234,6 +240,7 @@ const calendarEvents = {
   },
   simulation: {
     id: "calendar-mini-simulation",
+    seriesId: "10000000-0000-4000-8000-000000000007", originalStart: "2026-05-09T07:00:00.000Z",
     title: "Mini-simulation Maths 1",
     subjectLabel: "Algèbre",
     tone: "algebra",
@@ -246,6 +253,7 @@ const calendarEvents = {
   },
   planning: {
     id: "calendar-bilan-semaine",
+    seriesId: "10000000-0000-4000-8000-000000000008", originalStart: "2026-05-10T09:00:00.000Z",
     title: "Bilan semaine et plan",
     subjectLabel: "Méthodologie",
     tone: "method",
@@ -426,9 +434,9 @@ export const dashboardFixture = {
     },
   ],
   todayClasses: [
-    { id: "class-mathematics", timeLabel: "09:00", title: "Mathematics", location: "Room 27" },
-    { id: "class-english", timeLabel: "11:00", title: "English Language", location: "Room 21" },
-    { id: "class-science", timeLabel: "13:00", title: "Science", location: "Lab 3" },
+    { id: "class-mathematics", seriesId: "20000000-0000-4000-8000-000000000001", originalStart: "2026-08-10T08:00:00.000Z", timeLabel: "09:00", title: "Mathematics", location: "Room 27" },
+    { id: "class-english", seriesId: "20000000-0000-4000-8000-000000000002", originalStart: "2026-08-10T10:00:00.000Z", timeLabel: "11:00", title: "English Language", location: "Room 21" },
+    { id: "class-science", seriesId: "20000000-0000-4000-8000-000000000003", originalStart: "2026-08-10T12:00:00.000Z", timeLabel: "13:00", title: "Science", location: "Lab 3" },
   ],
   calendar: {
     label: "August 2026",

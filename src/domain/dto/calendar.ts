@@ -38,6 +38,8 @@ export interface CalendarFixtureDTO {
 
 export interface CalendarVisualEventDTO {
   id: EntityId;
+  seriesId: EntityId;
+  originalStart: IsoDateTime;
   title: string;
   subjectLabel: string;
   tone: CalendarTone;
