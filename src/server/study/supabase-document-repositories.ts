@@ -6,7 +6,9 @@ import { z } from "zod";
 import type { ChapterRepository } from "./chapter-service";
 import type {
   Chapter, ChapterCreate, ChapterUpdate, Folder, FolderCreate, FolderUpdate,
+  UploadIntentInput, UploadIntentReservation,
 } from "./document-domain";
+import type { UploadIntentRepository } from "./document-service";
 import type { FolderRepository } from "./folder-service";
 
 const chapterColumns = "id, subject_id, name, position, created_at, updated_at";
@@ -20,6 +22,22 @@ const folderRowSchema = z.object({
   chapter_id: z.string().uuid().nullable(), created_at: z.string().min(1), id: z.string().uuid(),
   name: z.string(), parent_id: z.string().uuid().nullable(), position: z.number().int(),
   subject_id: z.string().uuid(), updated_at: z.string().min(1),
+}).strict();
+const uploadReservationRowSchema = z.object({
+  chapter_id: z.string().uuid().nullable(),
+  created_at: z.string().datetime({ offset: true }),
+  display_name: z.string().min(1).max(512),
+  expires_at: z.string().datetime({ offset: true }),
+  extension: z.enum(["pdf", "docx", "xlsx", "pptx", "png", "jpg", "jpeg"]),
+  file_id: z.string().uuid(),
+  folder_id: z.string().uuid().nullable(),
+  intent_id: z.string().uuid(),
+  mime_type: z.string().min(1).max(255),
+  object_key: z.string().min(1).max(256),
+  original_filename: z.string().min(1).max(512),
+  size_bytes: z.number().int().min(1).max(52_428_800),
+  subject_id: z.string().uuid(),
+  upload_state: z.literal("pending"),
 }).strict();
 
 function errorCode(error: unknown) {
@@ -44,6 +62,27 @@ function toFolder(input: unknown): Folder | null {
     chapterId: row.data.chapter_id, createdAt: row.data.created_at, id: row.data.id,
     name: row.data.name, parentId: row.data.parent_id, position: row.data.position,
     subjectId: row.data.subject_id, updatedAt: row.data.updated_at,
+  };
+}
+
+function toUploadReservation(userId: string, input: unknown): UploadIntentReservation | null {
+  const row = uploadReservationRowSchema.safeParse(input);
+  if (!row.success || row.data.object_key !== `users/${userId}/files/${row.data.file_id}`) return null;
+  return {
+    chapterId: row.data.chapter_id,
+    createdAt: row.data.created_at,
+    displayName: row.data.display_name,
+    expiresAt: row.data.expires_at,
+    extension: row.data.extension,
+    fileId: row.data.file_id,
+    folderId: row.data.folder_id,
+    intentId: row.data.intent_id,
+    mimeType: row.data.mime_type,
+    objectKey: row.data.object_key,
+    originalFilename: row.data.original_filename,
+    sizeBytes: row.data.size_bytes,
+    subjectId: row.data.subject_id,
+    uploadState: row.data.upload_state,
   };
 }
 
@@ -174,6 +213,27 @@ export function createSupabaseFolderRepository(supabase: SupabaseClient): Folder
       return typeof data === "boolean"
         ? { data, errorCode: errorCode(error) }
         : { data: null, errorCode: errorCode(error) ?? "provider_error" };
+    },
+  };
+}
+
+export function createSupabaseUploadIntentRepository(supabase: SupabaseClient): UploadIntentRepository {
+  return {
+    async reserveOwned(userId: string, input: UploadIntentInput) {
+      const { data, error } = await supabase.rpc("reserve_file_upload", {
+        p_chapter_id: input.chapterId,
+        p_extension: input.extension,
+        p_filename: input.filename,
+        p_folder_id: input.folderId,
+        p_mime_type: input.mimeType,
+        p_size_bytes: input.sizeBytes,
+        p_subject_id: input.subjectId,
+        p_user_id: userId,
+      }).single();
+      const mapped = data ? toUploadReservation(userId, data) : null;
+      return data && !mapped
+        ? { data: null, errorCode: errorCode(error) ?? "provider_error" }
+        : { data: mapped, errorCode: errorCode(error) };
     },
   };
 }

@@ -5,6 +5,7 @@ vi.mock("server-only", () => ({}));
 import {
   createSupabaseChapterRepository,
   createSupabaseFolderRepository,
+  createSupabaseUploadIntentRepository,
 } from "./supabase-document-repositories";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -14,6 +15,13 @@ const FOLDER_ID = "44444444-4444-4444-8444-444444444444";
 const PARENT_ID = "55555555-5555-4555-8555-555555555555";
 const chapterRow = { created_at: "2026-10-06T00:00:00Z", id: CHAPTER_ID, name: "Algebra", position: 0, subject_id: SUBJECT_ID, updated_at: "2026-10-06T00:00:00Z" };
 const folderRow = { chapter_id: CHAPTER_ID, created_at: "2026-10-06T00:00:00Z", id: FOLDER_ID, name: "Cours", parent_id: null, position: 0, subject_id: SUBJECT_ID, updated_at: "2026-10-06T00:00:00Z" };
+const uploadRow = {
+  chapter_id: null, created_at: "2026-10-06T12:00:00Z", display_name: "lecture.pdf",
+  expires_at: "2026-10-06T12:10:00Z", extension: "pdf", file_id: "66666666-6666-4666-8666-666666666666",
+  folder_id: null, intent_id: "77777777-7777-4777-8777-777777777777", mime_type: "application/pdf",
+  object_key: `users/${USER_ID}/files/66666666-6666-4666-8666-666666666666`, original_filename: "lecture.pdf",
+  size_bytes: 512, subject_id: SUBJECT_ID, upload_state: "pending",
+};
 
 function chain(reply: { data: unknown; error: unknown }) {
   const builder = { delete: vi.fn(), eq: vi.fn(), insert: vi.fn(), is: vi.fn(), maybeSingle: vi.fn().mockResolvedValue(reply), order: vi.fn(), select: vi.fn(), single: vi.fn().mockResolvedValue(reply), update: vi.fn() };
@@ -68,5 +76,30 @@ describe("Supabase document hierarchy repositories", () => {
     const wrongClient = { from: vi.fn().mockReturnValue(wrong) };
     expect(await createSupabaseFolderRepository(wrongClient as never).deleteOwned(USER_ID, FOLDER_ID))
       .toEqual({ data: false, errorCode: "provider_error" });
+  });
+});
+
+describe("Supabase upload intent repository", () => {
+  it("delegates quota reservation to one atomic RPC and validates its result", async () => {
+    const builder = chain({ data: uploadRow, error: null });
+    const client = { rpc: vi.fn().mockReturnValue(builder) };
+    const result = await createSupabaseUploadIntentRepository(client as never).reserveOwned(USER_ID, {
+      chapterId: null, extension: "pdf", filename: "lecture.pdf", folderId: null,
+      mimeType: "application/pdf", sizeBytes: 512, subjectId: SUBJECT_ID,
+    });
+    expect(result).toMatchObject({ data: { fileId: uploadRow.file_id, intentId: uploadRow.intent_id }, errorCode: null });
+    expect(client.rpc).toHaveBeenCalledWith("reserve_file_upload", {
+      p_chapter_id: null, p_extension: "pdf", p_filename: "lecture.pdf", p_folder_id: null,
+      p_mime_type: "application/pdf", p_size_bytes: 512, p_subject_id: SUBJECT_ID, p_user_id: USER_ID,
+    });
+  });
+
+  it("fails closed when the provider returns malformed reservation data", async () => {
+    const builder = chain({ data: { ...uploadRow, object_key: "foreign/key" }, error: null });
+    const client = { rpc: vi.fn().mockReturnValue(builder) };
+    expect(await createSupabaseUploadIntentRepository(client as never).reserveOwned(USER_ID, {
+      chapterId: null, extension: "pdf", filename: "lecture.pdf", folderId: null,
+      mimeType: "application/pdf", sizeBytes: 512, subjectId: SUBJECT_ID,
+    })).toEqual({ data: null, errorCode: "provider_error" });
   });
 });
