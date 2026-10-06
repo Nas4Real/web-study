@@ -1,8 +1,8 @@
 # Story 08-01: Complete RLS and database advisors
 
 Epic: epic-08
-Status: ready-for-dev
-Dependencies: 02-04,03-01,04-01,05-04,06-01,07-01
+Status: complete
+Dependencies: 02-04,03-01,04-01,05-04
 
 ## Purpose
 
@@ -47,3 +47,22 @@ Positive/negative RLS suite and advisors.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion evidence
+
+- Audited the live local schema catalog for every exposed public table, policy,
+  DML grant, security-definer function, and ownership index/foreign key rather
+  than relying only on migration text.
+- All 11 public tables have RLS enabled; anon has no public-table DML access;
+  policies explicitly target `authenticated`; and every UPDATE policy contains
+  both `USING` and `WITH CHECK` ownership clauses.
+- Removed broad legacy authenticated grants from `subjects`, replacing them
+  with explicit insert/update column allow-lists. Removed the unused profile
+  DELETE grant. RLS already prevented foreign-row access; the grant layer now
+  also prevents writes to identity, ownership, and audit columns.
+- Added a 27-assertion audit covering catalog-wide invariants, profile/subject
+  privileges, positive owner access, and negative cross-user select, update,
+  delete, and insert paths.
+- Verification: fresh local database reset, 195 pgTAP assertions, and local
+  database advisor pass except for the pre-existing calendar volatility
+  warning, which is unrelated to access control.

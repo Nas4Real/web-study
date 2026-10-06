@@ -8,10 +8,28 @@ Read `AGENTS.md`, the PRD, architecture, engineering index, this epic, and each 
 
 ## Milestones
 
-1. `08-01` Complete RLS and database advisors
-2. `08-02` End-to-end visual regression matrix
-3. `08-03` Production environment deployment and smoke tests
-4. `08-04` Operational hardening
+1. `08-01` Lightweight RLS and two-user isolation audit — complete 2026-10-07
+2. `08-02` Critical-flow tests only — planned
+3. `08-03` Basic Supabase/Vercel deployment and smoke tests — planned
+4. `08-04` Minimal logging and recovery notes — planned
+
+## Private-beta scope decision
+
+Epic 08 is reduced to the safeguards needed for a private two-user launch.
+The exhaustive visual matrix, elaborate monitoring, and job infrastructure are
+out of scope. Cloudflare R2 remains optional until credentials are connected;
+deployment must fail closed by disabling uploads when storage is unavailable.
+
+## Progress
+
+- `08-01` audited the running schema as well as migration text. All 11 exposed
+  public tables have RLS, all UPDATE policies have `USING` and `WITH CHECK`,
+  public policies target `authenticated`, security-definer functions have a
+  fixed empty `search_path`, and owner-aware relationships remain enforced.
+- The audit found and removed broad legacy grants on `subjects` plus an
+  unnecessary authenticated DELETE grant on `profiles`. A 27-assertion pgTAP
+  regression now covers global catalog invariants and direct two-user profile
+  and subject isolation.
 
 ## Verification
 
