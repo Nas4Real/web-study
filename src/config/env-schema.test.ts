@@ -8,7 +8,7 @@ const productionEnv = {
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable-key",
   NEXT_PUBLIC_APP_ORIGIN: "https://study.example.com",
   SUPABASE_SECRET_KEY: "secret-key",
-  R2_ACCOUNT_ID: "account-id",
+  R2_ACCOUNT_ID: "0123456789abcdef0123456789abcdef",
   R2_ACCESS_KEY_ID: "access-key-id",
   R2_SECRET_ACCESS_KEY: "r2-secret",
   R2_BUCKET: "study-files",
@@ -46,5 +46,16 @@ describe("parseServerEnv", () => {
         NEXT_PUBLIC_APP_ORIGIN: "not-a-url",
       }),
     ).toThrow();
+  });
+
+  it("rejects malformed R2 endpoint and bucket identifiers before startup", () => {
+    expect(() => parseServerEnv({
+      NODE_ENV: "development",
+      R2_ACCOUNT_ID: "https://attacker.example",
+    })).toThrow();
+    expect(() => parseServerEnv({
+      NODE_ENV: "development",
+      R2_BUCKET: "Invalid/Bucket",
+    })).toThrow();
   });
 });

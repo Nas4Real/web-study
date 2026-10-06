@@ -1,7 +1,7 @@
 # Story 05-02: R2 client private bucket configuration
 
 Epic: epic-05
-Status: ready-for-dev
+Status: done
 Dependencies: 01-01
 
 ## Purpose
@@ -47,3 +47,11 @@ Unit test presign parameters; integration against dev bucket when available.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion evidence
+
+- Added a server-only Cloudflare R2 adapter using pinned AWS SDK v3 packages and Cloudflare's documented `auto` region/account endpoint configuration.
+- Opaque file keys accept only canonical user/file UUID paths. Upload signatures bind the exact private bucket, key, and normalized `Content-Type`; upload/download bearer URLs cannot exceed 10 minutes.
+- HEAD and delete operations share the same adapter for completion verification and reliable cleanup stories. Provider output is narrowed to safe metadata, while failures expose only stable `INVALID_INPUT` or `PROVIDER_UNAVAILABLE` errors.
+- Environment validation now rejects malformed account IDs and bucket names before startup. Private-bucket and exact-origin CORS setup is documented in `docs/R2.md`; credentials remain server-only.
+- All 12 focused environment/R2 tests pass. `pnpm audit --prod` reports no known vulnerabilities. No local R2 credentials were available, so the optional live dev-bucket integration was not run. `pnpm check` passes with 468 tests and the production build.

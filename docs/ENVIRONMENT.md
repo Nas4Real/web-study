@@ -23,3 +23,5 @@ CRON_SECRET=
 Names may be adjusted to current provider conventions at implementation time, but server secrets must never use `NEXT_PUBLIC_`.
 
 Validate environment at startup using a server-only schema. Fail fast in production when required values are missing.
+
+`R2_ACCOUNT_ID` is the 32-character Cloudflare account ID. `R2_BUCKET` is the private bucket name. The access key must be an R2 S3 API credential scoped only to the required bucket operations; none of these four values may use a `NEXT_PUBLIC_` prefix.
