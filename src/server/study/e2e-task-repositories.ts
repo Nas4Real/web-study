@@ -3,7 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 
 import type { ProfileRepository } from "./profile-service";
-import type { Subject } from "./study-domain";
+import type { Profile, Subject } from "./study-domain";
 import type { SubjectRepository } from "./subject-service";
 import type { Task, TaskCreate } from "./task-domain";
 import type { TaskRepository } from "./task-service";
@@ -75,6 +75,25 @@ function initialTasks(): Task[] {
 }
 
 const stores = new Map<string, Task[]>();
+const profileStores = new Map<string, Profile>();
+
+function profileFor(scope: string, userId: string) {
+  const existing = profileStores.get(scope);
+  if (existing) return existing;
+  const profile: Profile = {
+    avatarObjectKey: null,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    displayName: "Nas",
+    id: userId,
+    storageQuotaBytes: 2_147_483_648,
+    storageReservedBytes: 0,
+    storageUsedBytes: 348_127_232,
+    timezone: "Africa/Tunis",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  };
+  profileStores.set(scope, profile);
+  return profile;
+}
 
 function storeFor(scope: string) {
   const existing = stores.get(scope);
@@ -154,22 +173,19 @@ export function createE2eStudyRepositories(scope: string) {
   const profileRepository: ProfileRepository = {
     async findByUserId(userId) {
       return {
-        data: {
-          avatarObjectKey: null,
-          createdAt: "2026-01-01T00:00:00.000Z",
-          displayName: "Nas",
-          id: userId,
-          storageQuotaBytes: 2_147_483_648,
-          storageReservedBytes: 0,
-          storageUsedBytes: 348_127_232,
-          timezone: "Africa/Tunis",
-          updatedAt: "2026-01-01T00:00:00.000Z",
-        },
+        data: profileFor(scope, userId),
         errorCode: null,
       };
     },
-    async updateOwned() {
-      return { data: null, errorCode: "provider_error" };
+    async updateOwned(userId, update) {
+      const current = profileFor(scope, userId);
+      const updated: Profile = {
+        ...current,
+        ...update,
+        updatedAt: new Date().toISOString(),
+      };
+      profileStores.set(scope, updated);
+      return { data: updated, errorCode: null };
     },
   };
   const subjectRepository: SubjectRepository = {

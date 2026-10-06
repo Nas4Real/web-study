@@ -8,12 +8,19 @@ Read `AGENTS.md`, the PRD, architecture, engineering index, this epic, and each 
 
 ## Milestones
 
-1. `06-01` Notification preferences and generation backend
-2. `06-02` Wire notification bell/list
-3. `06-03` Wire Settings profile password storage signout
-4. `06-04` Notification preferences UI
-5. `06-05` Account deletion orchestration
-6. `06-06` Delete-account confirmation UI
+1. `06-01` Notification preferences and generation backend — deferred for the private beta
+2. `06-02` Wire notification bell/list — deferred for the private beta
+3. `06-03` Wire Settings profile password storage signout — complete 2026-10-07
+4. `06-04` Notification preferences UI — deferred for the private beta
+5. `06-05` Account deletion orchestration — deferred for the private beta
+6. `06-06` Delete-account confirmation UI — deferred for the private beta
+
+## Private-beta scope decision
+
+The current two-user beta keeps functional profile editing, password recovery,
+storage usage, and sign-out. Notifications and account deletion remain planned
+but are intentionally deferred; their existing controls stay disabled until the
+supporting stories are implemented.
 
 ## Verification
 

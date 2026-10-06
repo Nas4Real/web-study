@@ -66,10 +66,22 @@ test.describe("workspace surfaces", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Settings" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByText("348 MB / 2 GB")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Update Password" })).toHaveAttribute("href", "/forgot-password");
+    await expect(page.getByRole("button", { name: "Notification preferences are not available yet" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Account deletion is not available yet" })).toBeDisabled();
 
     await page.getByRole("button", { name: "Open profile menu" }).click();
     await expect(page.getByRole("menu", { name: "Profile menu" })).toBeVisible();
     await expect(page.getByText("nas@example.com")).toBeVisible();
+  });
+
+  test("updates the authenticated profile from Settings", async ({ page }) => {
+    await page.goto("/settings?e2eScope=settings-profile-update");
+    const fullName = page.getByLabel("Full Name");
+    await fullName.fill("Nas Study");
+    await page.getByRole("button", { name: "Save Changes" }).click();
+    await expect(page.getByText("Profile updated.")).toBeVisible();
+    await expect(fullName).toHaveValue("Nas Study");
   });
 
   test("opens approved New Session and Session Details dialogs", async ({ page }) => {

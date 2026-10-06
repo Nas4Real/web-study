@@ -1,7 +1,7 @@
 # Story 06-03: Wire Settings profile password storage signout
 
 Epic: epic-06
-Status: ready-for-dev
+Status: done
 Dependencies: 02-02,05-04,01-05
 
 ## Purpose
@@ -47,3 +47,11 @@ E2E profile save/password flow/storage/signout.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion notes
+
+- Settings now reads the authenticated user's profile, email, and storage usage.
+- Display-name changes use the existing profile application service and preserve timezone/avatar fields.
+- Password updates route through the existing reset flow; sign-out remains wired to Supabase Auth.
+- Deferred notification, avatar-upload, and account-deletion controls are non-operational rather than misleadingly active.
+- Unit, interaction, responsive, visual-regression, lint, typecheck, full test, and production-build checks passed on 2026-10-07.
