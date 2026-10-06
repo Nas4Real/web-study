@@ -12,7 +12,7 @@ async function openCalendarSession(page: Page, scope: string, date: string, view
   return { dialog, invoker };
 }
 
-test("opens the same effective session from Day, Week, and Dashboard", async ({ page }) => {
+test("opens the same effective session from Day, Week, and Dashboard", { tag: "@critical" }, async ({ page }) => {
   const scope = "session-detail-surfaces";
   for (const view of ["day", "week"] as const) {
     const { dialog } = await openCalendarSession(page, scope, "2026-10-02", view);
@@ -39,7 +39,7 @@ test("shows a modified occurrence without leaking its override into a sibling", 
   await expect(opened.dialog.getByText("Room 401", { exact: true })).toHaveCount(0);
 });
 
-test("persists an occurrence-only edit while leaving siblings unchanged", async ({ page }) => {
+test("persists an occurrence-only edit while leaving siblings unchanged", { tag: "@critical" }, async ({ page }) => {
   const scope = "session-detail-occurrence-edit";
   let opened = await openCalendarSession(page, scope, "2026-10-02");
   await opened.dialog.getByRole("button", { name: "Edit", exact: true }).click();

@@ -35,7 +35,7 @@ test.describe("workspace surfaces", () => {
     await expect(page.getByRole("heading", { level: 2, name: "All Files" })).toBeVisible();
   });
 
-  test("searches, sorts, and navigates the approved Documents hierarchy", async ({ page }) => {
+  test("searches, sorts, and navigates the approved Documents hierarchy", { tag: "@critical" }, async ({ page }) => {
     await page.goto("/documents");
 
     const search = page.getByRole("searchbox", { name: "Search documents" });

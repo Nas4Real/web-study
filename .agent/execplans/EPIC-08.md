@@ -9,7 +9,7 @@ Read `AGENTS.md`, the PRD, architecture, engineering index, this epic, and each 
 ## Milestones
 
 1. `08-01` Lightweight RLS and two-user isolation audit — complete 2026-10-07
-2. `08-02` Critical-flow tests only — planned
+2. `08-02` Critical-flow tests only — complete 2026-10-07
 3. `08-03` Basic Supabase/Vercel deployment and smoke tests — planned
 4. `08-04` Minimal logging and recovery notes — planned
 
@@ -30,6 +30,12 @@ deployment must fail closed by disabling uploads when storage is unavailable.
   unnecessary authenticated DELETE grant on `profiles`. A 27-assertion pgTAP
   regression now covers global catalog invariants and direct two-user profile
   and subject isolation.
+- `08-02` added a tagged `test:launch-critical` gate covering auth access,
+  dashboard aggregation, enriched task lifecycle, calendar authoring and
+  effective-occurrence details, document search/navigation, and the focused
+  isolation suite. Hosted email/password sign-up and sign-in remain an `08-03`
+  smoke check because deployment credentials are intentionally not configured
+  in the local browser fixture.
 
 ## Verification
 

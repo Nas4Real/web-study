@@ -10,7 +10,7 @@ test("opens the selected canonical task rather than the fixture task", async ({ 
   await expect(dialog.getByText("Normal Priority", { exact: false })).toBeVisible();
 });
 
-test("persists independent subtasks and parent changes, then confirms deletion", async ({ page }) => {
+test("persists independent subtasks and parent changes, then confirms deletion", { tag: "@critical" }, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1200 });
   await page.goto("/tasks?e2eScope=detail-mutations");
   const invoker = page.getByRole("button", { name: "Open Complete Chapter 4 Exercises", exact: true });

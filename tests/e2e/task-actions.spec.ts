@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("creates, completes, reopens, and moves a task to Someday", async ({ page }) => {
+test("creates, completes, reopens, and moves a task to Someday", { tag: "@critical" }, async ({ page }) => {
   await page.goto("/tasks?e2eScope=task-actions");
 
   await page.getByRole("button", { name: "New Task" }).click();

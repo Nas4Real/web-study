@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { hideNextDevTools } from "./visual-test-helpers";
 
-test("creates enriched tasks with edited, removed and reordered subtasks", async ({ page }) => {
+test("creates enriched tasks with edited, removed and reordered subtasks", { tag: "@critical" }, async ({ page }) => {
   await page.goto("/tasks?e2eScope=task-authoring-enriched");
   await page.getByRole("button", { name: "New Task" }).click();
   const dialog = page.getByRole("dialog", { name: "Create new task" });

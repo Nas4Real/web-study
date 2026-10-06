@@ -1,20 +1,23 @@
 # Story 08-02: End-to-end visual regression matrix
 
 Epic: epic-08
-Status: ready-for-dev
-Dependencies: all UI-ready stories
+Status: complete
+Dependencies: 08-01 and implemented private-beta UI stories
 
-## Purpose
+## Reduced private-beta purpose
 
-Capture final baselines for all approved screens and main states at fixed viewport.
+Run a fast launch gate for the flows needed by two website users. The exhaustive
+visual and responsive matrix is deferred.
 
 ## Expected implementation surface
 
-Playwright tests/baselines
+Playwright critical-flow tags and package scripts
 
 ## Engineering constraints
 
-No unexplained visual diffs.
+Do not add or update visual baselines. Reuse existing behavioral tests and keep
+the launch gate independent from deferred notifications, public API keys,
+account deletion, and live R2 bytes.
 
 ## Implementation sequence
 
@@ -37,7 +40,8 @@ No unexplained visual diffs.
 
 ## Test plan
 
-CI screenshot run.
+`pnpm test:launch-critical` runs application tests, tagged critical Playwright
+flows, and the focused two-user database isolation audit.
 
 ## Done when
 
@@ -47,3 +51,20 @@ CI screenshot run.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion evidence
+
+- Added an explicit `@critical` browser subset instead of duplicating the
+  existing E2E suite or regenerating approved screenshots.
+- The 12 browser checks cover auth-screen navigation and unauthenticated
+  redirect, dashboard aggregation, basic and enriched task creation, task and
+  subtask persistence/deletion, Exam/University/Revision session authoring,
+  effective occurrence details and editing, and document metadata
+  search/sort/hierarchy navigation.
+- The launch command also runs all 507 Vitest tests and the 27-assertion
+  catalog/cross-user isolation audit from `08-01`.
+- Hosted Supabase email/password sign-up and sign-in are intentionally reserved
+  for the `08-03` deployment smoke test. Local browser tests validate the UI and
+  access boundary without inventing deployment credentials.
+- Verification: `pnpm test:launch-critical` passes with 507 application tests,
+  12 critical Chromium tests, and 27 focused pgTAP assertions.

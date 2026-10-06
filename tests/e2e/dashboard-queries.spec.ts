@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { hideNextDevTools } from "./visual-test-helpers";
 
-test("derives dashboard cards from canonical tasks and effective session data", async ({ page }, testInfo) => {
+test("derives dashboard cards from canonical tasks and effective session data", { tag: "@critical" }, async ({ page }, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   page.on("console", message => {

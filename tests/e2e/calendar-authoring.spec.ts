@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { hideNextDevTools } from "./visual-test-helpers";
 
 for (const kind of ["Exam", "University", "Revision"] as const) {
-  test(`saves ${kind} through the approved form and reads it after reload`, async ({ page }) => {
+  test(`saves ${kind} through the approved form and reads it after reload`, { tag: "@critical" }, async ({ page }) => {
     const scope = `calendar-authoring-${kind.toLowerCase()}`;
     const title = `${kind} saved session`;
     await page.setViewportSize({ width: 1440, height: 1200 });

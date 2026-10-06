@@ -7,7 +7,7 @@ test.describe("auth screens", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
   });
 
-  test("renders the corrected Sign In screen and navigates the auth flow", async ({ page }) => {
+  test("renders the corrected Sign In screen and navigates the auth flow", { tag: "@critical" }, async ({ page }) => {
     await page.goto("/sign-in");
     await page.waitForLoadState("networkidle");
 
@@ -75,7 +75,7 @@ test.describe("auth screens", () => {
     await expect(page.getByText(/Google|Apple/i)).toHaveCount(0);
   });
 
-  test("redirects an unauthenticated workspace request to sign in", async ({ browser }) => {
+  test("redirects an unauthenticated workspace request to sign in", { tag: "@critical" }, async ({ browser }) => {
     const context = await browser.newContext({
       baseURL: "http://localhost:3100",
       extraHTTPHeaders: { "x-web-study-e2e-auth": "unauthenticated" },
