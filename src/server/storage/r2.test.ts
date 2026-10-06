@@ -135,4 +135,14 @@ describe("R2 object storage adapter", () => {
       }),
     );
   });
+
+  it("distinguishes a missing object without exposing provider details", async () => {
+    const deps = dependencies();
+    deps.client.send.mockRejectedValue({ $metadata: { httpStatusCode: 404 }, message: "secret key" });
+    const storage = createR2ObjectStore(CONFIG, deps as never);
+    await expect(storage.headObject(OBJECT_KEY)).rejects.toMatchObject({
+      code: "OBJECT_NOT_FOUND",
+      message: "Object was not found.",
+    });
+  });
 });

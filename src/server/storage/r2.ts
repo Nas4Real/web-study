@@ -44,7 +44,7 @@ const headResultSchema = z.object({
 }).passthrough();
 const signedUrlSchema = z.string().url();
 
-export type R2StorageErrorCode = "INVALID_INPUT" | "PROVIDER_UNAVAILABLE";
+export type R2StorageErrorCode = "INVALID_INPUT" | "OBJECT_NOT_FOUND" | "PROVIDER_UNAVAILABLE";
 
 export class R2StorageError extends Error {
   constructor(
@@ -83,6 +83,18 @@ function unavailable(): R2StorageError {
     "PROVIDER_UNAVAILABLE",
     "Object storage is temporarily unavailable.",
   );
+}
+
+function notFound(): R2StorageError {
+  return new R2StorageError("OBJECT_NOT_FOUND", "Object was not found.");
+}
+
+function isNotFound(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const metadata = Reflect.get(error, "$metadata");
+  const status = metadata && typeof metadata === "object" ? Reflect.get(metadata, "httpStatusCode") : null;
+  const name = Reflect.get(error, "name");
+  return status === 404 || name === "NotFound" || name === "NoSuchKey";
 }
 
 function parseInput<T>(schema: z.ZodType<T>, input: unknown): T {
@@ -151,6 +163,7 @@ export function createR2ObjectStore(configInput: R2Config, dependencies: R2Depen
         };
       } catch (error) {
         if (error instanceof R2StorageError) throw error;
+        if (isNotFound(error)) throw notFound();
         throw unavailable();
       }
     },

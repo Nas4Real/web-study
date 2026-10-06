@@ -102,4 +102,40 @@ describe("Supabase upload intent repository", () => {
       mimeType: "application/pdf", sizeBytes: 512, subjectId: SUBJECT_ID,
     })).toEqual({ data: null, errorCode: "provider_error" });
   });
+
+  it("loads and finalizes upload completion through owner-scoped RPCs", async () => {
+    const targetRow = {
+      ...uploadRow, expected_mime_type: "application/pdf", intent_status: "pending",
+    };
+    delete (targetRow as Partial<typeof targetRow>).intent_id;
+    const readyRow = {
+      chapter_id: null, created_at: uploadRow.created_at, display_name: "lecture.pdf",
+      extension: "pdf", file_id: uploadRow.file_id, folder_id: null, mime_type: "application/pdf",
+      original_filename: "lecture.pdf", result_code: "READY", size_bytes: 500,
+      subject_id: SUBJECT_ID, upload_state: "ready",
+    };
+    const targetBuilder = chain({ data: targetRow, error: null });
+    const readyBuilder = chain({ data: readyRow, error: null });
+    const client = { rpc: vi.fn().mockReturnValueOnce(targetBuilder).mockReturnValueOnce(readyBuilder) };
+    const repo = createSupabaseUploadIntentRepository(client as never);
+    expect(await repo.findCompletionTargetOwned(USER_ID, uploadRow.file_id))
+      .toMatchObject({ data: { intentStatus: "pending", objectKey: uploadRow.object_key }, errorCode: null });
+    expect(await repo.finalizeOwned(USER_ID, uploadRow.file_id, {
+      actualMimeType: "application/pdf", actualSizeBytes: 500,
+    })).toMatchObject({ data: { code: "READY", file: { id: uploadRow.file_id, sizeBytes: 500 } }, errorCode: null });
+  });
+
+  it("uses bounded server cleanup RPCs and validates their output", async () => {
+    const client = { rpc: vi.fn()
+      .mockResolvedValueOnce({ data: 2, error: null })
+      .mockResolvedValueOnce({ data: [{ id: uploadRow.intent_id, object_key: uploadRow.object_key }], error: null })
+      .mockResolvedValueOnce({ data: true, error: null })
+      .mockResolvedValueOnce({ data: true, error: null }) };
+    const repo = createSupabaseUploadIntentRepository(client as never);
+    expect(await repo.expirePending(25)).toEqual({ data: 2, errorCode: null });
+    expect(await repo.listDueCleanup(25)).toMatchObject({ data: [{ id: uploadRow.intent_id }] });
+    expect(await repo.markCleanupCompleted(uploadRow.intent_id)).toEqual({ data: true, errorCode: null });
+    expect(await repo.markCleanupRetry(uploadRow.intent_id, "PROVIDER_UNAVAILABLE"))
+      .toEqual({ data: true, errorCode: null });
+  });
 });
