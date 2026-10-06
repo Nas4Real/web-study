@@ -4,6 +4,7 @@ vi.mock("server-only", () => ({}));
 
 import {
   createSupabaseChapterRepository,
+  createSupabaseDocumentLibraryRepository,
   createSupabaseFolderRepository,
   createSupabaseUploadIntentRepository,
 } from "./supabase-document-repositories";
@@ -24,8 +25,8 @@ const uploadRow = {
 };
 
 function chain(reply: { data: unknown; error: unknown }) {
-  const builder = { delete: vi.fn(), eq: vi.fn(), insert: vi.fn(), is: vi.fn(), maybeSingle: vi.fn().mockResolvedValue(reply), order: vi.fn(), select: vi.fn(), single: vi.fn().mockResolvedValue(reply), update: vi.fn() };
-  for (const method of [builder.delete, builder.eq, builder.insert, builder.is, builder.order, builder.select, builder.update]) method.mockReturnValue(builder);
+  const builder = { delete: vi.fn(), eq: vi.fn(), ilike: vi.fn(), insert: vi.fn(), is: vi.fn(), limit: vi.fn().mockResolvedValue(reply), maybeSingle: vi.fn().mockResolvedValue(reply), order: vi.fn(), select: vi.fn(), single: vi.fn().mockResolvedValue(reply), update: vi.fn() };
+  for (const method of [builder.delete, builder.eq, builder.ilike, builder.insert, builder.is, builder.order, builder.select, builder.update]) method.mockReturnValue(builder);
   return builder;
 }
 
@@ -137,5 +138,43 @@ describe("Supabase upload intent repository", () => {
     expect(await repo.markCleanupCompleted(uploadRow.intent_id)).toEqual({ data: true, errorCode: null });
     expect(await repo.markCleanupRetry(uploadRow.intent_id, "PROVIDER_UNAVAILABLE"))
       .toEqual({ data: true, errorCode: null });
+  });
+});
+
+describe("Supabase document library repository", () => {
+  const fileRow = {
+    chapter_id: null, created_at: uploadRow.created_at, display_name: "lecture.pdf",
+    extension: "pdf", folder_id: null, id: uploadRow.file_id, mime_type: "application/pdf",
+    original_filename: "lecture.pdf", size_bytes: 500, subject_id: SUBJECT_ID, upload_state: "ready",
+  };
+
+  it("lists only owned ready files with validated filters and ordering", async () => {
+    const builder = chain({ data: [fileRow], error: null });
+    const client = { from: vi.fn().mockReturnValue(builder) };
+    const result = await createSupabaseDocumentLibraryRepository(client as never).listOwned(USER_ID, {
+      limit: 25, query: "100%_lecture", sort: "name", subjectId: SUBJECT_ID,
+    });
+    expect(result).toMatchObject({ data: [{ id: uploadRow.file_id }], errorCode: null });
+    expect(builder.eq.mock.calls).toEqual(expect.arrayContaining([
+      ["user_id", USER_ID], ["upload_state", "ready"], ["subject_id", SUBJECT_ID],
+    ]));
+    expect(builder.ilike).toHaveBeenCalledWith("display_name", "%100\\%\\_lecture%");
+    expect(builder.order).toHaveBeenCalledWith("display_name", { ascending: true });
+  });
+
+  it("validates the owned object key before returning a download target", async () => {
+    const builder = chain({ data: { ...fileRow, object_key: `users/${USER_ID}/files/${uploadRow.file_id}` }, error: null });
+    const client = { from: vi.fn().mockReturnValue(builder) };
+    expect(await createSupabaseDocumentLibraryRepository(client as never).findDownloadOwned(USER_ID, uploadRow.file_id))
+      .toMatchObject({ data: { objectKey: uploadRow.object_key }, errorCode: null });
+  });
+
+  it("uses owner-scoped RPCs for moves and idempotent logical deletion", async () => {
+    const moved = chain({ data: fileRow, error: null });
+    const client = { rpc: vi.fn().mockReturnValueOnce(moved).mockResolvedValueOnce({ data: true, error: null }) };
+    const repository = createSupabaseDocumentLibraryRepository(client as never);
+    expect(await repository.moveOwned(USER_ID, uploadRow.file_id, { chapterId: null, folderId: null }))
+      .toMatchObject({ data: { id: uploadRow.file_id } });
+    expect(await repository.deleteOwned(USER_ID, uploadRow.file_id)).toEqual({ data: true, errorCode: null });
   });
 });

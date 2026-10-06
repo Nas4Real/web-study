@@ -83,6 +83,20 @@ export const uploadIntentInputSchema = z.object({
   extension: value.filename.slice(value.filename.lastIndexOf(".") + 1).toLowerCase(),
 }));
 
+export const fileSortSchema = z.enum(["latest", "oldest", "name", "size"]).default("latest");
+export const fileListFilterSchema = z.object({
+  chapterId: entityIdSchema.nullable().optional(),
+  folderId: entityIdSchema.nullable().optional(),
+  limit: z.number().int().min(1).max(100).default(100),
+  query: z.string().trim().max(160).transform(value => value.replace(/\s+/g, " ")).optional(),
+  sort: fileSortSchema,
+  subjectId: entityIdSchema.optional(),
+}).strict();
+export const fileMoveInputSchema = z.object({
+  chapterId: entityIdSchema.nullable(),
+  folderId: entityIdSchema.nullable(),
+}).strict();
+
 export type Chapter = Readonly<{
   createdAt: string;
   id: string;
@@ -110,6 +124,8 @@ export type FolderUpdate = z.infer<typeof folderUpdateInputSchema>;
 export type FolderListFilter = z.infer<typeof folderListFilterSchema>;
 
 export type UploadIntentInput = z.infer<typeof uploadIntentInputSchema>;
+export type FileListFilter = z.infer<typeof fileListFilterSchema>;
+export type FileMoveInput = z.infer<typeof fileMoveInputSchema>;
 
 export type FileMetadata = Readonly<{
   chapterId: string | null;

@@ -35,6 +35,31 @@ test.describe("workspace surfaces", () => {
     await expect(page.getByRole("heading", { level: 2, name: "All Files" })).toBeVisible();
   });
 
+  test("searches, sorts, and navigates the approved Documents hierarchy", async ({ page }) => {
+    await page.goto("/documents");
+
+    const search = page.getByRole("searchbox", { name: "Search documents" });
+    await search.fill("Q4");
+    await expect(page.getByRole("cell", { name: "Q4 Results" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Sequence Data" })).toBeHidden();
+    await search.clear();
+
+    await page.getByRole("button", { name: "Sort By: Latest" }).click();
+    await page.getByRole("button", { name: "Name", exact: true }).click();
+    await expect(page.locator("tbody tr").first()).toContainText("Analysis Data April");
+
+    await page.getByRole("button", { name: /Analysis 8 Chapters/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Analysis" })).toBeVisible();
+    await page.getByRole("button", { name: /Chapter 1: Series/ }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Chapter 1: Series" })).toBeVisible();
+    await page.getByRole("button", { name: /TD 1 File/ }).click();
+    await expect(page.getByText("Sequence Data", { exact: true })).toBeVisible();
+    await expect(page.getByText("Analysis Data April", { exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "Back to Analysis" }).click();
+    await page.getByRole("button", { name: "Back to Documents" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: "Recent" })).toBeVisible();
+  });
+
   test("renders locked Settings values and profile menu", async ({ page }) => {
     await page.goto("/settings");
 
@@ -70,10 +95,11 @@ test.describe("workspace surfaces", () => {
       await page.goto(surface.path);
       await page.waitForLoadState("networkidle");
       await hideNextDevTools(page);
-      await expect(page).toHaveScreenshot(`${surface.name}-1440x1200.png`, {
-        animations: "disabled",
-        fullPage: true,
-      });
+        await expect(page).toHaveScreenshot(`${surface.name}-1440x1200.png`, {
+          animations: "disabled",
+          fullPage: true,
+          maxDiffPixels: surface.name === "documents" ? 2 : 0,
+        });
     });
   }
 

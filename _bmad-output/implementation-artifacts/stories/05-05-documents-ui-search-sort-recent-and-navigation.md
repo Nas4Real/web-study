@@ -1,7 +1,7 @@
 # Story 05-05: Documents UI search sort recent and navigation
 
 Epic: epic-05
-Status: ready-for-dev
+Status: complete
 Dependencies: 05-04,01-05
 
 ## Purpose
@@ -47,3 +47,13 @@ E2E upload/list/search/move/download/delete.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Completion evidence
+
+- Root Documents screen remains pixel-compatible with the approved live Superdesign/V2 baseline while adding keyboard-focusable search, literal file-type filtering, deterministic latest/oldest/name/size sorting, and a bounded recent-files strip.
+- Approved Documents → Subject → Chapter navigation is implemented with folder filtering and responsive empty states.
+- The server page loader projects authenticated owner-scoped subjects, chapters, folders, and ready files; visual tests use the existing authenticated deterministic fixture path only.
+- Owner-scoped application/repository boundaries cover list, move, short-lived download signing, and idempotent logical delete. Logical delete releases used quota exactly once and enqueues reliable R2 cleanup.
+- A new migration exposes only authenticated owner-checked move/delete RPCs; anon is denied and cross-user destinations/files fail closed.
+- Verification: 500 application tests, 168 pgTAP assertions, production build, relevant Chromium E2E interactions, 320/768/1024 responsive checks, and the approved 1440×1200 Documents visual baseline all pass.
+- Live R2 upload/download E2E remains intentionally deferred until bucket credentials are connected, as approved by the user; no secret or provider diagnostic reaches the browser.

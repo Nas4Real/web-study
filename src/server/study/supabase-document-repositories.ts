@@ -9,6 +9,7 @@ import type {
   UploadIntentInput, UploadIntentReservation,
 } from "./document-domain";
 import type { DocumentRepository } from "./document-service";
+import type { DocumentLibraryRepository } from "./document-library-service";
 import type { FolderRepository } from "./folder-service";
 
 const chapterColumns = "id, subject_id, name, position, created_at, updated_at";
@@ -76,6 +77,20 @@ const finalizeRowSchema = z.object({
 const cleanupJobRowSchema = z.object({
   id: z.string().uuid(), object_key: z.string().min(1).max(256),
 }).strict();
+const libraryFileRowSchema = z.object({
+  chapter_id: fileMetadataFields.chapter_id,
+  created_at: fileMetadataFields.created_at,
+  display_name: fileMetadataFields.display_name,
+  extension: fileMetadataFields.extension,
+  folder_id: fileMetadataFields.folder_id,
+  id: fileMetadataFields.file_id,
+  mime_type: fileMetadataFields.mime_type,
+  object_key: z.string().min(1).max(256).optional(),
+  original_filename: fileMetadataFields.original_filename,
+  size_bytes: fileMetadataFields.size_bytes,
+  subject_id: fileMetadataFields.subject_id,
+  upload_state: fileMetadataFields.upload_state,
+}).strict();
 
 function errorCode(error: unknown) {
   if (!error || typeof error !== "object") return error ? "provider_error" : null;
@@ -131,6 +146,18 @@ function fileMetadata(row: z.infer<typeof completionTargetRowSchema> | z.infer<t
     extension: row.extension, folderId: row.folder_id, id: row.file_id, mimeType: row.mime_type,
     originalFilename: row.original_filename, sizeBytes: row.size_bytes,
     subjectId: row.subject_id, uploadState: row.upload_state,
+  };
+}
+
+function toLibraryFile(input: unknown): FileMetadata | null {
+  const row = libraryFileRowSchema.safeParse(input);
+  if (!row.success) return null;
+  return {
+    chapterId: row.data.chapter_id, createdAt: row.data.created_at,
+    displayName: row.data.display_name, extension: row.data.extension,
+    folderId: row.data.folder_id, id: row.data.id, mimeType: row.data.mime_type,
+    originalFilename: row.data.original_filename, sizeBytes: row.data.size_bytes,
+    subjectId: row.data.subject_id, uploadState: row.data.upload_state,
   };
 }
 
@@ -343,6 +370,61 @@ export function createSupabaseUploadIntentRepository(supabase: SupabaseClient): 
       return data && !mapped
         ? { data: null, errorCode: errorCode(error) ?? "provider_error" }
         : { data: mapped, errorCode: errorCode(error) };
+    },
+  };
+}
+
+export function createSupabaseDocumentLibraryRepository(supabase: SupabaseClient): DocumentLibraryRepository {
+  const columns = "id, subject_id, chapter_id, folder_id, original_filename, display_name, mime_type, extension, size_bytes, upload_state, created_at";
+  return {
+    async listOwned(userId, filter) {
+      let query = supabase.from("files").select(columns)
+        .eq("user_id", userId).eq("upload_state", "ready");
+      if (filter.subjectId) query = query.eq("subject_id", filter.subjectId);
+      if (filter.chapterId !== undefined) query = filter.chapterId === null ? query.is("chapter_id", null) : query.eq("chapter_id", filter.chapterId);
+      if (filter.folderId !== undefined) query = filter.folderId === null ? query.is("folder_id", null) : query.eq("folder_id", filter.folderId);
+      if (filter.query) query = query.ilike("display_name", `%${filter.query.replace(/[\\%_]/g, "\\$&")}%`);
+      const order = filter.sort === "oldest" ? ["created_at", true] as const
+        : filter.sort === "name" ? ["display_name", true] as const
+          : filter.sort === "size" ? ["size_bytes", false] as const
+            : ["created_at", false] as const;
+      const { data, error } = await query.order(order[0], { ascending: order[1] }).limit(filter.limit);
+      const mapped = data?.map(toLibraryFile);
+      return mapped?.every(Boolean)
+        ? { data: mapped as FileMetadata[], errorCode: errorCode(error) }
+        : { data: null, errorCode: errorCode(error) ?? "provider_error" };
+    },
+
+    async findDownloadOwned(userId, fileId) {
+      const { data, error } = await supabase.from("files").select(`${columns}, object_key`)
+        .eq("id", fileId).eq("user_id", userId).eq("upload_state", "ready").maybeSingle();
+      if (!data) return { data: null, errorCode: errorCode(error) };
+      const row = libraryFileRowSchema.safeParse(data);
+      const file = row.success ? toLibraryFile(data) : null;
+      if (!row.success || !file || row.data.object_key !== `users/${userId}/files/${fileId}`) {
+        return { data: null, errorCode: errorCode(error) ?? "provider_error" };
+      }
+      return { data: { file, objectKey: row.data.object_key }, errorCode: errorCode(error) };
+    },
+
+    async moveOwned(userId, fileId, input) {
+      const { data, error } = await supabase.rpc("move_owned_file", {
+        p_chapter_id: input.chapterId, p_file_id: fileId,
+        p_folder_id: input.folderId, p_user_id: userId,
+      }).maybeSingle();
+      const mapped = data ? toLibraryFile(data) : null;
+      return data && !mapped
+        ? { data: null, errorCode: errorCode(error) ?? "provider_error" }
+        : { data: mapped, errorCode: errorCode(error) };
+    },
+
+    async deleteOwned(userId, fileId) {
+      const { data, error } = await supabase.rpc("delete_owned_file", {
+        p_file_id: fileId, p_user_id: userId,
+      });
+      return typeof data === "boolean"
+        ? { data, errorCode: errorCode(error) }
+        : { data: null, errorCode: errorCode(error) ?? "provider_error" };
     },
   };
 }
