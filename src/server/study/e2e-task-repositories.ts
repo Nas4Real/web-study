@@ -74,9 +74,23 @@ function initialTasks(): Task[] {
   ];
 }
 
-const stores = new Map<string, Task[]>();
-const profileStores = new Map<string, Profile>();
-const subjectStores = new Map<string, Subject[]>();
+type E2eStores = {
+  profiles: Map<string, Profile>;
+  subjects: Map<string, Subject[]>;
+  tasks: Map<string, Task[]>;
+};
+
+const globalE2eState = globalThis as typeof globalThis & {
+  __webStudyE2eStores?: E2eStores;
+};
+const sharedStores = globalE2eState.__webStudyE2eStores ??= {
+  profiles: new Map<string, Profile>(),
+  subjects: new Map<string, Subject[]>(),
+  tasks: new Map<string, Task[]>(),
+};
+const stores = sharedStores.tasks;
+const profileStores = sharedStores.profiles;
+const subjectStores = sharedStores.subjects;
 
 function profileFor(scope: string, userId: string) {
   const existing = profileStores.get(scope);
