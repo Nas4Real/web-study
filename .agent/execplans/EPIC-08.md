@@ -11,7 +11,7 @@ Read `AGENTS.md`, the PRD, architecture, engineering index, this epic, and each 
 1. `08-01` Lightweight RLS and two-user isolation audit — complete 2026-10-07
 2. `08-02` Critical-flow tests only — complete 2026-10-07
 3. `08-03` Basic Supabase/Vercel deployment and smoke tests — complete 2026-10-07
-4. `08-04` Minimal logging and recovery notes — planned
+4. `08-04` Minimal logging and recovery notes — complete 2026-10-07
 
 ## Private-beta scope decision
 
@@ -38,6 +38,10 @@ deployment must fail closed by disabling uploads when storage is unavailable.
   in the local browser fixture.
 
 - `08-03` deployed the private beta at `https://web-study-pearl.vercel.app` with hosted Supabase auth callbacks, the corrected Vercel production origin, and R2 disabled. Health, auth-page, unauthenticated-redirect, and runtime-log smoke checks pass. The accidental duplicate Vercel project created during hostname discovery was removed.
+- `08-04` added a safe structured auth-callback failure event with validated
+  request correlation, focused failure-path tests, and a private-beta operations
+  runbook covering incident triage plus Supabase logical backup and separate-project
+  restore rehearsal. Elaborate monitoring and job infrastructure remain deferred.
 
 ## Verification
 

@@ -1,7 +1,7 @@
 # Story 08-04: Operational hardening
 
 Epic: epic-08
-Status: ready-for-dev
+Status: done
 Dependencies: 08-03
 
 ## Purpose
@@ -47,3 +47,27 @@ Failure injection smoke tests.
 - tests listed above pass
 - visual regression passes for any changed approved UI
 - no secret or provider-internal error is exposed
+
+## Private-beta scope delivered
+
+- Added a server-only structured `auth_callback_failed` event for the highest-value
+  previously silent production failure path.
+- Added validated request IDs and returned the correlation ID on both callback
+  success and failure responses.
+- Kept callback codes, query strings, emails, tokens, provider messages, and raw
+  exceptions out of telemetry.
+- Added focused failure-injection tests for structured output, unsafe request-ID
+  replacement, successful callback correlation, and normalized failure redirects.
+- Added `docs/PRIVATE-BETA-OPERATIONS.md` with Vercel/Supabase diagnosis steps,
+  an incident checklist, free-plan logical backup policy, and a restore rehearsal
+  procedure that never starts by overwriting production.
+- Deferred cleanup/job monitoring, metrics, tracing, alerts, and third-party
+  monitoring under the agreed two-user private-beta scope.
+
+## Verification
+
+- `pnpm check` passes: lint, TypeScript, 63 Vitest files / 515 tests, and the
+  production Next.js build.
+- `pnpm test:launch-critical` passes the serialized critical browser flows and
+  the 27-assertion tenant-isolation database suite.
+- No UI changed, so no visual comparison was required.
