@@ -7,6 +7,7 @@ import type {
   DocumentFileViewModel,
   DocumentSubjectViewModel,
 } from "./documents-view-model";
+import { NewChapterForm } from "./new-chapter-form";
 
 export function DocumentsSubjectView({
   onBack,
@@ -44,6 +45,7 @@ export function DocumentsSubjectView({
             </p>
           </div>
         </div>
+        <NewChapterForm subjectId={subject.id} />
       </header>
       <section className="mt-8">
         <h2 className="mb-4 text-base font-bold text-white">Chapters</h2>
