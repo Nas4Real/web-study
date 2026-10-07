@@ -1,6 +1,7 @@
 "use client";
 
 import { BookOpenCheck, CalendarPlus, ClipboardCheck, GripVertical, LoaderCircle, Plus, School, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 
 import { ModalFrame } from "@/components/modal-frame";
@@ -121,6 +122,11 @@ export function NewSessionModal({ onClose, subjects, timeZone }: {
               <input className={styles.input} id="session-focus" maxLength={80} name="focusText" onChange={event => setFocusText(event.target.value)} placeholder="e.g. Chapter 4 · integrals" value={focusText} />
             </div> : null}
           </div>
+          {subjects.length === 0 ? (
+            <p className="rounded-lg border border-[#303034] bg-[#171719] p-3 text-[14px] text-zinc-300" role="alert">
+              You need a subject before adding a session. <Link className="font-bold text-white underline underline-offset-4" href="/settings#subjects">Create a subject in Settings</Link>.
+            </p>
+          ) : null}
           <section className="border-t border-[#27272a] pt-5">
             <div className="flex items-center justify-between gap-3">
               <div><h3 className="text-[14px] font-bold text-white">Notes &amp; Reminders</h3><p className="mt-1 text-[11px] text-zinc-500">Keep these in the order you need them.</p></div>

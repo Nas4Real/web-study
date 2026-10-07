@@ -23,6 +23,18 @@ const context = {
     updatedAt: "2026-10-02T00:00:00.000Z",
   },
   profileService: {},
+  subjectService: {
+    list: vi.fn().mockResolvedValue({
+      data: [
+        {
+          color: "#10b981",
+          id: "22222222-2222-4222-8222-222222222222",
+          name: "Physics",
+        },
+      ],
+      status: "success",
+    }),
+  },
 } as unknown as SettingsRequestContext;
 
 describe("loadSettingsPageData", () => {
@@ -35,6 +47,13 @@ describe("loadSettingsPageData", () => {
       errorCode: null,
       storageQuotaBytes: 2_147_483_648,
       storageUsedBytes: 348_127_232,
+      subjects: [
+        {
+          color: "#10b981",
+          id: "22222222-2222-4222-8222-222222222222",
+          name: "Physics",
+        },
+      ],
     });
   });
 

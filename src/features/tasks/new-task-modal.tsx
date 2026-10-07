@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, ChevronDown, Plus, SquareCheckBig } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 
 import { ModalFrame } from "@/components/modal-frame";
@@ -95,6 +96,11 @@ export function NewTaskModal({
             </div>
           </div>
         </div>
+        {subjects.length === 0 ? (
+          <p className="rounded-lg border border-border-base bg-card p-3 text-sm text-text-muted" role="alert">
+            You need a subject before creating a task. <Link className="font-semibold text-white underline underline-offset-4" href="/settings#subjects">Create a subject in Settings</Link>.
+          </p>
+        ) : null}
         <TaskAuthoringSubtasks />
         <div className="flex flex-col gap-2">
           <label className={labelClass} htmlFor="new-task-description">Description <span className="text-text-disabled font-normal ml-1">— optional</span></label>

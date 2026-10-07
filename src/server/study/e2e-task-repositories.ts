@@ -76,6 +76,7 @@ function initialTasks(): Task[] {
 
 const stores = new Map<string, Task[]>();
 const profileStores = new Map<string, Profile>();
+const subjectStores = new Map<string, Subject[]>();
 
 function profileFor(scope: string, userId: string) {
   const existing = profileStores.get(scope);
@@ -100,6 +101,14 @@ function storeFor(scope: string) {
   if (existing) return existing;
   const created = initialTasks();
   stores.set(scope, created);
+  return created;
+}
+
+function subjectsFor(scope: string) {
+  const existing = subjectStores.get(scope);
+  if (existing) return existing;
+  const created = scope.startsWith("empty-subjects") ? [] : SUBJECTS.map((subject) => ({ ...subject }));
+  subjectStores.set(scope, created);
   return created;
 }
 
@@ -188,15 +197,28 @@ export function createE2eStudyRepositories(scope: string) {
       return { data: updated, errorCode: null };
     },
   };
+  const subjects = subjectsFor(scope);
   const subjectRepository: SubjectRepository = {
-    async createOwned() {
-      return { data: null, errorCode: "provider_error" };
+    async createOwned(_userId, input) {
+      if (subjects.some((subject) => subject.name.toLowerCase() === input.name.toLowerCase())) {
+        return { data: null, errorCode: "23505" };
+      }
+      const now = new Date().toISOString();
+      const subject: Subject = {
+        ...input,
+        createdAt: now,
+        id: randomUUID(),
+        icon: input.icon ?? null,
+        updatedAt: now,
+      };
+      subjects.push(subject);
+      return { data: subject, errorCode: null };
     },
     async deleteOwned() {
       return { data: false, errorCode: "provider_error" };
     },
     async listOwned() {
-      return { data: SUBJECTS, errorCode: null };
+      return { data: [...subjects], errorCode: null };
     },
     async updateOwned() {
       return { data: null, errorCode: "provider_error" };

@@ -76,11 +76,14 @@ export function DocumentsRoot({
         </div>
         <div className="flex flex-wrap gap-3">
           <button
-            className="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black"
+            aria-label="Uploads are unavailable until storage is connected"
+            className="flex cursor-not-allowed items-center gap-2 rounded-full bg-zinc-700 px-5 py-2.5 text-sm font-bold text-text-muted"
+            disabled
+            title="Connect file storage to enable uploads"
             type="button"
           >
             <Plus aria-hidden="true" size={16} />
-            New
+            Upload unavailable
           </button>
           <span className="relative">
             <button
@@ -193,7 +196,7 @@ export function DocumentsRoot({
           </div>
         ) : (
           <p className="rounded-xl border border-border-panel bg-card p-8 text-center text-sm text-text-muted">
-            No subjects match your search.
+            {data.subjects.length === 0 ? "Create a subject in Settings before organizing documents." : "No subjects match your search."}
           </p>
         )}
       </section>

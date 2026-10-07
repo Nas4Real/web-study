@@ -17,12 +17,17 @@ interface CalendarHeaderProps {
   onNewSession: () => void;
 }
 
+export function morningGreeting(name: string) {
+  const normalized = name.trim();
+  return normalized ? `Good Morning, ${normalized}!` : "Good Morning!";
+}
+
 export function CalendarHeader({ greetingName, onNewSession, onShift, onViewChange, periodLabel, view }: CalendarHeaderProps) {
   return (
     <>
       <header className="flex shrink-0 items-start justify-between gap-4 px-4 pb-5 pt-6 sm:px-8 sm:pt-8">
         <div className="flex flex-col gap-1 max-sm:min-w-0">
-          <h1 className="text-[22px] font-bold tracking-tight text-white">Good Morning, {greetingName}!</h1>
+          <h1 className="text-[22px] font-bold tracking-tight text-white">{morningGreeting(greetingName)}</h1>
           <p className="text-[13px] font-medium text-text-muted">Here&apos;s what&apos;s happening with your studies today.</p>
         </div>
         <div className="flex items-center gap-3 max-sm:shrink-0">

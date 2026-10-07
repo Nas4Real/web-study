@@ -5,6 +5,7 @@ import { signOutAction } from "@/server/auth/auth-actions";
 import type { SettingsPageData } from "@/server/study/settings-page-loader";
 
 import { SettingsProfileForm } from "./settings-profile-form";
+import { SettingsSubjectForm } from "./settings-subject-form";
 
 function SettingsRow({
   action,
@@ -54,6 +55,17 @@ export function SettingsPage({ data }: Readonly<{ data: SettingsPageData }>) {
           <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-text-muted">Profile</h2>
           <div className="rounded-xl border border-border-panel bg-card p-5 sm:p-6">
             <SettingsProfileForm displayName={data.displayName} email={data.email} />
+          </div>
+        </section>
+
+        <section id="subjects">
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-text-muted">Subjects</h2>
+          <div className="rounded-xl border border-border-panel bg-card p-5 sm:p-6">
+            <div className="mb-5">
+              <h3 className="text-sm font-bold">Your Subjects</h3>
+              <p className="mt-1 text-sm text-text-muted">Subjects organize your tasks, calendar sessions, and documents.</p>
+            </div>
+            <SettingsSubjectForm subjects={data.subjects} />
           </div>
         </section>
 
