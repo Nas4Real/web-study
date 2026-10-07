@@ -6,6 +6,8 @@ remain deferred. Document organization works, but the Upload control stays
 disabled until storage is connected and the upload UI is enabled in a later
 story.
 
+Current production URL: `https://web-study-pearl.vercel.app`
+
 ## 1. Create and migrate Supabase
 
 1. Create one hosted Supabase project in the closest practical region.

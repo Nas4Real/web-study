@@ -1,7 +1,7 @@
 # Story 08-03: Production environment deployment and smoke tests
 
 Epic: epic-08
-Status: in-progress
+Status: done
 Dependencies: 08-01,08-02
 
 ## Purpose
@@ -47,7 +47,8 @@ Production smoke checklist.
 - `/api/health` provides a no-store deployment health check.
 - `pnpm check` passes.
 - `pnpm test:launch-critical` passes: 12 critical browser flows and 27 tenant-isolation pgTAP assertions.
-- Public deployment and post-deploy smoke checks remain before this story can be marked done.
+- Production is deployed at `https://web-study-pearl.vercel.app` from commit `8056782`.
+- Production smoke checks pass: health and auth pages return `200`, unauthenticated workspace routes redirect to sign-in with safe `next` parameters, and filtered Vercel runtime logs contain no application errors.
 
 ## Done when
 
