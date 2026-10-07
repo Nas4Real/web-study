@@ -6,8 +6,20 @@ import type { CalendarRepository } from "./calendar-service";
 import type { CalendarException, CalendarSeries } from "./calendar-domain";
 import { createE2eStudyRepositories } from "./e2e-task-repositories";
 
-const stores = new Map<string, Map<string, CalendarSeries[]>>();
-const exceptionStores = new Map<string, Map<string, CalendarException[]>>();
+type E2eCalendarStores = {
+  exceptions: Map<string, Map<string, CalendarException[]>>;
+  series: Map<string, Map<string, CalendarSeries[]>>;
+};
+
+const globalE2eCalendarState = globalThis as typeof globalThis & {
+  __webStudyE2eCalendarStores?: E2eCalendarStores;
+};
+const sharedCalendarStores = globalE2eCalendarState.__webStudyE2eCalendarStores ??= {
+  exceptions: new Map<string, Map<string, CalendarException[]>>(),
+  series: new Map<string, Map<string, CalendarSeries[]>>(),
+};
+const stores = sharedCalendarStores.series;
+const exceptionStores = sharedCalendarStores.exceptions;
 
 export function createE2eCalendarRepository(scope = "visual-baseline"): CalendarRepository {
   const base: CalendarSeries = {
