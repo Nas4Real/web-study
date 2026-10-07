@@ -128,11 +128,13 @@ export function DocumentsChapterView({
           </div>
         </div>
         <button
-          className="flex items-center gap-2 self-start rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black"
+          aria-label="Uploads are unavailable until storage is connected"
+          className="flex cursor-not-allowed items-center gap-2 self-start rounded-full bg-zinc-700 px-5 py-2.5 text-sm font-bold text-text-muted"
+          disabled
           type="button"
         >
           <Upload aria-hidden="true" size={16} />
-          Upload
+          Upload unavailable
         </button>
       </header>
       <section className="mt-8">

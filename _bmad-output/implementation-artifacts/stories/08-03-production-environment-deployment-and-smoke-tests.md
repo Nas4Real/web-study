@@ -1,7 +1,7 @@
 # Story 08-03: Production environment deployment and smoke tests
 
 Epic: epic-08
-Status: ready-for-dev
+Status: in-progress
 Dependencies: 08-01,08-02
 
 ## Purpose
@@ -38,6 +38,16 @@ Secrets server-only. Authenticated pages uncached publicly.
 ## Test plan
 
 Production smoke checklist.
+
+## Implementation record
+
+- Hosted Supabase project `qvqnztgpjludiahmboyd` is linked and all migrations are applied.
+- Production auth allows the Vercel origin plus local development callbacks, requires eight-character passwords, and requires email verification.
+- Vercel environment values are configured for Supabase and the production app origin; R2 remains optional and uploads are visibly disabled when it is absent.
+- `/api/health` provides a no-store deployment health check.
+- `pnpm check` passes.
+- `pnpm test:launch-critical` passes: 12 critical browser flows and 27 tenant-isolation pgTAP assertions.
+- Public deployment and post-deploy smoke checks remain before this story can be marked done.
 
 ## Done when
 

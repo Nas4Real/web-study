@@ -52,6 +52,7 @@ test.describe("workspace surfaces", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Analysis" })).toBeVisible();
     await page.getByRole("button", { name: /Chapter 1: Series/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Chapter 1: Series" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Uploads are unavailable until storage is connected" })).toBeDisabled();
     await page.getByRole("button", { name: /TD 1 File/ }).click();
     await expect(page.getByText("Sequence Data", { exact: true })).toBeVisible();
     await expect(page.getByText("Analysis Data April", { exact: true })).toBeHidden();

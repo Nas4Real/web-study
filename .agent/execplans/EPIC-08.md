@@ -37,6 +37,8 @@ deployment must fail closed by disabling uploads when storage is unavailable.
   smoke check because deployment credentials are intentionally not configured
   in the local browser fixture.
 
+- `08-03` deployment readiness is complete: hosted Supabase is configured, Vercel environment values are present, storage is optional with disabled upload controls, and a health endpoint plus deployment runbook are in place. `pnpm check` and the reduced launch gate pass locally. Public Vercel deployment and production smoke checks remain.
+
 ## Verification
 
 At every story boundary run the relevant lint, typecheck, unit/integration, E2E, build, RLS, and screenshot gates. Make a small coherent commit only after verification.

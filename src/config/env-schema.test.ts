@@ -7,28 +7,42 @@ const productionEnv = {
   NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable-key",
   NEXT_PUBLIC_APP_ORIGIN: "https://study.example.com",
-  SUPABASE_SECRET_KEY: "secret-key",
-  R2_ACCOUNT_ID: "0123456789abcdef0123456789abcdef",
-  R2_ACCESS_KEY_ID: "access-key-id",
-  R2_SECRET_ACCESS_KEY: "r2-secret",
-  R2_BUCKET: "study-files",
-  API_KEY_HASH_PEPPER: "pepper",
-  CRON_SECRET: "cron-secret",
 };
 
 describe("parseServerEnv", () => {
-  it("accepts the complete production environment contract", () => {
+  it("accepts the minimal private-beta production environment", () => {
     const parsed = parseServerEnv(productionEnv);
 
     expect(parsed.NEXT_PUBLIC_APP_ORIGIN).toBe("https://study.example.com");
+    expect(parsed.R2_BUCKET).toBeUndefined();
+  });
+
+  it("accepts R2 only when the complete optional credential group is present", () => {
+    const parsed = parseServerEnv({
+      ...productionEnv,
+      R2_ACCOUNT_ID: "0123456789abcdef0123456789abcdef",
+      R2_ACCESS_KEY_ID: "access-key-id",
+      R2_SECRET_ACCESS_KEY: "r2-secret",
+      R2_BUCKET: "study-files",
+    });
+
     expect(parsed.R2_BUCKET).toBe("study-files");
   });
 
-  it("rejects a production environment with missing secrets", () => {
+  it("rejects a production environment with missing Supabase values", () => {
     expect(() =>
       parseServerEnv({
         NODE_ENV: "production",
         NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects a partial R2 credential group", () => {
+    expect(() =>
+      parseServerEnv({
+        ...productionEnv,
+        R2_ACCOUNT_ID: "0123456789abcdef0123456789abcdef",
       }),
     ).toThrow();
   });
