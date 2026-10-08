@@ -1,7 +1,7 @@
 # Story 07-01: Personal API key backend
 
 Epic: epic-07
-Status: ready-for-dev
+Status: done
 Dependencies: 02-04
 
 ## Purpose
@@ -38,6 +38,19 @@ Secret shown once. No plaintext at rest.
 ## Test plan
 
 Key verify/revoke/expiry tests.
+
+## Implementation record
+
+- Added a private `api_keys` migration with bounded metadata, digest-only secret storage, RLS enabled, browser-role access revoked, and minimum `service_role` grants.
+- Added 256-bit personal API-key generation, HMAC-SHA-256 digesting with `API_KEY_HASH_PEPPER`, constant-time verification, expiry/revocation enforcement, and one-time raw-token return.
+- Added owner-scoped create/list/revoke/verify services, a server-only Supabase repository adapter, and session-authenticated management actions.
+- Added fail-closed environment validation for the Supabase secret-key/API-key-pepper pair and a server-only Supabase admin client.
+- Applied migration `20261008172409_personal_api_keys.sql` to hosted project `qvqnztgpjludiahmboyd`; migration dry run was clean.
+- Configured `SUPABASE_SECRET_KEY` and a generated `API_KEY_HASH_PEPPER` as Vercel Secrets for Production and Preview.
+- Focused API-key tests pass: 35 tests across crypto, service, repository, actions, environment, and migration contracts.
+- Full `pnpm test`, `pnpm typecheck`, and `pnpm build` pass. `pnpm lint` has zero errors and one unrelated pre-existing warning in `src/components/modal-frame.tsx`.
+- Hosted Supabase security advisors reported only pre-existing file-function/Auth findings; performance advisors reported no issues.
+- Local pgTAP could not run because Docker Desktop was unavailable; the migration is additive and the key table is intentionally inaccessible to browser roles.
 
 ## Done when
 

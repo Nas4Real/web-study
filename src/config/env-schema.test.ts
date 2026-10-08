@@ -62,6 +62,24 @@ describe("parseServerEnv", () => {
     ).toThrow();
   });
 
+  it("requires a strong API-key pepper when public API infrastructure is configured", () => {
+    expect(() => parseServerEnv({
+      NODE_ENV: "development",
+      API_KEY_HASH_PEPPER: "too-short",
+    })).toThrow();
+
+    expect(() => parseServerEnv({
+      NODE_ENV: "development",
+      API_KEY_HASH_PEPPER: "p".repeat(32),
+    })).toThrow("API key infrastructure requires a Supabase secret key");
+
+    expect(parseServerEnv({
+      NODE_ENV: "development",
+      API_KEY_HASH_PEPPER: "p".repeat(32),
+      SUPABASE_SECRET_KEY: "sb_secret_server_only",
+    })).toMatchObject({ API_KEY_HASH_PEPPER: "p".repeat(32) });
+  });
+
   it("rejects malformed R2 endpoint and bucket identifiers before startup", () => {
     expect(() => parseServerEnv({
       NODE_ENV: "development",
