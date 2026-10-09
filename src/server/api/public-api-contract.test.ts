@@ -20,7 +20,7 @@ describe("public API boundary contract", () => {
     "Basic wsk_abc123",
     "Bearer",
     "Bearer first second",
-    `Bearer ${"x".repeat(513)}`,
+    `Bearer ${"x".repeat(8192)}`,
   ])("rejects a missing or malformed authorization value", (authorization) => {
     expect(parseBearerToken(authorization)).toEqual({ status: "error" });
   });
@@ -47,7 +47,7 @@ describe("public API boundary contract", () => {
     expect(await response.json()).toEqual({
       error: {
         code: "UNAUTHENTICATED",
-        message: "A valid API key is required.",
+        message: "A valid Supabase session or personal API key is required.",
         request_id: "request-123",
       },
     });

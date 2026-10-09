@@ -4,9 +4,17 @@ Base path: `/api/v1`
 
 ## Authentication
 
-External clients use `Authorization: Bearer <personal-api-key>`. The raw key is shown once. Store only prefix/fingerprint + secure hash. Revoked/expired keys fail before domain services are invoked.
+Every resource route accepts a verified Supabase session or a personal API
+key. The website uses its existing Supabase cookies, so users do not create API
+keys. Clients may also send a current Supabase access JWT as a Bearer token.
 
-The normal web app uses the Supabase authenticated session but calls the same application services.
+External integrations use `Authorization: Bearer <personal-api-key>`. The raw
+key is shown once. Store only prefix/fingerprint + secure hash. Revoked/expired
+keys fail before domain services are invoked.
+
+Cookie-authenticated mutations require an `Origin` matching the request origin.
+All credential types resolve a user actor before calling the same application
+services. See `docs/API-AUTHENTICATION.md`.
 
 ## General rules
 
