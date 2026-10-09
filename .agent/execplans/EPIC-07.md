@@ -90,7 +90,7 @@ External clients can use revocable personal API keys to access the same owner-sc
 - [x] 07-01 Personal API key backend.
 - [x] 07-02 API authentication, rate limit, and error pipeline.
 - [x] 07-03 Tasks/subjects/chapters/folders API.
-- [ ] 07-04 Calendar API including occurrence operations.
+- [x] 07-04 Calendar API including occurrence operations.
 - [ ] 07-05 Files/notifications/profile/storage API.
 - [ ] 07-06 Developer/API Settings UI.
 
@@ -103,9 +103,11 @@ External clients can use revocable personal API keys to access the same owner-sc
 - The initial public API policy is 120 requests per 60-second fixed window per personal API key. The adapter boundary permits later replacement without changing route handlers.
 - Error payloads follow `docs/openapi.yaml`: `request_id` is nested inside `error`, and every response also carries `X-Request-ID`.
 - Task creation does not advertise `Idempotency-Key` until a durable actor/key/request-hash store exists; explicit complete/reopen and subtask completion mutations remain retry-safe.
+- Session-series creation likewise does not advertise `Idempotency-Key` without durable persistence. Occurrence modification/cancellation uses the canonical atomic upsert and is retry-safe by original occurrence identity.
 
 ## Completion evidence
 
 - **07-01:** migration `20261008172409_personal_api_keys.sql` applied to hosted Supabase project `qvqnztgpjludiahmboyd`; 35 focused tests plus the full unit suite, typecheck, and build pass; lint has zero errors and one unrelated pre-existing warning; hosted security/performance advisors show no new finding. Vercel Production and Preview have the paired server-only Supabase secret key and API-key hash pepper. Local pgTAP remains unavailable while Docker Desktop is stopped.
 - **07-02:** migration `20261008175956_api_rate_windows.sql` applied after a clean dry run; hosted SQL proved atomic allow/allow/reject behavior, invalid-input rejection, and browser-role denial. Twenty-one focused tests plus the full unit suite, typecheck, lint, and production build pass. Performance advisors are clean; security advisors show no finding from the new invoker function.
 - **07-03:** subject, chapter, folder, and task `/api/v1` resources are implemented with strict validation, deterministic keyset pagination, owner-scoped services, normalized errors, full Task Details, explicit complete/reopen operations, and nested subtask create/update/delete. Migration `20261009100201_allow_server_api_service_operations.sql` was dry-run and applied to hosted project `qvqnztgpjludiahmboyd`; hosted rollback probes proved service-role Task/Chapter creation, invoker security, locked search paths, and anon denial. Forty-one focused tests, the full unit suite, typecheck, lint, and production build pass; lint retains one unrelated pre-existing modal warning.
+- **07-04:** session-series CRUD, bounded effective occurrence listing, effective occurrence detail, and one-occurrence modify/cancel routes are implemented over the existing Calendar and Session Detail services. Migration `20261009174015_allow_server_api_calendar_exceptions.sql` was dry-run and applied to the hosted project; metadata verification proved invoker security, an empty search path, service-role execution, and anon denial, while a rolled-back service-role occurrence write returned one row. Fifty-three focused tests, the full unit suite, typecheck, lint, and production build pass. Advisors report no new Calendar finding; existing file-function and leaked-password warnings remain outside this story.
