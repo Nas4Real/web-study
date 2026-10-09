@@ -5,13 +5,16 @@ import {
 } from "./public-api-contract";
 
 export type ActorContext = Readonly<{
-  apiKeyId: string;
+  apiKeyId: string | null;
   userId: string;
 }>;
 
+type ApiKeyActorContext = ActorContext & Readonly<{ apiKeyId: string }>;
+type SessionActorContext = ActorContext & Readonly<{ apiKeyId: null }>;
+
 export type ApiKeyVerifier = Readonly<{
   verify(token: string): Promise<
-    | Readonly<{ data: ActorContext; status: "success" }>
+    | Readonly<{ data: ApiKeyActorContext; status: "success" }>
     | Readonly<{ code: string; status: "error" }>
   >;
 }>;
@@ -23,6 +26,13 @@ export type RateLimiter = Readonly<{
       status: "success";
     }>
     | Readonly<{ code: "STORAGE_UNAVAILABLE"; status: "error" }>
+  >;
+}>;
+
+export type SessionVerifier = Readonly<{
+  verify(token?: string): Promise<
+    | Readonly<{ data: SessionActorContext; status: "success" }>
+    | Readonly<{ code: "INVALID_SESSION"; status: "error" }>
   >;
 }>;
 
@@ -44,6 +54,25 @@ function providerUnavailable(requestId: string) {
   });
 }
 
+function unauthenticated(requestId: string) {
+  return publicApiErrorResponse({
+    code: "UNAUTHENTICATED",
+    requestId,
+    status: 401,
+  });
+}
+
+function isCookieMutationAllowed(request: Request) {
+  if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return true;
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  try {
+    return new URL(origin).origin === new URL(request.url).origin;
+  } catch {
+    return false;
+  }
+}
+
 function withBoundaryHeaders(response: Response, requestId: string) {
   const headers = new Headers(response.headers);
   headers.set("cache-control", "no-store");
@@ -55,24 +84,50 @@ function withBoundaryHeaders(response: Response, requestId: string) {
   });
 }
 
+async function callResource(
+  next: PublicApiResourceAdapter,
+  request: Request,
+  context: PublicApiRequestContext,
+) {
+  try {
+    return withBoundaryHeaders(await next(request, context), context.requestId);
+  } catch {
+    return publicApiErrorResponse({
+      code: "INTERNAL_ERROR",
+      requestId: context.requestId,
+      status: 500,
+    });
+  }
+}
+
 export function createPublicApiHandler(input: Readonly<{
   apiKeys: ApiKeyVerifier;
   limiter: RateLimiter;
   next: PublicApiResourceAdapter;
   requestIdFactory?: () => string;
+  sessions: SessionVerifier;
 }>) {
   return async function handle(request: Request) {
     const requestId = createRequestId(
       request.headers.get("x-request-id"),
       input.requestIdFactory,
     );
-    const bearer = parseBearerToken(request.headers.get("authorization"));
-    if (bearer.status === "error") {
-      return publicApiErrorResponse({
-        code: "UNAUTHENTICATED",
-        requestId,
-        status: 401,
-      });
+    const authorization = request.headers.get("authorization");
+    const bearer = authorization === null ? null : parseBearerToken(authorization);
+    if (bearer?.status === "error") return unauthenticated(requestId);
+
+    if (!bearer || !bearer.token.startsWith("wsk_")) {
+      let verified: Awaited<ReturnType<SessionVerifier["verify"]>>;
+      try {
+        verified = await input.sessions.verify(bearer?.token);
+      } catch {
+        return providerUnavailable(requestId);
+      }
+      if (verified.status === "error") return unauthenticated(requestId);
+      if (!bearer && !isCookieMutationAllowed(request)) {
+        return publicApiErrorResponse({ code: "FORBIDDEN", requestId, status: 403 });
+      }
+      return callResource(input.next, request, { actor: verified.data, requestId });
     }
 
     let verified: Awaited<ReturnType<ApiKeyVerifier["verify"]>>;
@@ -107,17 +162,6 @@ export function createPublicApiHandler(input: Readonly<{
       });
     }
 
-    try {
-      return withBoundaryHeaders(
-        await input.next(request, { actor: verified.data, requestId }),
-        requestId,
-      );
-    } catch {
-      return publicApiErrorResponse({
-        code: "INTERNAL_ERROR",
-        requestId,
-        status: 500,
-      });
-    }
+    return callResource(input.next, request, { actor: verified.data, requestId });
   };
 }

@@ -4,7 +4,7 @@ vi.mock("server-only", () => ({}));
 
 import { createApiKeyTokenCodec } from "./api-key-crypto";
 import { ApiKeyService, type ApiKeyRepository } from "./api-key-service";
-import { createPublicApiHandler, type RateLimiter } from "./public-api-handler";
+import { createPublicApiHandler, type RateLimiter, type SessionVerifier } from "./public-api-handler";
 
 const NOW = new Date("2026-10-09T09:00:00.000Z");
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -28,6 +28,9 @@ const limiter: RateLimiter = {
     status: "success",
   }),
 };
+const sessions: SessionVerifier = {
+  verify: vi.fn().mockResolvedValue({ code: "INVALID_SESSION", status: "error" }),
+};
 
 describe("public API authentication integration", () => {
   it.each([
@@ -48,7 +51,7 @@ describe("public API authentication integration", () => {
       userId: USER_ID,
     }), codec, () => NOW);
     const next = vi.fn();
-    const handle = createPublicApiHandler({ apiKeys: keys, limiter, next });
+    const handle = createPublicApiHandler({ apiKeys: keys, limiter, next, sessions });
 
     const response = await handle(new Request("https://example.test/api/v1/tasks", {
       headers: { authorization: `Bearer ${generated.token}` },

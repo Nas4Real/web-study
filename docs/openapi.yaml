@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
   title: Web Study API
-  version: 1.0.0
+  version: 1.1.0
   description: |
-    External Web Study API. Personal API keys authenticate external clients.
-    The normal web application uses the same application-service layer with a Supabase session.
+    Web Study resource API. Verified Supabase sessions/JWTs authenticate users,
+    while personal API keys authenticate external integrations. Same-origin web
+    requests may rely on their Supabase session cookies; cookie-authenticated
+    mutations require a matching Origin header.
     Notification APIs are deferred. File-byte upload, completion, and download URL operations
     return PROVIDER_UNAVAILABLE until private object storage is configured.
 servers:
   - url: /api/v1
 security:
+  - supabaseAccessToken: []
   - personalApiKey: []
 
 tags:
@@ -23,6 +26,11 @@ tags:
 
 components:
   securitySchemes:
+    supabaseAccessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: A current Supabase Auth access JWT. Same-origin web clients may use their Supabase session cookies instead.
     personalApiKey:
       type: http
       scheme: bearer
@@ -88,12 +96,17 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
     Unauthorized:
-      description: Missing, invalid, revoked, or expired API key
+      description: Missing, invalid, revoked, or expired Supabase session/JWT or personal API key
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
     NotFound:
       description: Resource not found or not visible to the authenticated owner
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Forbidden:
+      description: The authenticated request is not allowed, including an unsafe cookie-authenticated mutation origin
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }

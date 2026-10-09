@@ -15,7 +15,7 @@ describe("/api/v1/subjects", () => {
     expect(await response.json()).toEqual({
       error: {
         code: "UNAUTHENTICATED",
-        message: "A valid API key is required.",
+        message: "A valid Supabase session or personal API key is required.",
         request_id: "subjects-test-1",
       },
     });

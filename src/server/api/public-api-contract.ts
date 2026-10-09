@@ -1,16 +1,17 @@
 import { randomUUID } from "node:crypto";
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
-const MAX_AUTHORIZATION_LENGTH = 512;
+const MAX_AUTHORIZATION_LENGTH = 8192;
 
 const ERROR_MESSAGES = {
   API_KEY_INVALID: "The API key is invalid, expired, or revoked.",
   CONFLICT: "The request conflicts with the current resource state.",
+  FORBIDDEN: "The request is not allowed.",
   INTERNAL_ERROR: "The request could not be completed.",
   NOT_FOUND: "The requested resource was not found.",
   PROVIDER_UNAVAILABLE: "The service is temporarily unavailable.",
   RATE_LIMITED: "The API rate limit has been exceeded.",
-  UNAUTHENTICATED: "A valid API key is required.",
+  UNAUTHENTICATED: "A valid Supabase session or personal API key is required.",
   VALIDATION_FAILED: "The request is invalid.",
 } as const;
 
