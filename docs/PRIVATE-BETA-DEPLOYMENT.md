@@ -1,10 +1,10 @@
 # Private-beta deployment
 
 This runbook deploys Web Study for two users with Supabase and Vercel. The
-public developer API, notifications, account deletion, and live R2 file bytes
-remain deferred. Document organization works, but the Upload control stays
-disabled until storage is connected and the upload UI is enabled in a later
-story.
+public developer API metadata surface is available; its Developer Settings UI,
+notifications, account deletion, and live R2 file bytes remain deferred.
+Document organization works, but the Upload control stays disabled until
+storage is connected and the upload UI is enabled in a later story.
 
 Current production URL: `https://web-study-pearl.vercel.app`
 
@@ -42,6 +42,8 @@ for Production and Preview:
 | `NEXT_PUBLIC_SUPABASE_URL` | Hosted project API URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Hosted publishable/anon key |
 | `NEXT_PUBLIC_APP_ORIGIN` | Exact deployed origin, without a trailing slash |
+| `SUPABASE_SECRET_KEY` | Hosted project server-only secret key |
+| `API_KEY_HASH_PEPPER` | Random server-only secret of at least 32 characters |
 
 Do not add R2 variables yet. If storage is configured later, all four
 `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET`

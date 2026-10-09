@@ -12,7 +12,7 @@ The normal web app uses the Supabase authenticated session but calls the same ap
 
 - JSON request/response for metadata.
 - Zod schemas are shared with service contracts.
-- Stable error envelope: `error.code`, `error.message`, `request_id`, optional validation details.
+- Stable error envelope: `error.code`, `error.message`, `error.request_id`, optional validation details.
 - Mutating POST operations that may be retried support `Idempotency-Key` where documented.
 - IDs are UUIDs. Calendar occurrence identity is `(series_id, original_start)`.
 
@@ -44,8 +44,14 @@ Session payloads support optional `location`, `professor`, `focus_text`, and ord
 
 ## Other resources
 
-Subjects, chapters, folders, files/upload-intents, notifications/preferences, profile/storage and API-key settings follow the existing V1 contract in `docs/openapi.yaml`.
+Subjects, chapters, folders, file metadata, profile/storage, and API-key settings
+follow the existing V1 contract in `docs/openapi.yaml`. Notification endpoints
+remain deferred with Epic 06. Upload intent, completion, and download URL routes
+return `PROVIDER_UNAVAILABLE` until private object storage is configured.
 
 ## File transfer
 
-The API never accepts a 50 MB file body through the ordinary JSON route. It creates a quota-reserved upload intent and returns a short-lived R2 presigned PUT. Completion verifies the uploaded object before it becomes a ready file.
+When R2 is configured later, the API will never accept a 50 MB file body
+through the ordinary JSON route. It will create a quota-reserved upload intent
+and return a short-lived R2 presigned PUT. Completion will verify the uploaded
+object before it becomes a ready file.
