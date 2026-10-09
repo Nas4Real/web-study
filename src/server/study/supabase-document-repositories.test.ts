@@ -25,8 +25,8 @@ const uploadRow = {
 };
 
 function chain(reply: { data: unknown; error: unknown }) {
-  const builder = { delete: vi.fn(), eq: vi.fn(), ilike: vi.fn(), insert: vi.fn(), is: vi.fn(), limit: vi.fn().mockResolvedValue(reply), maybeSingle: vi.fn().mockResolvedValue(reply), order: vi.fn(), select: vi.fn(), single: vi.fn().mockResolvedValue(reply), update: vi.fn() };
-  for (const method of [builder.delete, builder.eq, builder.ilike, builder.insert, builder.is, builder.order, builder.select, builder.update]) method.mockReturnValue(builder);
+  const builder = { delete: vi.fn(), eq: vi.fn(), ilike: vi.fn(), insert: vi.fn(), is: vi.fn(), limit: vi.fn().mockResolvedValue(reply), maybeSingle: vi.fn().mockResolvedValue(reply), or: vi.fn(), order: vi.fn(), select: vi.fn(), single: vi.fn().mockResolvedValue(reply), update: vi.fn() };
+  for (const method of [builder.delete, builder.eq, builder.ilike, builder.insert, builder.is, builder.or, builder.order, builder.select, builder.update]) method.mockReturnValue(builder);
   return builder;
 }
 
@@ -42,6 +42,25 @@ describe("Supabase document hierarchy repositories", () => {
       p_name: "Algebra", p_position: 0, p_starter_names: ["Cours", "TD", "Resume"],
       p_subject_id: SUBJECT_ID, p_user_id: USER_ID,
     });
+  });
+
+  it("lists a bounded owner-scoped chapter page with deterministic ordering", async () => {
+    const builder = chain({ data: [chapterRow], error: null });
+    const client = { from: vi.fn().mockReturnValue(builder) };
+    const result = await createSupabaseChapterRepository(client as never).listPageOwned(USER_ID, {
+      cursor: { createdAt: chapterRow.created_at, id: CHAPTER_ID, position: 0 },
+      limit: 21,
+      subjectId: SUBJECT_ID,
+    });
+    expect(result).toMatchObject({ data: [{ id: CHAPTER_ID }], errorCode: null });
+    expect(builder.eq.mock.calls).toEqual(expect.arrayContaining([
+      ["user_id", USER_ID], ["subject_id", SUBJECT_ID],
+    ]));
+    expect(builder.or).toHaveBeenCalledOnce();
+    expect(builder.order).toHaveBeenNthCalledWith(1, "position", { ascending: true });
+    expect(builder.order).toHaveBeenNthCalledWith(2, "created_at", { ascending: true });
+    expect(builder.order).toHaveBeenNthCalledWith(3, "id", { ascending: true });
+    expect(builder.limit).toHaveBeenCalledWith(21);
   });
 
   it("applies every supplied folder filter in addition to actor ownership", async () => {

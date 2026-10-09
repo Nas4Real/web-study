@@ -16,6 +16,7 @@ function repository(overrides: Partial<ChapterRepository> = {}): ChapterReposito
     deleteOwned: vi.fn().mockResolvedValue({ data: true, errorCode: null }),
     findOwned: vi.fn().mockResolvedValue({ data: CHAPTER, errorCode: null }),
     listOwned: vi.fn().mockResolvedValue({ data: [CHAPTER], errorCode: null }),
+    listPageOwned: vi.fn().mockResolvedValue({ data: [CHAPTER], errorCode: null }),
     updateOwned: vi.fn().mockResolvedValue({ data: CHAPTER, errorCode: null }),
     ...overrides,
   };
@@ -53,5 +54,31 @@ describe("ChapterService", () => {
     await service.update(USER_ID, CHAPTER_ID, { name: "Geometry" });
     expect(repo.findOwned).toHaveBeenCalledWith(USER_ID, CHAPTER_ID);
     expect(repo.updateOwned).toHaveBeenCalledWith(USER_ID, CHAPTER_ID, { name: "Geometry" });
+  });
+
+  it("returns a bounded owner-scoped keyset page", async () => {
+    const second = { ...CHAPTER, id: "66666666-6666-4666-8666-666666666666", position: 1 };
+    const repo = repository({
+      listPageOwned: vi.fn().mockResolvedValue({ data: [CHAPTER, second], errorCode: null }),
+    });
+
+    const result = await new ChapterService(repo).listPage(USER_ID, {
+      cursor: null,
+      limit: 1,
+      subjectId: SUBJECT_ID,
+    });
+
+    expect(result).toEqual({
+      data: {
+        items: [CHAPTER],
+        nextCursor: { createdAt: CHAPTER.createdAt, id: CHAPTER.id, position: 0 },
+      },
+      status: "success",
+    });
+    expect(repo.listPageOwned).toHaveBeenCalledWith(USER_ID, {
+      cursor: null,
+      limit: 2,
+      subjectId: SUBJECT_ID,
+    });
   });
 });

@@ -191,6 +191,28 @@ export function createSupabaseChapterRepository(supabase: SupabaseClient): Chapt
         : { data: null, errorCode: errorCode(error) ?? "provider_error" };
     },
 
+    async listPageOwned(userId, input) {
+      let query = supabase.from("chapters").select(chapterColumns).eq("user_id", userId);
+      if (input.subjectId) query = query.eq("subject_id", input.subjectId);
+      if (input.cursor) {
+        const { createdAt, id, position } = input.cursor;
+        query = query.or([
+          `position.gt.${position}`,
+          `and(position.eq.${position},created_at.gt.${createdAt})`,
+          `and(position.eq.${position},created_at.eq.${createdAt},id.gt.${id})`,
+        ].join(","));
+      }
+      const { data, error } = await query
+        .order("position", { ascending: true })
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .limit(input.limit);
+      const mapped = data?.map(toChapter);
+      return mapped?.every(Boolean)
+        ? { data: mapped as Chapter[], errorCode: errorCode(error) }
+        : { data: null, errorCode: errorCode(error) ?? "provider_error" };
+    },
+
     async findOwned(userId, chapterId) {
       const { data, error } = await supabase.from("chapters").select(chapterColumns)
         .eq("id", chapterId).eq("user_id", userId).maybeSingle();
