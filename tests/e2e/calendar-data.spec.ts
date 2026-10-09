@@ -33,6 +33,25 @@ test("reads effective owned sessions and retains date/view across reload and his
   expect(errors).toEqual([]);
 });
 
+test("shows an actionable empty state when a day has no sessions", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  await page.goto("/calendar?e2eScope=calendar-empty-day&date=2027-02-10&view=day");
+
+  await expect(page.getByRole("heading", { level: 2, name: "No sessions scheduled" })).toBeVisible();
+  await expect(page.getByText("Your day is clear.")).toBeVisible();
+  await expect(page).toHaveScreenshot("calendar-day-empty-1440x1200.png", {
+    animations: "disabled",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Add session" }).click();
+  await expect(page.getByRole("dialog", { name: "Add a session" })).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 320, height: 800 });
+  await expect(page.getByRole("heading", { level: 2, name: "No sessions scheduled" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
+});
+
 for (const [date, cells] of [["2027-02-10", 28], ["2026-11-10", 42]] as const) {
   test(`renders the complete ${cells}-cell month with no invented sessions`, async ({ page }) => {
     await page.goto(`/calendar?e2eScope=calendar-empty-${cells}&date=${date}&view=month`);

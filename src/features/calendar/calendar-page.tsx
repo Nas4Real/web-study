@@ -67,7 +67,9 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
         view={view}
       />
       {view === "week" ? <WeekView days={data.weekDays} onOpenEvent={openEvent} /> : null}
-      {view === "day" ? <DayView onOpenEvent={openEvent} sections={data.daySections} /> : null}
+      {view === "day" ? (
+        <DayView onNewSession={() => setDialog("new")} onOpenEvent={openEvent} sections={data.daySections} />
+      ) : null}
       {view === "month" ? (
         <MonthView cells={data.monthCells} label={periodLabel} />
       ) : null}
