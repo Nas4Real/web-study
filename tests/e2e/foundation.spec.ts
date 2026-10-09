@@ -20,7 +20,7 @@ test("renders the approved Dashboard and application shell", async ({ page }) =>
 
 test("keeps interactive shell controls keyboard reachable", async ({ page }) => {
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("searchbox", { name: "Search Web Study" })).toBeFocused();
+  await expect(page.getByRole("link", { name: "GetStudy" })).toBeFocused();
 
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Dashboard" })).toBeFocused();

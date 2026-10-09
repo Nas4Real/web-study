@@ -10,7 +10,7 @@ test("switches deterministically between the approved Calendar views", async ({ 
   const dayButton = page.getByRole("button", { name: "Day" });
   const monthButton = page.getByRole("button", { name: "Month" });
 
-  await expect(page.getByRole("link", { name: "Planning" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: "Calendar" })).toHaveAttribute("aria-current", "page");
   await expect(weekButton).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("heading", { level: 2, name: "4 Mai - 10 Mai 2026" })).toBeVisible();
   await expect(page.getByText("Réduction des endomorphismes")).toBeVisible();

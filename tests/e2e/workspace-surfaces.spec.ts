@@ -28,8 +28,11 @@ test.describe("workspace surfaces", () => {
   test("renders Documents with the approved sections", async ({ page }) => {
     await page.goto("/documents");
 
+    await expect(page.getByRole("link", { name: "GetStudy" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Calendar" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Documents" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Documents" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("link", { name: "Support" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Subjects" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Recent" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "All Files" })).toBeVisible();
@@ -72,8 +75,9 @@ test.describe("workspace surfaces", () => {
     await expect(page.getByRole("button", { name: "Account deletion is not available yet" })).toBeDisabled();
 
     await page.getByRole("button", { name: "Open profile menu" }).click();
-    await expect(page.getByRole("menu", { name: "Profile menu" })).toBeVisible();
-    await expect(page.getByText("nas@example.com")).toBeVisible();
+    const profileMenu = page.getByRole("menu", { name: "Profile menu" });
+    await expect(profileMenu).toBeVisible();
+    await expect(profileMenu.getByText("nas@example.com")).toBeVisible();
   });
 
   test("updates the authenticated profile from Settings", async ({ page }) => {
