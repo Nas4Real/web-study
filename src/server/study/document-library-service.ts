@@ -62,6 +62,20 @@ export class DocumentLibraryService {
     private readonly storage: DocumentLibraryStorage,
   ) {}
 
+  async find(actorId: unknown, fileId: unknown): Promise<LibraryResult<FileMetadata>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    const id = entityIdSchema.safeParse(fileId);
+    if (!actor.success) return INVALID_ACTOR;
+    if (!id.success) return INVALID_INPUT;
+    try {
+      const result = await this.repository.findDownloadOwned(actor.data, id.data);
+      if (result.errorCode) return repositoryError(result.errorCode);
+      return result.data ? { data: result.data.file, status: "success" } : NOT_FOUND;
+    } catch {
+      return STORAGE_UNAVAILABLE;
+    }
+  }
+
   async list(
     actorId: unknown,
     filter: unknown = {},
