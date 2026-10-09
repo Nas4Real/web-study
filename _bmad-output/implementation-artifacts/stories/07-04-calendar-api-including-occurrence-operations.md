@@ -1,7 +1,7 @@
 # Story 07-04: Calendar API including occurrence operations
 
 Epic: epic-07
-Status: ready-for-dev
+Status: done
 Dependencies: 07-02,04-02
 
 ## Purpose

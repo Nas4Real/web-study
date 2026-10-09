@@ -135,6 +135,17 @@ function taskRepository(scope: string): TaskRepository {
     return { data: task, errorCode: null };
   };
   return {
+    async addSubtaskOwned(_userId, taskId, input) {
+      const task = find(taskId);
+      if (!task) return { data: null, errorCode: null };
+      const now = new Date().toISOString();
+      const subtask = {
+        completedAt: input.completedAt, createdAt: now, id: randomUUID(),
+        position: input.position, title: input.title, updatedAt: now,
+      };
+      save({ ...task, subtasks: [...task.subtasks, subtask], updatedAt: now });
+      return { data: subtask, errorCode: null };
+    },
     async createOwned(_userId, input: TaskCreate) {
       if (!SUBJECTS.some(({ id }) => id === input.subjectId)) {
         return { data: null, errorCode: "23503" };
@@ -171,6 +182,18 @@ function taskRepository(scope: string): TaskRepository {
     async listOwned() {
       return { data: [...tasks], errorCode: null };
     },
+    async listPageOwned(_userId, input) {
+      const filtered = tasks.filter(task =>
+        (!input.status || task.status === input.status)
+        && (!input.subjectId || task.subjectId === input.subjectId)
+        && (!input.dueFrom || (task.dueAt !== null && task.dueAt >= input.dueFrom))
+        && (!input.dueTo || (task.dueAt !== null && task.dueAt <= input.dueTo)))
+        .sort((left, right) => right.createdAt.localeCompare(left.createdAt) || right.id.localeCompare(left.id));
+      const after = input.cursor ? filtered.filter(task =>
+        task.createdAt < input.cursor!.createdAt
+        || (task.createdAt === input.cursor!.createdAt && task.id < input.cursor!.id)) : filtered;
+      return { data: after.slice(0, input.limit), errorCode: null };
+    },
     async setStatusOwned(_userId, taskId, status, completedAt) {
       const task = find(taskId);
       return task
@@ -182,6 +205,21 @@ function taskRepository(scope: string): TaskRepository {
       if (!task?.subtasks.some(subtask => subtask.id === subtaskId)) return { data: null, errorCode: null };
       const now = new Date().toISOString();
       return save({ ...task, updatedAt: now, subtasks: task.subtasks.map(subtask => subtask.id === subtaskId ? { ...subtask, completedAt, updatedAt: now } : subtask) });
+    },
+    async updateSubtaskOwned(_userId, taskId, subtaskId, input) {
+      const task = find(taskId), now = new Date().toISOString();
+      if (!task?.subtasks.some(subtask => subtask.id === subtaskId)) return { data: null, errorCode: null };
+      const updated = task.subtasks.find(subtask => subtask.id === subtaskId);
+      if (!updated) return { data: null, errorCode: null };
+      const subtask = { ...updated, ...input, updatedAt: now };
+      save({ ...task, subtasks: task.subtasks.map(value => value.id === subtaskId ? subtask : value), updatedAt: now });
+      return { data: subtask, errorCode: null };
+    },
+    async deleteSubtaskOwned(_userId, taskId, subtaskId) {
+      const task = find(taskId);
+      if (!task?.subtasks.some(subtask => subtask.id === subtaskId)) return { data: false, errorCode: null };
+      save({ ...task, subtasks: task.subtasks.filter(subtask => subtask.id !== subtaskId), updatedAt: new Date().toISOString() });
+      return { data: true, errorCode: null };
     },
     async updateOwned(_userId, taskId, input) {
       const task = find(taskId);
@@ -233,6 +271,31 @@ export function createE2eStudyRepositories(scope: string) {
     },
     async listOwned() {
       return { data: [...subjects], errorCode: null };
+    },
+    async listPageOwned(_userId, input) {
+      const ordered = [...subjects].sort((left, right) =>
+        left.position - right.position
+        || left.createdAt.localeCompare(right.createdAt)
+        || left.id.localeCompare(right.id));
+      const after = input.cursor
+        ? ordered.filter((subject) =>
+          subject.position > input.cursor!.position
+          || (subject.position === input.cursor!.position
+            && subject.createdAt > input.cursor!.createdAt)
+          || (subject.position === input.cursor!.position
+            && subject.createdAt === input.cursor!.createdAt
+            && subject.id > input.cursor!.id))
+        : ordered;
+      return { data: after.slice(0, input.limit), errorCode: null };
+    },
+    async findOwned(_userId, subjectId) {
+      return {
+        data: subjects.find((subject) => subject.id === subjectId) ?? null,
+        errorCode: null,
+      };
+    },
+    async findManyOwned(_userId, subjectIds) {
+      return { data: subjects.filter(subject => subjectIds.includes(subject.id)), errorCode: null };
     },
     async updateOwned() {
       return { data: null, errorCode: "provider_error" };

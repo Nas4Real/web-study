@@ -15,11 +15,23 @@ import {
 const STARTER_FOLDERS = ["Cours", "TD", "Resume"] as const;
 type ChapterResult<T> = StudyResult<T, "CONFLICT">;
 
+export type ChapterPageRequest = Readonly<{
+  cursor: Readonly<{ createdAt: string; id: string; position: number }> | null;
+  limit: number;
+  subjectId?: string;
+}>;
+
+export type ChapterPage = Readonly<{
+  items: readonly Chapter[];
+  nextCursor: ChapterPageRequest["cursor"];
+}>;
+
 export type ChapterRepository = Readonly<{
   createOwnedWithStarters(userId: string, input: ChapterCreate, starterNames: readonly string[]): Promise<RepositoryResult<Chapter>>;
   deleteOwned(userId: string, chapterId: string): Promise<RepositoryResult<boolean>>;
   findOwned(userId: string, chapterId: string): Promise<RepositoryResult<Chapter>>;
   listOwned(userId: string, filter: ChapterListFilter): Promise<RepositoryResult<readonly Chapter[]>>;
+  listPageOwned(userId: string, input: ChapterPageRequest): Promise<RepositoryResult<readonly Chapter[]>>;
   updateOwned(userId: string, chapterId: string, input: ChapterUpdate): Promise<RepositoryResult<Chapter>>;
 }>;
 
@@ -44,6 +56,37 @@ export class ChapterService {
       const result = await this.repository.listOwned(actor.data, parsed.data);
       if (result.errorCode) return repositoryError(result.errorCode, "write");
       return { data: result.data ?? [], status: "success" };
+    } catch { return STORAGE_UNAVAILABLE; }
+  }
+
+  async listPage(actorId: unknown, input: ChapterPageRequest): Promise<ChapterResult<ChapterPage>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    const subject = input.subjectId === undefined
+      ? { success: true as const, data: undefined }
+      : entityIdSchema.safeParse(input.subjectId);
+    if (!actor.success) return INVALID_ACTOR;
+    if (!subject.success || !Number.isInteger(input.limit) || input.limit < 1 || input.limit > 100) {
+      return INVALID_INPUT;
+    }
+    try {
+      const result = await this.repository.listPageOwned(actor.data, {
+        cursor: input.cursor,
+        limit: input.limit + 1,
+        ...(subject.data ? { subjectId: subject.data } : {}),
+      });
+      if (result.errorCode) return repositoryError(result.errorCode, "write");
+      const rows = result.data ?? [];
+      const items = rows.slice(0, input.limit);
+      const last = items.at(-1);
+      return {
+        data: {
+          items,
+          nextCursor: rows.length > input.limit && last
+            ? { createdAt: last.createdAt, id: last.id, position: last.position }
+            : null,
+        },
+        status: "success",
+      };
     } catch { return STORAGE_UNAVAILABLE; }
   }
 

@@ -3,6 +3,11 @@ export type SupabasePublicConfig = Readonly<{
   publishableKey: string;
 }>;
 
+export type SupabaseAdminConfig = Readonly<{
+  secretKey: string;
+  url: string;
+}>;
+
 type PublicEnvironment = Record<string, string | undefined>;
 
 export function parseSupabasePublicConfig(
@@ -41,4 +46,20 @@ export function requireSupabasePublicConfig() {
   }
 
   return config;
+}
+
+export function parseSupabaseAdminConfig(
+  source: PublicEnvironment,
+): SupabaseAdminConfig {
+  const url = source.NEXT_PUBLIC_SUPABASE_URL;
+  const secretKey = source.SUPABASE_SECRET_KEY;
+  if (!url || !secretKey) {
+    throw new Error("Supabase admin environment is incomplete");
+  }
+  try {
+    new URL(url);
+  } catch {
+    throw new Error("Supabase admin URL is invalid");
+  }
+  return { secretKey, url };
 }

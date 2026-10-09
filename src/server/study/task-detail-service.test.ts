@@ -24,6 +24,7 @@ function fixture() {
   };
   const owned = (actor: string, id: string) => actor === ACTOR && id === task?.id;
   const repository: TaskRepository = {
+    async addSubtaskOwned() { return { data: null, errorCode: "provider_error" }; },
     async findOwned(actor, id) { return { data: owned(actor, id) ? task : null, errorCode: null }; },
     async setStatusOwned(actor, id, status, completedAt) {
       if (!owned(actor, id) || !task) return { data: null, errorCode: null };
@@ -41,6 +42,9 @@ function fixture() {
       return { data: true, errorCode: null };
     },
     async listOwned() { return { data: [], errorCode: null }; },
+    async listPageOwned() { return { data: [], errorCode: null }; },
+    async updateSubtaskOwned() { return { data: null, errorCode: "provider_error" }; },
+    async deleteSubtaskOwned() { return { data: false, errorCode: "provider_error" }; },
     async createOwned() { return { data: null, errorCode: "provider_error" }; },
     async updateOwned() { return { data: null, errorCode: "provider_error" }; },
   };
@@ -48,6 +52,13 @@ function fixture() {
     async listOwned(actor) {
       return { data: actor === ACTOR ? [{ id: SUBJECT_ID, name: "Math", color: "#ec4899", icon: null, position: 0, createdAt: NOW, updatedAt: NOW }] : [], errorCode: null };
     },
+    async listPageOwned() { return { data: [], errorCode: null }; },
+    async findOwned(actor, id) {
+      return { data: actor === ACTOR && id === SUBJECT_ID
+        ? { id: SUBJECT_ID, name: "Math", color: "#ec4899", icon: null, position: 0, createdAt: NOW, updatedAt: NOW }
+        : null, errorCode: null };
+    },
+    async findManyOwned() { return { data: [], errorCode: null }; },
     async createOwned() { return { data: null, errorCode: "provider_error" }; },
     async updateOwned() { return { data: null, errorCode: "provider_error" }; },
     async deleteOwned() { return { data: false, errorCode: "provider_error" }; },
@@ -122,7 +133,7 @@ describe("TaskDetailService", () => {
 
   it("fails closed for missing subject metadata before applying a mutation", async () => {
     const { service, subjectRepository, repository } = fixture();
-    vi.spyOn(subjectRepository, "listOwned").mockResolvedValue({ data: [], errorCode: null });
+    vi.spyOn(subjectRepository, "findOwned").mockResolvedValue({ data: null, errorCode: null });
     const update = vi.spyOn(repository, "setStatusOwned");
     expect(await service.mutate(ACTOR, TASK_ID, { type: "complete" })).toEqual({ status: "error", code: "NOT_FOUND" });
     expect(update).not.toHaveBeenCalled();
@@ -133,7 +144,7 @@ describe("TaskDetailService", () => {
     vi.spyOn(repository, "toggleSubtaskOwned").mockRejectedValue(new Error("provider secret"));
     expect(await service.mutate(ACTOR, TASK_ID, { type: "subtask", subtaskId: SUBTASK_ID, completed: true }))
       .toEqual({ status: "error", code: "STORAGE_UNAVAILABLE" });
-    vi.spyOn(sources.subjects, "list").mockRejectedValue(new Error("provider secret"));
+    vi.spyOn(sources.subjects, "find").mockRejectedValue(new Error("provider secret"));
     expect(await service.read(ACTOR, TASK_ID)).toEqual({ status: "error", code: "STORAGE_UNAVAILABLE" });
   });
 });

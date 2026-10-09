@@ -20,6 +20,7 @@ function repository(overrides: Partial<FolderRepository> = {}): FolderRepository
     findOwned: vi.fn().mockResolvedValue({ data: FOLDER, errorCode: null }),
     isDescendantOwned: vi.fn().mockResolvedValue({ data: false, errorCode: null }),
     listOwned: vi.fn().mockResolvedValue({ data: [FOLDER], errorCode: null }),
+    listPageOwned: vi.fn().mockResolvedValue({ data: [FOLDER], errorCode: null }),
     updateOwned: vi.fn().mockResolvedValue({ data: FOLDER, errorCode: null }),
     ...overrides,
   };
@@ -68,5 +69,31 @@ describe("FolderService", () => {
     const dependent = repository({ deleteOwned: vi.fn().mockResolvedValue({ data: false, errorCode: "23503" }) });
     expect(await new FolderService(dependent).delete(USER_ID, FOLDER_ID))
       .toEqual({ code: "CONFLICT", status: "error" });
+  });
+
+  it("returns a bounded owner-scoped keyset page with filters", async () => {
+    const second = { ...FOLDER, id: "66666666-6666-4666-8666-666666666666", position: 1 };
+    const repo = repository({
+      listPageOwned: vi.fn().mockResolvedValue({ data: [FOLDER, second], errorCode: null }),
+    });
+    const result = await new FolderService(repo).listPage(USER_ID, {
+      chapterId: CHAPTER_ID,
+      cursor: null,
+      limit: 1,
+      subjectId: SUBJECT_ID,
+    });
+    expect(result).toEqual({
+      data: {
+        items: [FOLDER],
+        nextCursor: { createdAt: FOLDER.createdAt, id: FOLDER.id, position: 0 },
+      },
+      status: "success",
+    });
+    expect(repo.listPageOwned).toHaveBeenCalledWith(USER_ID, {
+      chapterId: CHAPTER_ID,
+      cursor: null,
+      limit: 2,
+      subjectId: SUBJECT_ID,
+    });
   });
 });

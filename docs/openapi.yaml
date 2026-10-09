@@ -28,6 +28,17 @@ components:
       bearerFormat: WebStudyApiKey
 
   parameters:
+    Cursor:
+      in: query
+      name: cursor
+      required: false
+      description: Opaque cursor returned by the previous page.
+      schema: { type: string, minLength: 1, maxLength: 1024 }
+    PageLimit:
+      in: query
+      name: limit
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
     SubjectId:
       in: path
       name: subject_id
@@ -116,6 +127,11 @@ components:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
 
   schemas:
+    PageInfo:
+      type: object
+      required: [next_cursor]
+      properties:
+        next_cursor: { type: [string, 'null'] }
     ErrorIssue:
       type: object
       properties:
@@ -155,7 +171,7 @@ components:
         name: { type: string, minLength: 1, maxLength: 120 }
         color: { type: string, minLength: 1, maxLength: 80 }
         icon: { type: [string, 'null'], maxLength: 120 }
-        position: { type: integer, minimum: 0 }
+        position: { type: integer, minimum: 0, maximum: 1000000 }
     SubjectPatch:
       type: object
       minProperties: 1
@@ -164,7 +180,7 @@ components:
         name: { type: string, minLength: 1, maxLength: 120 }
         color: { type: string, minLength: 1, maxLength: 80 }
         icon: { type: [string, 'null'], maxLength: 120 }
-        position: { type: integer, minimum: 0 }
+        position: { type: integer, minimum: 0, maximum: 1000000 }
 
     ChapterInput:
       type: object
@@ -173,6 +189,14 @@ components:
       properties:
         subject_id: { type: string, format: uuid }
         name: { type: string, minLength: 1, maxLength: 160 }
+        position: { type: integer, minimum: 0 }
+    Chapter:
+      type: object
+      required: [id, subject_id, name, position]
+      properties:
+        id: { type: string, format: uuid }
+        subject_id: { type: string, format: uuid }
+        name: { type: string }
         position: { type: integer, minimum: 0 }
     ChapterPatch:
       type: object
@@ -192,6 +216,16 @@ components:
         parent_id: { type: [string, 'null'], format: uuid }
         name: { type: string, minLength: 1, maxLength: 160 }
         position: { type: integer, minimum: 0 }
+    Folder:
+      type: object
+      required: [id, subject_id, chapter_id, parent_id, name, position]
+      properties:
+        id: { type: string, format: uuid }
+        subject_id: { type: string, format: uuid }
+        chapter_id: { type: [string, 'null'], format: uuid }
+        parent_id: { type: [string, 'null'], format: uuid }
+        name: { type: string }
+        position: { type: integer, minimum: 0 }
     FolderPatch:
       type: object
       minProperties: 1
@@ -210,6 +244,12 @@ components:
         title: { type: string, minLength: 1, maxLength: 300 }
         completed: { type: boolean, default: false }
         position: { type: integer, minimum: 0 }
+    InitialSubtaskInput:
+      type: object
+      required: [title]
+      additionalProperties: false
+      properties:
+        title: { type: string, minLength: 1, maxLength: 300 }
     SubtaskPatch:
       type: object
       minProperties: 1
@@ -238,11 +278,11 @@ components:
         description: { type: [string, 'null'], maxLength: 10000 }
         priority: { type: string, enum: [normal, high], default: normal }
         due_at: { type: [string, 'null'], format: date-time }
-        status: { type: string, enum: [pending, someday], default: pending }
+        status: { type: string, enum: [pending], default: pending }
         subtasks:
           type: array
-          maxItems: 50
-          items: { $ref: '#/components/schemas/SubtaskInput' }
+          maxItems: 100
+          items: { $ref: '#/components/schemas/InitialSubtaskInput' }
     TaskPatch:
       type: object
       minProperties: 1
@@ -284,15 +324,15 @@ components:
         title: { type: string, minLength: 1, maxLength: 240 }
         subject_id: { type: string, format: uuid }
         starts_at: { type: string, format: date-time }
-        timezone: { type: string, minLength: 1, maxLength: 100 }
-        recurrence_rule: { type: [string, 'null'], maxLength: 2000 }
-        location: { type: [string, 'null'], maxLength: 300 }
-        professor: { type: [string, 'null'], maxLength: 300 }
+        timezone: { type: string, minLength: 1, maxLength: 64 }
+        recurrence_rule: { type: [string, 'null'], maxLength: 2048 }
+        location: { type: [string, 'null'], maxLength: 500 }
+        professor: { type: [string, 'null'], maxLength: 500 }
         focus_text: { type: [string, 'null'], maxLength: 1000 }
         notes_items:
           type: array
-          maxItems: 30
-          items: { type: string, minLength: 1, maxLength: 1000 }
+          maxItems: 50
+          items: { type: string, minLength: 1, maxLength: 500 }
     ExamSessionInput:
       unevaluatedProperties: false
       allOf:
@@ -336,15 +376,15 @@ components:
         subject_id: { type: string, format: uuid }
         starts_at: { type: string, format: date-time }
         duration_minutes: { type: [integer, 'null'], minimum: 1, maximum: 1440 }
-        timezone: { type: string, minLength: 1, maxLength: 100 }
-        recurrence_rule: { type: [string, 'null'], maxLength: 2000 }
-        location: { type: [string, 'null'], maxLength: 300 }
-        professor: { type: [string, 'null'], maxLength: 300 }
+        timezone: { type: string, minLength: 1, maxLength: 64 }
+        recurrence_rule: { type: [string, 'null'], maxLength: 2048 }
+        location: { type: [string, 'null'], maxLength: 500 }
+        professor: { type: [string, 'null'], maxLength: 500 }
         focus_text: { type: [string, 'null'], maxLength: 1000 }
         notes_items:
           type: array
-          maxItems: 30
-          items: { type: string, minLength: 1, maxLength: 1000 }
+          maxItems: 50
+          items: { type: string, minLength: 1, maxLength: 500 }
     SessionOccurrencePatch:
       type: object
       minProperties: 1
@@ -353,13 +393,13 @@ components:
         title: { type: string, minLength: 1, maxLength: 240 }
         starts_at: { type: string, format: date-time }
         duration_minutes: { type: [integer, 'null'], minimum: 1, maximum: 1440 }
-        location: { type: [string, 'null'], maxLength: 300 }
-        professor: { type: [string, 'null'], maxLength: 300 }
+        location: { type: [string, 'null'], maxLength: 500 }
+        professor: { type: [string, 'null'], maxLength: 500 }
         focus_text: { type: [string, 'null'], maxLength: 1000 }
         notes_items:
           type: array
-          maxItems: 30
-          items: { type: string, minLength: 1, maxLength: 1000 }
+          maxItems: 50
+          items: { type: string, minLength: 1, maxLength: 500 }
     SessionOccurrenceDetail:
       type: object
       required: [series_id, original_start, kind, title, subject, starts_at, timezone, notes_items]
@@ -381,6 +421,23 @@ components:
           items: { type: string }
         recurring: { type: boolean }
         overridden: { type: boolean }
+
+    SessionSeries:
+      type: object
+      required: [id, kind, title, subject_id, starts_at, timezone, notes_items]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [exam, university, revision] }
+        title: { type: string }
+        subject_id: { type: string, format: uuid }
+        starts_at: { type: string, format: date-time }
+        duration_minutes: { type: [integer, 'null'] }
+        timezone: { type: string }
+        recurrence_rule: { type: [string, 'null'] }
+        location: { type: [string, 'null'] }
+        professor: { type: [string, 'null'] }
+        focus_text: { type: [string, 'null'] }
+        notes_items: { type: array, items: { type: string } }
 
     FileMetadata:
       type: object
@@ -505,10 +562,20 @@ paths:
     get:
       tags: [Subjects]
       summary: List subjects
+      parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/PageLimit' }
       responses:
         '200':
           description: OK
-          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/SubjectSummary' } } } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, pagination]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/SubjectSummary' } }
+                  pagination: { $ref: '#/components/schemas/PageInfo' }
     post:
       tags: [Subjects]
       summary: Create subject
@@ -548,8 +615,20 @@ paths:
       tags: [Chapters]
       summary: List chapters
       parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/PageLimit' }
         - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
-      responses: { '200': { description: OK } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, pagination]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Chapter' } }
+                  pagination: { $ref: '#/components/schemas/PageInfo' }
     post:
       tags: [Chapters]
       summary: Create chapter and starter folders
@@ -576,10 +655,22 @@ paths:
       tags: [Folders]
       summary: List folders
       parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/PageLimit' }
         - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
         - { in: query, name: chapter_id, required: false, schema: { type: string, format: uuid } }
         - { in: query, name: parent_id, required: false, schema: { type: string, format: uuid } }
-      responses: { '200': { description: OK } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, pagination]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Folder' } }
+                  pagination: { $ref: '#/components/schemas/PageInfo' }
     post:
       tags: [Folders]
       summary: Create folder
@@ -604,6 +695,8 @@ paths:
       tags: [Tasks]
       summary: List tasks
       parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/PageLimit' }
         - { in: query, name: status, required: false, schema: { type: string, enum: [pending, completed, someday] } }
         - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
         - { in: query, name: due_from, required: false, schema: { type: string, format: date-time } }
@@ -611,17 +704,22 @@ paths:
       responses:
         '200':
           description: OK
-          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/TaskSummary' } } } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, pagination]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/TaskSummary' } }
+                  pagination: { $ref: '#/components/schemas/PageInfo' }
     post:
       tags: [Tasks]
       summary: Create task
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/TaskInput' } } }
       responses:
         '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/TaskDetail' } } } }
-        '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
 
   /tasks/{task_id}:
@@ -690,25 +788,24 @@ paths:
         '200':
           description: OK
           content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/SessionOccurrenceDetail' } } } }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
     post:
       tags: [Calendar]
       summary: Create one-time or recurring session series
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SessionInput' } } } }
-      responses: { '201': { description: Created }, '409': { $ref: '#/components/responses/Conflict' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeries' } } } }, '422': { $ref: '#/components/responses/ValidationFailed' } }
 
   /sessions/{series_id}:
     parameters: [{ $ref: '#/components/parameters/SeriesId' }]
     get:
       tags: [Calendar]
       summary: Get session series metadata
-      responses: { '200': { description: OK }, '404': { $ref: '#/components/responses/NotFound' } }
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeries' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
     patch:
       tags: [Calendar]
       summary: Update entire series
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeriesPatch' } } } }
-      responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+      responses: { '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeries' } } } }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
     delete:
       tags: [Calendar]
       summary: Delete entire series

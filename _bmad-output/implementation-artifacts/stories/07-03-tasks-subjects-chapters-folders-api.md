@@ -1,7 +1,7 @@
 # Story 07-03: Tasks subjects chapters folders API
 
 Epic: epic-07
-Status: ready-for-dev
+Status: done
 Dependencies: 07-02,03-01,05-01
 
 ## Purpose

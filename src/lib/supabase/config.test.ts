@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseSupabasePublicConfig } from "./config";
+import { parseSupabaseAdminConfig, parseSupabasePublicConfig } from "./config";
 
 describe("parseSupabasePublicConfig", () => {
   it("returns only the browser-safe Supabase connection values", () => {
@@ -33,5 +33,23 @@ describe("parseSupabasePublicConfig", () => {
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable-key",
       }),
     ).toThrow("Supabase public URL is invalid");
+  });
+});
+
+describe("parseSupabaseAdminConfig", () => {
+  it("requires and returns only the server-side URL and secret key", () => {
+    expect(parseSupabaseAdminConfig({
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SECRET_KEY: "sb_secret_server_only",
+    })).toEqual({
+      secretKey: "sb_secret_server_only",
+      url: "https://example.supabase.co",
+    });
+  });
+
+  it("fails closed when either server-side value is absent", () => {
+    expect(() => parseSupabaseAdminConfig({
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+    })).toThrow("Supabase admin environment is incomplete");
   });
 });
