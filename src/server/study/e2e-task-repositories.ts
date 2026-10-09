@@ -234,6 +234,28 @@ export function createE2eStudyRepositories(scope: string) {
     async listOwned() {
       return { data: [...subjects], errorCode: null };
     },
+    async listPageOwned(_userId, input) {
+      const ordered = [...subjects].sort((left, right) =>
+        left.position - right.position
+        || left.createdAt.localeCompare(right.createdAt)
+        || left.id.localeCompare(right.id));
+      const after = input.cursor
+        ? ordered.filter((subject) =>
+          subject.position > input.cursor!.position
+          || (subject.position === input.cursor!.position
+            && subject.createdAt > input.cursor!.createdAt)
+          || (subject.position === input.cursor!.position
+            && subject.createdAt === input.cursor!.createdAt
+            && subject.id > input.cursor!.id))
+        : ordered;
+      return { data: after.slice(0, input.limit), errorCode: null };
+    },
+    async findOwned(_userId, subjectId) {
+      return {
+        data: subjects.find((subject) => subject.id === subjectId) ?? null,
+        errorCode: null,
+      };
+    },
     async updateOwned() {
       return { data: null, errorCode: "provider_error" };
     },

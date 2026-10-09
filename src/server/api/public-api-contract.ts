@@ -5,7 +5,9 @@ const MAX_AUTHORIZATION_LENGTH = 512;
 
 const ERROR_MESSAGES = {
   API_KEY_INVALID: "The API key is invalid, expired, or revoked.",
+  CONFLICT: "The request conflicts with the current resource state.",
   INTERNAL_ERROR: "The request could not be completed.",
+  NOT_FOUND: "The requested resource was not found.",
   PROVIDER_UNAVAILABLE: "The service is temporarily unavailable.",
   RATE_LIMITED: "The API rate limit has been exceeded.",
   UNAUTHENTICATED: "A valid API key is required.",

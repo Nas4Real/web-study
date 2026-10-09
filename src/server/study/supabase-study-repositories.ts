@@ -193,6 +193,43 @@ export function createSupabaseSubjectRepository(
       };
     },
 
+    async listPageOwned(userId, input) {
+      let query = supabase
+        .from("subjects")
+        .select(SUBJECT_COLUMNS)
+        .eq("user_id", userId);
+      if (input.cursor) {
+        const { createdAt, id, position } = input.cursor;
+        query = query.or([
+          `position.gt.${position}`,
+          `and(position.eq.${position},created_at.gt.${createdAt})`,
+          `and(position.eq.${position},created_at.eq.${createdAt},id.gt.${id})`,
+        ].join(","));
+      }
+      const { data, error } = await query
+        .order("position", { ascending: true })
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .limit(input.limit);
+      return {
+        data: data ? (data as SubjectRow[]).map(toSubject) : null,
+        errorCode: errorCode(error),
+      };
+    },
+
+    async findOwned(userId, subjectId) {
+      const { data, error } = await supabase
+        .from("subjects")
+        .select(SUBJECT_COLUMNS)
+        .eq("id", subjectId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      return {
+        data: data ? toSubject(data as SubjectRow) : null,
+        errorCode: errorCode(error),
+      };
+    },
+
     async createOwned(userId, input) {
       const { data, error } = await supabase
         .from("subjects")

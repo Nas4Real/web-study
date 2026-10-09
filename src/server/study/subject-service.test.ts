@@ -20,7 +20,9 @@ function createRepository(
   return {
     createOwned: vi.fn().mockResolvedValue({ data: SUBJECT, errorCode: null }),
     deleteOwned: vi.fn().mockResolvedValue({ data: true, errorCode: null }),
+    findOwned: vi.fn().mockResolvedValue({ data: SUBJECT, errorCode: null }),
     listOwned: vi.fn().mockResolvedValue({ data: [], errorCode: null }),
+    listPageOwned: vi.fn().mockResolvedValue({ data: [], errorCode: null }),
     updateOwned: vi.fn().mockResolvedValue({ data: SUBJECT, errorCode: null }),
     ...overrides,
   };
@@ -111,5 +113,41 @@ describe("SubjectService", () => {
 
     expect(result).toEqual({ code: "STORAGE_UNAVAILABLE", status: "error" });
     expect(JSON.stringify(result)).not.toContain("database connection secret");
+  });
+
+  it("returns a bounded keyset page and scopes its cursor to the actor", async () => {
+    const next = {
+      ...SUBJECT,
+      createdAt: "2026-10-03T00:00:00.000Z",
+      id: "44444444-4444-4444-8444-444444444444",
+      position: 1,
+    };
+    const repository = createRepository({
+      listPageOwned: vi.fn().mockResolvedValue({
+        data: [SUBJECT, next],
+        errorCode: null,
+      }),
+    });
+
+    const result = await new SubjectService(repository).listPage(USER_ID, {
+      cursor: null,
+      limit: 1,
+    });
+
+    expect(result).toEqual({
+      data: {
+        items: [SUBJECT],
+        nextCursor: {
+          createdAt: SUBJECT.createdAt,
+          id: SUBJECT.id,
+          position: SUBJECT.position,
+        },
+      },
+      status: "success",
+    });
+    expect(repository.listPageOwned).toHaveBeenCalledWith(USER_ID, {
+      cursor: null,
+      limit: 2,
+    });
   });
 });

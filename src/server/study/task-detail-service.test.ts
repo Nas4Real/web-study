@@ -48,6 +48,8 @@ function fixture() {
     async listOwned(actor) {
       return { data: actor === ACTOR ? [{ id: SUBJECT_ID, name: "Math", color: "#ec4899", icon: null, position: 0, createdAt: NOW, updatedAt: NOW }] : [], errorCode: null };
     },
+    async listPageOwned() { return { data: [], errorCode: null }; },
+    async findOwned() { return { data: null, errorCode: null }; },
     async createOwned() { return { data: null, errorCode: "provider_error" }; },
     async updateOwned() { return { data: null, errorCode: "provider_error" }; },
     async deleteOwned() { return { data: false, errorCode: "provider_error" }; },

@@ -13,9 +13,29 @@ import {
   type SubjectUpdate,
   subjectUpdateInputSchema,
 } from "./study-domain";
+export type SubjectCursor = Readonly<{
+  createdAt: string;
+  id: string;
+  position: number;
+}>;
+
+export type SubjectPage = Readonly<{
+  items: readonly Subject[];
+  nextCursor: SubjectCursor | null;
+}>;
+
+export type SubjectPageRequest = Readonly<{
+  cursor: SubjectCursor | null;
+  limit: number;
+}>;
 
 export type SubjectRepository = Readonly<{
   listOwned(userId: string): Promise<RepositoryResult<readonly Subject[]>>;
+  listPageOwned(
+    userId: string,
+    input: SubjectPageRequest,
+  ): Promise<RepositoryResult<readonly Subject[]>>;
+  findOwned(userId: string, subjectId: string): Promise<RepositoryResult<Subject>>;
   createOwned(
     userId: string,
     input: SubjectCreate,
@@ -48,6 +68,58 @@ export class SubjectService {
       const result = await this.repository.listOwned(actor.data);
       if (result.errorCode) return repositoryError(result.errorCode);
       return { data: result.data ?? [], status: "success" };
+    } catch {
+      return STORAGE_UNAVAILABLE;
+    }
+  }
+
+  async listPage(
+    actorId: unknown,
+    input: SubjectPageRequest,
+  ): Promise<StudyResult<SubjectPage>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    if (!actor.success) return INVALID_ACTOR;
+    if (!Number.isInteger(input.limit) || input.limit < 1 || input.limit > 100) {
+      return INVALID_INPUT;
+    }
+    try {
+      const result = await this.repository.listPageOwned(actor.data, {
+        cursor: input.cursor,
+        limit: input.limit + 1,
+      });
+      if (result.errorCode) return repositoryError(result.errorCode);
+      const rows = result.data ?? [];
+      const items = rows.slice(0, input.limit);
+      const last = items.at(-1);
+      return {
+        data: {
+          items,
+          nextCursor: rows.length > input.limit && last
+            ? {
+              createdAt: last.createdAt,
+              id: last.id,
+              position: last.position,
+            }
+            : null,
+        },
+        status: "success",
+      };
+    } catch {
+      return STORAGE_UNAVAILABLE;
+    }
+  }
+
+  async find(actorId: unknown, subjectId: unknown): Promise<StudyResult<Subject>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    if (!actor.success) return INVALID_ACTOR;
+    const id = entityIdSchema.safeParse(subjectId);
+    if (!id.success) return INVALID_INPUT;
+    try {
+      const result = await this.repository.findOwned(actor.data, id.data);
+      if (result.errorCode) return repositoryError(result.errorCode);
+      return result.data
+        ? { data: result.data, status: "success" }
+        : NOT_FOUND;
     } catch {
       return STORAGE_UNAVAILABLE;
     }

@@ -28,6 +28,17 @@ components:
       bearerFormat: WebStudyApiKey
 
   parameters:
+    Cursor:
+      in: query
+      name: cursor
+      required: false
+      description: Opaque cursor returned by the previous page.
+      schema: { type: string, minLength: 1, maxLength: 1024 }
+    PageLimit:
+      in: query
+      name: limit
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
     SubjectId:
       in: path
       name: subject_id
@@ -116,6 +127,11 @@ components:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
 
   schemas:
+    PageInfo:
+      type: object
+      required: [next_cursor]
+      properties:
+        next_cursor: { type: [string, 'null'] }
     ErrorIssue:
       type: object
       properties:
@@ -505,10 +521,20 @@ paths:
     get:
       tags: [Subjects]
       summary: List subjects
+      parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/PageLimit' }
       responses:
         '200':
           description: OK
-          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/SubjectSummary' } } } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, pagination]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/SubjectSummary' } }
+                  pagination: { $ref: '#/components/schemas/PageInfo' }
     post:
       tags: [Subjects]
       summary: Create subject
