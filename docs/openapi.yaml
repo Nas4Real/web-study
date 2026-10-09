@@ -5,6 +5,8 @@ info:
   description: |
     External Web Study API. Personal API keys authenticate external clients.
     The normal web application uses the same application-service layer with a Supabase session.
+    Notification APIs are deferred. File-byte upload, completion, and download URL operations
+    return PROVIDER_UNAVAILABLE until private object storage is configured.
 servers:
   - url: /api/v1
 security:
@@ -18,7 +20,6 @@ tags:
   - name: Tasks
   - name: Calendar
   - name: Files
-  - name: Notifications
 
 components:
   securitySchemes:
@@ -80,17 +81,6 @@ components:
       name: file_id
       required: true
       schema: { type: string, format: uuid }
-    NotificationId:
-      in: path
-      name: notification_id
-      required: true
-      schema: { type: string, format: uuid }
-    IdempotencyKey:
-      in: header
-      name: Idempotency-Key
-      required: false
-      schema: { type: string, minLength: 8, maxLength: 200 }
-
   responses:
     BadRequest:
       description: Invalid request
@@ -108,7 +98,7 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
     Conflict:
-      description: Domain conflict or idempotency conflict
+      description: Domain conflict
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
@@ -122,6 +112,11 @@ components:
       headers:
         Retry-After:
           schema: { type: integer, minimum: 1 }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    ProviderUnavailable:
+      description: A required provider is not configured or temporarily unavailable
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorEnvelope' }
@@ -454,6 +449,13 @@ components:
         size_bytes: { type: integer, minimum: 0 }
         upload_state: { type: string, enum: [pending, ready, failed, deleting, deleted] }
         created_at: { type: string, format: date-time }
+    FileMovePatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        chapter_id: { type: [string, 'null'], format: uuid }
+        folder_id: { type: [string, 'null'], format: uuid }
     UploadIntentInput:
       type: object
       required: [subject_id, filename, mime_type, size_bytes]
@@ -482,33 +484,9 @@ components:
         url: { type: string, format: uri }
         expires_at: { type: string, format: date-time }
 
-    Notification:
-      type: object
-      required: [id, kind, source_type, source_id, title, scheduled_for, created_at]
-      properties:
-        id: { type: string, format: uuid }
-        kind: { type: string, enum: [upcoming_exam, overdue_task, session_start] }
-        source_type: { type: string, enum: [task, calendar_series] }
-        source_id: { type: string, format: uuid }
-        occurrence_start: { type: [string, 'null'], format: date-time }
-        title: { type: string }
-        body: { type: [string, 'null'] }
-        scheduled_for: { type: string, format: date-time }
-        read_at: { type: [string, 'null'], format: date-time }
-        created_at: { type: string, format: date-time }
-    NotificationPreferences:
-      type: object
-      required: [upcoming_exams, overdue_tasks, session_reminders, exam_lead_hours, session_lead_minutes]
-      properties:
-        upcoming_exams: { type: boolean }
-        overdue_tasks: { type: boolean }
-        session_reminders: { type: boolean }
-        exam_lead_hours: { type: integer, minimum: 1, maximum: 720 }
-        session_lead_minutes: { type: integer, minimum: 1, maximum: 1440 }
-
     Profile:
       type: object
-      required: [id, display_name, timezone, storage_quota_bytes, storage_used_bytes]
+      required: [id, display_name, timezone, avatar_url, storage_quota_bytes, storage_used_bytes, storage_reserved_bytes]
       properties:
         id: { type: string, format: uuid }
         display_name: { type: string }
@@ -522,8 +500,8 @@ components:
       minProperties: 1
       additionalProperties: false
       properties:
-        display_name: { type: string, minLength: 1, maxLength: 160 }
-        timezone: { type: string, minLength: 1, maxLength: 100 }
+        display_name: { type: string, minLength: 1, maxLength: 120 }
+        timezone: { type: string, minLength: 1, maxLength: 64 }
     StorageUsage:
       type: object
       required: [quota_bytes, used_bytes, reserved_bytes, available_bytes]
@@ -839,19 +817,18 @@ paths:
         - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
         - { in: query, name: chapter_id, required: false, schema: { type: string, format: uuid } }
         - { in: query, name: folder_id, required: false, schema: { type: string, format: uuid } }
+        - { in: query, name: query, required: false, schema: { type: string, maxLength: 160 } }
+        - { in: query, name: sort, required: false, schema: { type: string, enum: [latest, oldest, name, size], default: latest } }
+        - { in: query, name: limit, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 100 } }
       responses:
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/FileMetadata' } } } } }
 
   /files/upload-intents:
     post:
       tags: [Files]
-      summary: Reserve quota and create direct R2 upload intent
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/UploadIntentInput' } } } }
+      summary: File uploads are unavailable until private object storage is configured
       responses:
-        '201': { description: Intent created, content: { application/json: { schema: { $ref: '#/components/schemas/UploadIntentResponse' } } } }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/ProviderUnavailable' }
 
   /files/{file_id}:
     parameters: [{ $ref: '#/components/parameters/FileId' }]
@@ -861,7 +838,8 @@ paths:
       responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/FileMetadata' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
     patch:
       tags: [Files]
-      summary: Rename or move file metadata without renaming the R2 object key
+      summary: Move file metadata between an owned chapter or folder
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/FileMovePatch' } } } }
       responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
     delete:
       tags: [Files]
@@ -872,39 +850,12 @@ paths:
     parameters: [{ $ref: '#/components/parameters/FileId' }]
     post:
       tags: [Files]
-      summary: HEAD/verify uploaded R2 object and finalize metadata/quota accounting
-      responses: { '200': { description: Ready, content: { application/json: { schema: { $ref: '#/components/schemas/FileMetadata' } } } }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } }
+      summary: Upload completion is unavailable until private object storage is configured
+      responses: { '503': { $ref: '#/components/responses/ProviderUnavailable' } }
 
   /files/{file_id}/download-url:
     parameters: [{ $ref: '#/components/parameters/FileId' }]
     post:
       tags: [Files]
-      summary: Create short-lived authorized R2 download URL
-      responses: { '200': { description: URL issued, content: { application/json: { schema: { $ref: '#/components/schemas/DownloadUrlResponse' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
-
-  /notifications:
-    get:
-      tags: [Notifications]
-      summary: List notifications
-      parameters:
-        - { in: query, name: unread_only, required: false, schema: { type: boolean, default: false } }
-      responses: { '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Notification' } } } } } }
-
-  /notifications/{notification_id}/read:
-    parameters: [{ $ref: '#/components/parameters/NotificationId' }]
-    post: { tags: [Notifications], summary: Mark notification read, responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' } } }
-
-  /notifications/{notification_id}/unread:
-    parameters: [{ $ref: '#/components/parameters/NotificationId' }]
-    post: { tags: [Notifications], summary: Mark notification unread, responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' } } }
-
-  /notification-preferences:
-    get:
-      tags: [Notifications]
-      summary: Get notification preferences
-      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreferences' } } } } }
-    patch:
-      tags: [Notifications]
-      summary: Update notification preferences
-      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPreferences' } } } }
-      responses: { '200': { description: Updated }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+      summary: Downloads are unavailable until private object storage is configured
+      responses: { '503': { $ref: '#/components/responses/ProviderUnavailable' } }

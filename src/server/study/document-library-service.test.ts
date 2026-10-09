@@ -47,6 +47,14 @@ const storage: DocumentLibraryStorage = {
 };
 
 describe("DocumentLibraryService", () => {
+  it("returns owned metadata without exposing its object key", async () => {
+    const result = await new DocumentLibraryService(repository(), storage)
+      .find(USER_ID, FILE_ID);
+
+    expect(result).toEqual({ data: FILE, status: "success" });
+    expect(JSON.stringify(result)).not.toContain("users/");
+  });
+
   it("normalizes search and scopes ready-file listing to the actor", async () => {
     const repo = repository();
     const result = await new DocumentLibraryService(repo, storage).list(
