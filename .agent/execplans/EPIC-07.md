@@ -88,7 +88,7 @@ External clients can use revocable personal API keys to access the same owner-sc
 
 - [x] Reconcile BMAD Epic 07, stories, engineering contract, OpenAPI draft, and current implementation.
 - [x] 07-01 Personal API key backend.
-- [ ] 07-02 API authentication, rate limit, and error pipeline.
+- [x] 07-02 API authentication, rate limit, and error pipeline.
 - [ ] 07-03 Tasks/subjects/chapters/folders API.
 - [ ] 07-04 Calendar API including occurrence operations.
 - [ ] 07-05 Files/notifications/profile/storage API.
@@ -100,7 +100,10 @@ External clients can use revocable personal API keys to access the same owner-sc
 - The OpenAPI file is a contract draft, not evidence of implemented routes.
 - Supabase's current server guidance prefers `SUPABASE_SECRET_KEY` over the legacy service-role JWT; the server-only adapter will follow that guidance.
 - Current Supabase Data API defaults do not auto-expose new public tables. The API infrastructure tables intentionally remain unexposed to browser roles.
+- The initial public API policy is 120 requests per 60-second fixed window per personal API key. The adapter boundary permits later replacement without changing route handlers.
+- Error payloads follow `docs/openapi.yaml`: `request_id` is nested inside `error`, and every response also carries `X-Request-ID`.
 
 ## Completion evidence
 
 - **07-01:** migration `20261008172409_personal_api_keys.sql` applied to hosted Supabase project `qvqnztgpjludiahmboyd`; 35 focused tests plus the full unit suite, typecheck, and build pass; lint has zero errors and one unrelated pre-existing warning; hosted security/performance advisors show no new finding. Vercel Production and Preview have the paired server-only Supabase secret key and API-key hash pepper. Local pgTAP remains unavailable while Docker Desktop is stopped.
+- **07-02:** migration `20261008175956_api_rate_windows.sql` applied after a clean dry run; hosted SQL proved atomic allow/allow/reject behavior, invalid-input rejection, and browser-role denial. Twenty-one focused tests plus the full unit suite, typecheck, lint, and production build pass. Performance advisors are clean; security advisors show no finding from the new invoker function.
