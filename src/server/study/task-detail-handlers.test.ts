@@ -22,9 +22,9 @@ function context(): TaskDetailContext {
       toggleSubtask: vi.fn().mockResolvedValue({ status: "success", data: TASK }),
       delete: vi.fn().mockResolvedValue({ status: "success", data: null }),
     },
-    subjectService: { list: vi.fn().mockResolvedValue({ status: "success", data: [{
+    subjectService: { find: vi.fn().mockResolvedValue({ status: "success", data: {
       id: SUBJECT_ID, name: "Math", color: "#ec4899", icon: null, position: 0, createdAt: NOW, updatedAt: NOW,
-    }] }) },
+    } }) },
   };
 }
 

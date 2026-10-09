@@ -40,16 +40,31 @@ export const taskUpdateInputSchema = z
     description: nullableDescription.optional(),
     dueAt: nullableDateTime.optional(),
     priority: taskPrioritySchema.optional(),
+    status: z.enum(["pending", "someday"]).optional(),
     subjectId: z.string().uuid().optional(),
     title: normalizedText(240).optional(),
   })
   .strict()
   .refine((input) => Object.keys(input).length > 0);
 
+export const subtaskCreateInputSchema = z.object({
+  completed: z.boolean().default(false),
+  position: z.number().int().min(0).max(1_000_000).default(0),
+  title: normalizedText(300),
+}).strict();
+
+export const subtaskUpdateInputSchema = z.object({
+  completed: z.boolean().optional(),
+  position: z.number().int().min(0).max(1_000_000).optional(),
+  title: normalizedText(300).optional(),
+}).strict().refine((input) => Object.keys(input).length > 0);
+
 export type TaskPriority = z.infer<typeof taskPrioritySchema>;
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
 export type TaskCreate = z.infer<typeof taskCreateInputSchema>;
 export type TaskUpdate = z.infer<typeof taskUpdateInputSchema>;
+export type SubtaskCreate = z.infer<typeof subtaskCreateInputSchema>;
+export type SubtaskUpdate = z.infer<typeof subtaskUpdateInputSchema>;
 
 export type TaskSubtask = Readonly<{
   completedAt: string | null;

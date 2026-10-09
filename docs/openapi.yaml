@@ -171,7 +171,7 @@ components:
         name: { type: string, minLength: 1, maxLength: 120 }
         color: { type: string, minLength: 1, maxLength: 80 }
         icon: { type: [string, 'null'], maxLength: 120 }
-        position: { type: integer, minimum: 0 }
+        position: { type: integer, minimum: 0, maximum: 1000000 }
     SubjectPatch:
       type: object
       minProperties: 1
@@ -180,7 +180,7 @@ components:
         name: { type: string, minLength: 1, maxLength: 120 }
         color: { type: string, minLength: 1, maxLength: 80 }
         icon: { type: [string, 'null'], maxLength: 120 }
-        position: { type: integer, minimum: 0 }
+        position: { type: integer, minimum: 0, maximum: 1000000 }
 
     ChapterInput:
       type: object
@@ -244,6 +244,12 @@ components:
         title: { type: string, minLength: 1, maxLength: 300 }
         completed: { type: boolean, default: false }
         position: { type: integer, minimum: 0 }
+    InitialSubtaskInput:
+      type: object
+      required: [title]
+      additionalProperties: false
+      properties:
+        title: { type: string, minLength: 1, maxLength: 300 }
     SubtaskPatch:
       type: object
       minProperties: 1
@@ -272,11 +278,11 @@ components:
         description: { type: [string, 'null'], maxLength: 10000 }
         priority: { type: string, enum: [normal, high], default: normal }
         due_at: { type: [string, 'null'], format: date-time }
-        status: { type: string, enum: [pending, someday], default: pending }
+        status: { type: string, enum: [pending], default: pending }
         subtasks:
           type: array
-          maxItems: 50
-          items: { $ref: '#/components/schemas/SubtaskInput' }
+          maxItems: 100
+          items: { $ref: '#/components/schemas/InitialSubtaskInput' }
     TaskPatch:
       type: object
       minProperties: 1
@@ -672,6 +678,8 @@ paths:
       tags: [Tasks]
       summary: List tasks
       parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/PageLimit' }
         - { in: query, name: status, required: false, schema: { type: string, enum: [pending, completed, someday] } }
         - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
         - { in: query, name: due_from, required: false, schema: { type: string, format: date-time } }
@@ -679,17 +687,22 @@ paths:
       responses:
         '200':
           description: OK
-          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/TaskSummary' } } } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, pagination]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/TaskSummary' } }
+                  pagination: { $ref: '#/components/schemas/PageInfo' }
     post:
       tags: [Tasks]
       summary: Create task
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/TaskInput' } } }
       responses:
         '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/TaskDetail' } } } }
-        '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
 
   /tasks/{task_id}:

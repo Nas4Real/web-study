@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import {
   actorIdSchema,
   entityIdSchema,
@@ -10,20 +12,45 @@ import {
 } from "./study-domain";
 import {
   groupTasks,
+  subtaskCreateInputSchema,
+  subtaskUpdateInputSchema,
   type Task,
   type TaskCreate,
   taskCreateInputSchema,
   type TaskGroups,
   type TaskStatus,
+  type TaskSubtask,
+  taskStatusSchema,
   type TaskUpdate,
   taskUpdateInputSchema,
 } from "./task-domain";
 
+export type TaskPageRequest = Readonly<{
+  cursor: Readonly<{ createdAt: string; id: string; position: number }> | null;
+  dueFrom?: string;
+  dueTo?: string;
+  limit: number;
+  status?: TaskStatus;
+  subjectId?: string;
+}>;
+export type TaskPage = Readonly<{
+  items: readonly Task[];
+  nextCursor: TaskPageRequest["cursor"];
+}>;
+
+export type SubtaskWrite = Readonly<{
+  completedAt?: string | null;
+  position?: number;
+  title?: string;
+}>;
+
 export type TaskRepository = Readonly<{
+  addSubtaskOwned(userId: string, taskId: string, input: Required<SubtaskWrite>): Promise<RepositoryResult<TaskSubtask>>;
   createOwned(userId: string, input: TaskCreate): Promise<RepositoryResult<Task>>;
   deleteOwned(userId: string, taskId: string): Promise<RepositoryResult<boolean>>;
   findOwned(userId: string, taskId: string): Promise<RepositoryResult<Task>>;
   listOwned(userId: string): Promise<RepositoryResult<readonly Task[]>>;
+  listPageOwned(userId: string, input: TaskPageRequest): Promise<RepositoryResult<readonly Task[]>>;
   setStatusOwned(
     userId: string,
     taskId: string,
@@ -36,6 +63,8 @@ export type TaskRepository = Readonly<{
     subtaskId: string,
     completedAt: string | null,
   ): Promise<RepositoryResult<Task>>;
+  updateSubtaskOwned(userId: string, taskId: string, subtaskId: string, input: SubtaskWrite): Promise<RepositoryResult<TaskSubtask>>;
+  deleteSubtaskOwned(userId: string, taskId: string, subtaskId: string): Promise<RepositoryResult<boolean>>;
   updateOwned(
     userId: string,
     taskId: string,
@@ -58,6 +87,34 @@ export class TaskService {
 
   async list(actorId: unknown): Promise<StudyResult<readonly Task[]>> {
     return this.readMany(actorId);
+  }
+
+  async listPage(actorId: unknown, input: TaskPageRequest): Promise<StudyResult<TaskPage>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    const filter = z.object({
+      dueFrom: z.iso.datetime({ offset: true }).optional(),
+      dueTo: z.iso.datetime({ offset: true }).optional(),
+      status: taskStatusSchema.optional(),
+      subjectId: entityIdSchema.optional(),
+    }).strict().safeParse({
+      ...(input.dueFrom === undefined ? {} : { dueFrom: input.dueFrom }),
+      ...(input.dueTo === undefined ? {} : { dueTo: input.dueTo }),
+      ...(input.status === undefined ? {} : { status: input.status }),
+      ...(input.subjectId === undefined ? {} : { subjectId: input.subjectId }),
+    });
+    if (!actor.success) return INVALID_ACTOR;
+    if (!filter.success || !Number.isInteger(input.limit) || input.limit < 1 || input.limit > 100
+      || (filter.data.dueFrom && filter.data.dueTo
+        && Date.parse(filter.data.dueFrom) > Date.parse(filter.data.dueTo))) return INVALID_INPUT;
+    try {
+      const result = await this.repository.listPageOwned(actor.data, {
+        ...filter.data, cursor: input.cursor, limit: input.limit + 1,
+      });
+      if (result.errorCode) return repositoryError(result.errorCode);
+      const rows = result.data ?? [], items = rows.slice(0, input.limit), last = items.at(-1);
+      return { data: { items, nextCursor: rows.length > input.limit && last
+        ? { createdAt: last.createdAt, id: last.id, position: 0 } : null }, status: "success" };
+    } catch { return STORAGE_UNAVAILABLE; }
   }
 
   async listGrouped(
@@ -160,6 +217,42 @@ export class TaskService {
     );
   }
 
+  async addSubtask(actorId: unknown, taskId: unknown, input: unknown): Promise<StudyResult<TaskSubtask>> {
+    const actor = actorIdSchema.safeParse(actorId), task = entityIdSchema.safeParse(taskId);
+    const parsed = subtaskCreateInputSchema.safeParse(input);
+    if (!actor.success) return INVALID_ACTOR;
+    if (!task.success || !parsed.success) return INVALID_INPUT;
+    return this.readSubtask(() => this.repository.addSubtaskOwned(actor.data, task.data, {
+      completedAt: parsed.data.completed ? this.now().toISOString() : null,
+      position: parsed.data.position, title: parsed.data.title,
+    }));
+  }
+
+  async updateSubtask(actorId: unknown, taskId: unknown, subtaskId: unknown, input: unknown): Promise<StudyResult<TaskSubtask>> {
+    const actor = actorIdSchema.safeParse(actorId), task = entityIdSchema.safeParse(taskId);
+    const subtask = entityIdSchema.safeParse(subtaskId), parsed = subtaskUpdateInputSchema.safeParse(input);
+    if (!actor.success) return INVALID_ACTOR;
+    if (!task.success || !subtask.success || !parsed.success) return INVALID_INPUT;
+    const write: SubtaskWrite = {
+      ...(parsed.data.completed === undefined ? {} : { completedAt: parsed.data.completed ? this.now().toISOString() : null }),
+      ...(parsed.data.position === undefined ? {} : { position: parsed.data.position }),
+      ...(parsed.data.title === undefined ? {} : { title: parsed.data.title }),
+    };
+    return this.readSubtask(() => this.repository.updateSubtaskOwned(actor.data, task.data, subtask.data, write));
+  }
+
+  async deleteSubtask(actorId: unknown, taskId: unknown, subtaskId: unknown): Promise<StudyResult<null>> {
+    const actor = actorIdSchema.safeParse(actorId), task = entityIdSchema.safeParse(taskId);
+    const subtask = entityIdSchema.safeParse(subtaskId);
+    if (!actor.success) return INVALID_ACTOR;
+    if (!task.success || !subtask.success) return INVALID_INPUT;
+    try {
+      const result = await this.repository.deleteSubtaskOwned(actor.data, task.data, subtask.data);
+      if (result.errorCode) return repositoryError(result.errorCode);
+      return result.data ? { data: null, status: "success" } : NOT_FOUND;
+    } catch { return STORAGE_UNAVAILABLE; }
+  }
+
   private async transition(
     actorId: unknown,
     taskId: unknown,
@@ -201,5 +294,13 @@ export class TaskService {
     } catch {
       return STORAGE_UNAVAILABLE;
     }
+  }
+
+  private async readSubtask(operation: () => Promise<RepositoryResult<TaskSubtask>>): Promise<StudyResult<TaskSubtask>> {
+    try {
+      const result = await operation();
+      if (result.errorCode) return repositoryError(result.errorCode);
+      return result.data ? { data: result.data, status: "success" } : NOT_FOUND;
+    } catch { return STORAGE_UNAVAILABLE; }
   }
 }

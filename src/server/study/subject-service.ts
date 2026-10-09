@@ -36,6 +36,7 @@ export type SubjectRepository = Readonly<{
     input: SubjectPageRequest,
   ): Promise<RepositoryResult<readonly Subject[]>>;
   findOwned(userId: string, subjectId: string): Promise<RepositoryResult<Subject>>;
+  findManyOwned(userId: string, subjectIds: readonly string[]): Promise<RepositoryResult<readonly Subject[]>>;
   createOwned(
     userId: string,
     input: SubjectCreate,
@@ -123,6 +124,21 @@ export class SubjectService {
     } catch {
       return STORAGE_UNAVAILABLE;
     }
+  }
+
+  async findMany(actorId: unknown, subjectIds: unknown): Promise<StudyResult<readonly Subject[]>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    if (!actor.success) return INVALID_ACTOR;
+    if (!Array.isArray(subjectIds) || subjectIds.length > 100) return INVALID_INPUT;
+    const parsed = subjectIds.map(value => entityIdSchema.safeParse(value));
+    if (parsed.some(result => !result.success)) return INVALID_INPUT;
+    const ids = [...new Set(parsed.map(result => result.success ? result.data : ""))];
+    if (ids.length === 0) return { data: [], status: "success" };
+    try {
+      const result = await this.repository.findManyOwned(actor.data, ids);
+      if (result.errorCode) return repositoryError(result.errorCode);
+      return { data: result.data ?? [], status: "success" };
+    } catch { return STORAGE_UNAVAILABLE; }
   }
 
   async create(actorId: unknown, input: unknown): Promise<StudyResult<Subject>> {

@@ -5,7 +5,7 @@ import type { SubjectSummaryDTO, TaskDetailDTO } from "@/domain/dto";
 import type { SubjectService } from "./subject-service";
 import type { Task } from "./task-domain";
 import type { TaskService } from "./task-service";
-import { actorIdSchema, entityIdSchema, INVALID_ACTOR, INVALID_INPUT, NOT_FOUND,
+import { actorIdSchema, entityIdSchema, INVALID_ACTOR, INVALID_INPUT,
   STORAGE_UNAVAILABLE, type StudyResult } from "./study-domain";
 
 export const taskDetailMutationSchema = z.discriminatedUnion("type", [
@@ -17,7 +17,7 @@ export const taskDetailMutationSchema = z.discriminatedUnion("type", [
 export type TaskDetailMutation = z.infer<typeof taskDetailMutationSchema>;
 export type TaskDetailSources = Readonly<{
   tasks: Pick<TaskService, "find" | "complete" | "reopen" | "toggleSubtask" | "delete">;
-  subjects: Pick<SubjectService, "list">;
+  subjects: Pick<SubjectService, "find">;
 }>;
 
 function project(task: Task, subject: SubjectSummaryDTO): TaskDetailDTO {
@@ -41,12 +41,10 @@ export class TaskDetailService {
     try {
       const task = await this.sources.tasks.find(actor.data, id.data);
       if (task.status === "error") return task;
-      const subjects = await this.sources.subjects.list(actor.data);
-      if (subjects.status === "error") return subjects;
-      const subject = subjects.data.find(s => s.id === task.data.subjectId);
-      if (!subject) return NOT_FOUND;
+      const subject = await this.sources.subjects.find(actor.data, task.data.subjectId);
+      if (subject.status === "error") return subject;
       return { status: "success", data: project(task.data, {
-        id: subject.id, name: subject.name, color: subject.color,
+        id: subject.data.id, name: subject.data.name, color: subject.data.color,
       }) };
     } catch { return STORAGE_UNAVAILABLE; }
   }

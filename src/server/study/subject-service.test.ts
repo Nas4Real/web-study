@@ -21,6 +21,7 @@ function createRepository(
     createOwned: vi.fn().mockResolvedValue({ data: SUBJECT, errorCode: null }),
     deleteOwned: vi.fn().mockResolvedValue({ data: true, errorCode: null }),
     findOwned: vi.fn().mockResolvedValue({ data: SUBJECT, errorCode: null }),
+    findManyOwned: vi.fn().mockResolvedValue({ data: [SUBJECT], errorCode: null }),
     listOwned: vi.fn().mockResolvedValue({ data: [], errorCode: null }),
     listPageOwned: vi.fn().mockResolvedValue({ data: [], errorCode: null }),
     updateOwned: vi.fn().mockResolvedValue({ data: SUBJECT, errorCode: null }),
@@ -149,5 +150,12 @@ describe("SubjectService", () => {
       cursor: null,
       limit: 2,
     });
+  });
+
+  it("loads a bounded unique set of owned subjects for task projections", async () => {
+    const repository = createRepository();
+    const result = await new SubjectService(repository).findMany(USER_ID, [SUBJECT_ID, SUBJECT_ID]);
+    expect(result).toEqual({ data: [SUBJECT], status: "success" });
+    expect(repository.findManyOwned).toHaveBeenCalledWith(USER_ID, [SUBJECT_ID]);
   });
 });

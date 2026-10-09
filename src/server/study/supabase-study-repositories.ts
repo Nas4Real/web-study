@@ -25,6 +25,9 @@ const SUBJECT_COLUMNS =
   "id, name, color, icon, position, created_at, updated_at";
 const TASK_COLUMNS =
   "id, subject_id, title, description, priority, status, due_at, completed_at, created_at, updated_at, task_subtasks(id, title, position, completed_at, created_at, updated_at)";
+const TASK_PAGE_COLUMNS =
+  "id, subject_id, title, description, priority, status, due_at, completed_at, created_at, updated_at";
+const SUBTASK_COLUMNS = "id, title, position, completed_at, created_at, updated_at";
 
 type ProfileRow = Readonly<{
   avatar_object_key: string | null;
@@ -66,7 +69,7 @@ type TaskRow = Readonly<{
   priority: "normal" | "high";
   status: "pending" | "completed" | "someday";
   subject_id: string;
-  task_subtasks: TaskSubtaskRow[] | null;
+  task_subtasks?: TaskSubtaskRow[] | null;
   title: string;
   updated_at: string;
 }>;
@@ -230,6 +233,12 @@ export function createSupabaseSubjectRepository(
       };
     },
 
+    async findManyOwned(userId, subjectIds) {
+      const { data, error } = await supabase.from("subjects").select(SUBJECT_COLUMNS)
+        .eq("user_id", userId).in("id", [...subjectIds]);
+      return { data: data ? (data as SubjectRow[]).map(toSubject) : null, errorCode: errorCode(error) };
+    },
+
     async createOwned(userId, input) {
       const { data, error } = await supabase
         .from("subjects")
@@ -275,6 +284,15 @@ function taskWrite(input: TaskUpdate) {
     ...(input.dueAt === undefined ? {} : { due_at: input.dueAt }),
     ...(input.priority === undefined ? {} : { priority: input.priority }),
     ...(input.subjectId === undefined ? {} : { subject_id: input.subjectId }),
+    ...(input.status === undefined ? {} : { completed_at: null, status: input.status }),
+    ...(input.title === undefined ? {} : { title: input.title }),
+  };
+}
+
+function subtaskWrite(input: Readonly<{ completedAt?: string | null; position?: number; title?: string }>) {
+  return {
+    ...(input.completedAt === undefined ? {} : { completed_at: input.completedAt }),
+    ...(input.position === undefined ? {} : { position: input.position }),
     ...(input.title === undefined ? {} : { title: input.title }),
   };
 }
@@ -305,6 +323,17 @@ export function createSupabaseTaskRepository(
   }
 
   return {
+    async addSubtaskOwned(userId, taskId, input) {
+      const { data, error } = await supabase.from("task_subtasks").insert({
+        completed_at: input.completedAt,
+        position: input.position,
+        task_id: taskId,
+        title: input.title,
+        user_id: userId,
+      }).select(SUBTASK_COLUMNS).maybeSingle();
+      return { data: data ? toTaskSubtask(data as TaskSubtaskRow) : null, errorCode: errorCode(error) };
+    },
+
     async listOwned(userId) {
       const { data, error } = await supabase
         .from("tasks")
@@ -312,6 +341,23 @@ export function createSupabaseTaskRepository(
         .eq("user_id", userId)
         .order("due_at", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: true });
+      return {
+        data: data ? (data as unknown as TaskRow[]).map(toTask) : null,
+        errorCode: errorCode(error),
+      };
+    },
+
+    async listPageOwned(userId, input) {
+      let query = supabase.from("tasks").select(TASK_PAGE_COLUMNS).eq("user_id", userId);
+      if (input.status) query = query.eq("status", input.status);
+      if (input.subjectId) query = query.eq("subject_id", input.subjectId);
+      if (input.dueFrom) query = query.gte("due_at", input.dueFrom);
+      if (input.dueTo) query = query.lte("due_at", input.dueTo);
+      if (input.cursor) {
+        query = query.or(`created_at.lt.${input.cursor.createdAt},and(created_at.eq.${input.cursor.createdAt},id.lt.${input.cursor.id})`);
+      }
+      const { data, error } = await query.order("created_at", { ascending: false })
+        .order("id", { ascending: false }).limit(input.limit);
       return {
         data: data ? (data as unknown as TaskRow[]).map(toTask) : null,
         errorCode: errorCode(error),
@@ -391,6 +437,20 @@ export function createSupabaseTaskRepository(
       return data
         ? findAfterMutation(userId, taskId, error)
         : { data: null, errorCode: errorCode(error) };
+    },
+
+    async updateSubtaskOwned(userId, taskId, subtaskId, input) {
+      const { data, error } = await supabase.from("task_subtasks")
+        .update(subtaskWrite(input)).eq("id", subtaskId).eq("task_id", taskId)
+        .eq("user_id", userId).select(SUBTASK_COLUMNS).maybeSingle();
+      return { data: data ? toTaskSubtask(data as TaskSubtaskRow) : null, errorCode: errorCode(error) };
+    },
+
+    async deleteSubtaskOwned(userId, taskId, subtaskId) {
+      const { data, error } = await supabase.from("task_subtasks").delete()
+        .eq("id", subtaskId).eq("task_id", taskId).eq("user_id", userId)
+        .select("id").maybeSingle();
+      return { data: data !== null, errorCode: errorCode(error) };
     },
   };
 }

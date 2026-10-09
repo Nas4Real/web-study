@@ -22,6 +22,7 @@ function query(result: unknown) {
     chain[method] = vi.fn(() => chain);
   }
   chain.limit = vi.fn().mockResolvedValue(result);
+  chain.in = vi.fn().mockResolvedValue(result);
   chain.maybeSingle = vi.fn().mockResolvedValue(result);
   return chain;
 }
@@ -62,5 +63,21 @@ describe("Supabase subject repository", () => {
     });
     expect(builder.eq).toHaveBeenNthCalledWith(1, "id", SUBJECT_ID);
     expect(builder.eq).toHaveBeenNthCalledWith(2, "user_id", USER_ID);
+  });
+
+  it("batch-loads only the requested subjects for the owner", async () => {
+    const secondSubjectId = "33333333-3333-4333-8333-333333333333";
+    const builder = query({ data: [ROW], error: null });
+    const client = { from: vi.fn(() => builder) };
+
+    const result = await createSupabaseSubjectRepository(client as never)
+      .findManyOwned(USER_ID, [SUBJECT_ID, secondSubjectId]);
+
+    expect(client.from).toHaveBeenCalledWith("subjects");
+    expect(builder.eq).toHaveBeenCalledWith("user_id", USER_ID);
+    expect(builder.in).toHaveBeenCalledWith("id", [SUBJECT_ID, secondSubjectId]);
+    expect(result.data).toEqual([
+      expect.objectContaining({ id: SUBJECT_ID, name: "Math" }),
+    ]);
   });
 });
