@@ -20,5 +20,7 @@ Date: 2026-09-29
 - New/Edit Task and Session must be enriched in live Superdesign before coding those missing authoring controls.
 - Storage 2 GB/user, 50 MB/file, allowed types PDF/DOCX/XLSX/PPTX/PNG/JPG.
 - R2 upload uses single presigned PUT under current 50 MB cap.
-- Public `/api/v1` covers application domain with personal API keys.
+- Public `/api/v1` covers the application domain with dual authentication:
+  verified Supabase sessions/JWTs for users and personal API keys for external
+  integrations. Cookie-authenticated mutations require a same-origin request.
 - In-app notifications only; AI Suggestion backend out of V1.

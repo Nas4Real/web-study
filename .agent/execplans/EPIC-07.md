@@ -93,6 +93,9 @@ External clients can use revocable personal API keys to access the same owner-sc
 - [x] 07-04 Calendar API including occurrence operations.
 - [x] 07-05 Files/notifications/profile/storage API.
 - [ ] 07-06 Developer/API Settings UI.
+- [x] Post-story addition: allow every `/api/v1` resource route to authenticate
+  with a verified Supabase cookie session or access JWT while retaining
+  personal API keys for integrations.
 
 ## Decisions / discoveries
 
@@ -104,6 +107,10 @@ External clients can use revocable personal API keys to access the same owner-sc
 - Error payloads follow `docs/openapi.yaml`: `request_id` is nested inside `error`, and every response also carries `X-Request-ID`.
 - Task creation does not advertise `Idempotency-Key` until a durable actor/key/request-hash store exists; explicit complete/reopen and subtask completion mutations remain retry-safe.
 - Session-series creation likewise does not advertise `Idempotency-Key` without durable persistence. Occurrence modification/cancellation uses the canonical atomic upsert and is retry-safe by original occurrence identity.
+- `/api/v1` uses dual authentication: verified Supabase cookie sessions or
+  access JWTs for first-party users, and personal API keys for integrations.
+  Cookie-authenticated mutations require an exact same-origin `Origin` header;
+  user metadata is never an authorization source.
 
 ## Completion evidence
 
@@ -112,3 +119,11 @@ External clients can use revocable personal API keys to access the same owner-sc
 - **07-03:** subject, chapter, folder, and task `/api/v1` resources are implemented with strict validation, deterministic keyset pagination, owner-scoped services, normalized errors, full Task Details, explicit complete/reopen operations, and nested subtask create/update/delete. Migration `20261009100201_allow_server_api_service_operations.sql` was dry-run and applied to hosted project `qvqnztgpjludiahmboyd`; hosted rollback probes proved service-role Task/Chapter creation, invoker security, locked search paths, and anon denial. Forty-one focused tests, the full unit suite, typecheck, lint, and production build pass; lint retains one unrelated pre-existing modal warning.
 - **07-04:** session-series CRUD, bounded effective occurrence listing, effective occurrence detail, and one-occurrence modify/cancel routes are implemented over the existing Calendar and Session Detail services. Migration `20261009174015_allow_server_api_calendar_exceptions.sql` was dry-run and applied to the hosted project; metadata verification proved invoker security, an empty search path, service-role execution, and anon denial, while a rolled-back service-role occurrence write returned one row. Fifty-three focused tests, the full unit suite, typecheck, lint, and production build pass. Advisors report no new Calendar finding; existing file-function and leaked-password warnings remain outside this story.
 - **07-05:** profile read/update, storage usage, and safe file metadata list/read/move/delete routes are implemented over existing owner-scoped services. Raw avatar/object keys never enter public DTOs; unknown or repeated query parameters and malformed bodies fail with stable errors; missing and foreign files share the same 404 response. R2-dependent upload, completion, and download routes authenticate and rate-limit normally before returning a documented `503 PROVIDER_UNAVAILABLE`, while deferred Epic 06 notification paths were removed from the active OpenAPI contract. Thirty-one focused service/adapter tests, the full unit suite, typecheck, lint, and production build pass; lint retains one unrelated pre-existing modal warning.
+- **Session-authenticated API addition:** the shared `/api/v1` runtime now accepts
+  verified non-anonymous Supabase cookie sessions and Bearer access JWTs without
+  requiring personal API keys. Personal-key authentication and its rate window
+  remain intact. CSRF-negative tests cover missing and foreign origins, claim
+  tests reject anonymous/non-user/invalid-subject tokens, and the dedicated
+  contract is recorded in `docs/API-AUTHENTICATION.md`. Twenty-eight focused
+  authentication/route tests, the full unit suite, typecheck, lint, and the
+  production build pass.
