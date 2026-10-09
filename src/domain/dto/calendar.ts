@@ -32,6 +32,7 @@ export interface CalendarSeriesMasterDTO {
 }
 
 export interface CalendarOccurrenceDetailDTO extends CalendarOccurrenceSummaryDTO {
+  durationMinutes: number | null;
   seriesMaster: CalendarSeriesMasterDTO;
   location: string | null;
   professor: string | null;
@@ -39,6 +40,7 @@ export interface CalendarOccurrenceDetailDTO extends CalendarOccurrenceSummaryDT
   notesItems: readonly SessionNoteDTO[];
   isRecurring: boolean;
   recurrenceRule: string | null;
+  timezone: string;
 }
 
 export interface CalendarFixtureDTO {

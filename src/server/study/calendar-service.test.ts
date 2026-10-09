@@ -119,6 +119,10 @@ describe("CalendarService", () => {
       subjectId: SUBJECT_ID,
       timezone: "Africa/Tunis",
       title: "Physics lecture",
+    }, {
+      recurrenceRule: SERIES.recurrenceRule,
+      startsAt: SERIES.startsAt,
+      timezone: SERIES.timezone,
     });
     await expect(service.delete(USER_ID, SERIES_ID)).resolves.toEqual({
       data: null,

@@ -4,7 +4,7 @@ import type { CalendarOccurrenceDetailDTO } from "@/domain/dto";
 
 import type { CalendarService } from "./calendar-service";
 import type { SubjectService } from "./subject-service";
-import { INVALID_INPUT, NOT_FOUND, STORAGE_UNAVAILABLE, type StudyResult } from "./study-domain";
+import { INVALID_INPUT, STORAGE_UNAVAILABLE, type StudyResult } from "./study-domain";
 
 export const sessionOccurrenceTargetSchema = z.object({
   originalStart: z.iso.datetime({ offset: true }),
@@ -15,7 +15,7 @@ export type SessionOccurrenceTarget = Readonly<z.infer<typeof sessionOccurrenceT
 
 export type SessionDetailSources = Readonly<{
   calendar: Pick<CalendarService, "findOccurrence">;
-  subjects: Pick<SubjectService, "list">;
+  subjects: Pick<SubjectService, "find">;
 }>;
 
 export class SessionDetailService {
@@ -31,14 +31,13 @@ export class SessionDetailService {
         parsed.data.originalStart,
       );
       if (occurrence.status === "error") return occurrence;
-      const subjects = await this.sources.subjects.list(actorId);
-      if (subjects.status === "error") return subjects;
-      const subject = subjects.data.find(item => item.id === occurrence.data.subjectId);
-      if (!subject) return NOT_FOUND;
+      const subject = await this.sources.subjects.find(actorId, occurrence.data.subjectId);
+      if (subject.status === "error") return subject;
 
       return {
         status: "success",
         data: {
+          durationMinutes: occurrence.data.durationMinutes,
           endsAt: occurrence.data.endsAt,
           focusText: occurrence.data.focusText,
           isRecurring: occurrence.data.recurrenceRule !== null,
@@ -55,7 +54,8 @@ export class SessionDetailService {
           seriesMaster: occurrence.data.seriesMaster,
           seriesId: occurrence.data.seriesId,
           startsAt: occurrence.data.startsAt,
-          subject,
+          subject: subject.data,
+          timezone: occurrence.data.timezone,
           title: occurrence.data.title,
         },
       };

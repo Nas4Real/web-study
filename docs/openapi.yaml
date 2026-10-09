@@ -324,15 +324,15 @@ components:
         title: { type: string, minLength: 1, maxLength: 240 }
         subject_id: { type: string, format: uuid }
         starts_at: { type: string, format: date-time }
-        timezone: { type: string, minLength: 1, maxLength: 100 }
-        recurrence_rule: { type: [string, 'null'], maxLength: 2000 }
-        location: { type: [string, 'null'], maxLength: 300 }
-        professor: { type: [string, 'null'], maxLength: 300 }
+        timezone: { type: string, minLength: 1, maxLength: 64 }
+        recurrence_rule: { type: [string, 'null'], maxLength: 2048 }
+        location: { type: [string, 'null'], maxLength: 500 }
+        professor: { type: [string, 'null'], maxLength: 500 }
         focus_text: { type: [string, 'null'], maxLength: 1000 }
         notes_items:
           type: array
-          maxItems: 30
-          items: { type: string, minLength: 1, maxLength: 1000 }
+          maxItems: 50
+          items: { type: string, minLength: 1, maxLength: 500 }
     ExamSessionInput:
       unevaluatedProperties: false
       allOf:
@@ -376,15 +376,15 @@ components:
         subject_id: { type: string, format: uuid }
         starts_at: { type: string, format: date-time }
         duration_minutes: { type: [integer, 'null'], minimum: 1, maximum: 1440 }
-        timezone: { type: string, minLength: 1, maxLength: 100 }
-        recurrence_rule: { type: [string, 'null'], maxLength: 2000 }
-        location: { type: [string, 'null'], maxLength: 300 }
-        professor: { type: [string, 'null'], maxLength: 300 }
+        timezone: { type: string, minLength: 1, maxLength: 64 }
+        recurrence_rule: { type: [string, 'null'], maxLength: 2048 }
+        location: { type: [string, 'null'], maxLength: 500 }
+        professor: { type: [string, 'null'], maxLength: 500 }
         focus_text: { type: [string, 'null'], maxLength: 1000 }
         notes_items:
           type: array
-          maxItems: 30
-          items: { type: string, minLength: 1, maxLength: 1000 }
+          maxItems: 50
+          items: { type: string, minLength: 1, maxLength: 500 }
     SessionOccurrencePatch:
       type: object
       minProperties: 1
@@ -393,13 +393,13 @@ components:
         title: { type: string, minLength: 1, maxLength: 240 }
         starts_at: { type: string, format: date-time }
         duration_minutes: { type: [integer, 'null'], minimum: 1, maximum: 1440 }
-        location: { type: [string, 'null'], maxLength: 300 }
-        professor: { type: [string, 'null'], maxLength: 300 }
+        location: { type: [string, 'null'], maxLength: 500 }
+        professor: { type: [string, 'null'], maxLength: 500 }
         focus_text: { type: [string, 'null'], maxLength: 1000 }
         notes_items:
           type: array
-          maxItems: 30
-          items: { type: string, minLength: 1, maxLength: 1000 }
+          maxItems: 50
+          items: { type: string, minLength: 1, maxLength: 500 }
     SessionOccurrenceDetail:
       type: object
       required: [series_id, original_start, kind, title, subject, starts_at, timezone, notes_items]
@@ -421,6 +421,23 @@ components:
           items: { type: string }
         recurring: { type: boolean }
         overridden: { type: boolean }
+
+    SessionSeries:
+      type: object
+      required: [id, kind, title, subject_id, starts_at, timezone, notes_items]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [exam, university, revision] }
+        title: { type: string }
+        subject_id: { type: string, format: uuid }
+        starts_at: { type: string, format: date-time }
+        duration_minutes: { type: [integer, 'null'] }
+        timezone: { type: string }
+        recurrence_rule: { type: [string, 'null'] }
+        location: { type: [string, 'null'] }
+        professor: { type: [string, 'null'] }
+        focus_text: { type: [string, 'null'] }
+        notes_items: { type: array, items: { type: string } }
 
     FileMetadata:
       type: object
@@ -771,25 +788,24 @@ paths:
         '200':
           description: OK
           content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/SessionOccurrenceDetail' } } } }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
     post:
       tags: [Calendar]
       summary: Create one-time or recurring session series
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SessionInput' } } } }
-      responses: { '201': { description: Created }, '409': { $ref: '#/components/responses/Conflict' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeries' } } } }, '422': { $ref: '#/components/responses/ValidationFailed' } }
 
   /sessions/{series_id}:
     parameters: [{ $ref: '#/components/parameters/SeriesId' }]
     get:
       tags: [Calendar]
       summary: Get session series metadata
-      responses: { '200': { description: OK }, '404': { $ref: '#/components/responses/NotFound' } }
+      responses: { '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeries' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
     patch:
       tags: [Calendar]
       summary: Update entire series
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeriesPatch' } } } }
-      responses: { '200': { description: Updated }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
+      responses: { '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/SessionSeries' } } } }, '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/ValidationFailed' } }
     delete:
       tags: [Calendar]
       summary: Delete entire series

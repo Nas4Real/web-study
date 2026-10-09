@@ -279,11 +279,16 @@ export class CalendarService {
         return STORAGE_UNAVAILABLE;
       }
     }
-    return this.readOne(() =>
-      expectedSchedule
-        ? this.repository.updateOwned(actor.data, id.data, writeUpdate(merged.data), expectedSchedule)
-        : this.repository.updateOwned(actor.data, id.data, writeUpdate(merged.data)),
-    );
+    return this.readOne(() => this.repository.updateOwned(
+      actor.data,
+      id.data,
+      writeUpdate(merged.data),
+      {
+        recurrenceRule: existing.data.recurrenceRule,
+        startsAt: existing.data.startsAt,
+        timezone: existing.data.timezone,
+      },
+    ));
   }
 
   async delete(actorId: unknown, seriesId: unknown): Promise<StudyResult<null>> {

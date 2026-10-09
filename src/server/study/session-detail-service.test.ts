@@ -39,7 +39,7 @@ const occurrence: CalendarOccurrenceDetailRecord = {
 function sources(overrides: Record<string, unknown> = {}) {
   return {
     calendar: { findOccurrence: vi.fn().mockResolvedValue({ data: occurrence, status: "success" }) },
-    subjects: { list: vi.fn().mockResolvedValue({ data: [{ id: SUBJECT, name: "Physics", color: "#10b981" }], status: "success" }) },
+    subjects: { find: vi.fn().mockResolvedValue({ data: { id: SUBJECT, name: "Physics", color: "#10b981" }, status: "success" }) },
     ...overrides,
   };
 }
@@ -52,6 +52,7 @@ describe("SessionDetailService", () => {
     expect(result).toEqual({
       status: "success",
       data: {
+        durationMinutes: occurrence.durationMinutes,
         endsAt: occurrence.endsAt,
         focusText: null,
         isRecurring: true,
@@ -68,11 +69,12 @@ describe("SessionDetailService", () => {
         seriesId: SERIES,
         startsAt: occurrence.startsAt,
         subject: { id: SUBJECT, name: "Physics", color: "#10b981" },
+        timezone: occurrence.timezone,
         title: "Moved physics lecture",
       },
     });
     expect(input.calendar.findOccurrence).toHaveBeenCalledWith(ACTOR, SERIES, ORIGINAL);
-    expect(input.subjects.list).toHaveBeenCalledWith(ACTOR);
+    expect(input.subjects.find).toHaveBeenCalledWith(ACTOR, SUBJECT);
   });
 
   it("returns one-time recurrence metadata without inventing a series", async () => {
@@ -87,9 +89,9 @@ describe("SessionDetailService", () => {
     const missing = sources({ calendar: { findOccurrence: vi.fn().mockResolvedValue({ code: "NOT_FOUND", status: "error" }) } });
     await expect(new SessionDetailService(missing).read(ACTOR, { seriesId: SERIES, originalStart: ORIGINAL }))
       .resolves.toEqual({ code: "NOT_FOUND", status: "error" });
-    expect(missing.subjects.list).not.toHaveBeenCalled();
+    expect(missing.subjects.find).not.toHaveBeenCalled();
 
-    const foreignSubject = sources({ subjects: { list: vi.fn().mockResolvedValue({ data: [], status: "success" }) } });
+    const foreignSubject = sources({ subjects: { find: vi.fn().mockResolvedValue({ code: "NOT_FOUND", status: "error" }) } });
     await expect(new SessionDetailService(foreignSubject).read(ACTOR, { seriesId: SERIES, originalStart: ORIGINAL }))
       .resolves.toEqual({ code: "NOT_FOUND", status: "error" });
   });

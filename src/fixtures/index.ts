@@ -137,6 +137,7 @@ export const sessionDetailFixture = {
     recurrenceRule: "FREQ=WEEKLY;BYDAY=WE",
   },
   originalStart: "2026-09-30T08:00:00.000Z",
+  durationMinutes: 90,
   title: "Quantum Mechanics Lecture",
   kind: "university",
   startsAt: "2026-09-30T09:00:00.000Z",
@@ -164,6 +165,7 @@ export const sessionDetailFixture = {
   ],
   isRecurring: true,
   recurrenceRule: "FREQ=WEEKLY;BYDAY=WE",
+  timezone: "Africa/Tunis",
 } as const satisfies CalendarOccurrenceDetailDTO;
 
 export const calendarFixture = {
