@@ -9,12 +9,23 @@ import {
 
 type FolderResult<T> = StudyResult<T, "CONFLICT" | "FOLDER_CYCLE">;
 
+export type FolderPageRequest = FolderListFilter & Readonly<{
+  cursor: Readonly<{ createdAt: string; id: string; position: number }> | null;
+  limit: number;
+}>;
+
+export type FolderPage = Readonly<{
+  items: readonly Folder[];
+  nextCursor: FolderPageRequest["cursor"];
+}>;
+
 export type FolderRepository = Readonly<{
   createOwned(userId: string, input: FolderCreate): Promise<RepositoryResult<Folder>>;
   deleteOwned(userId: string, folderId: string): Promise<RepositoryResult<boolean>>;
   findOwned(userId: string, folderId: string): Promise<RepositoryResult<Folder>>;
   isDescendantOwned(userId: string, folderId: string, candidateId: string): Promise<RepositoryResult<boolean>>;
   listOwned(userId: string, filter: FolderListFilter): Promise<RepositoryResult<readonly Folder[]>>;
+  listPageOwned(userId: string, input: FolderPageRequest): Promise<RepositoryResult<readonly Folder[]>>;
   updateOwned(userId: string, folderId: string, input: FolderUpdate): Promise<RepositoryResult<Folder>>;
 }>;
 
@@ -42,6 +53,35 @@ export class FolderService {
       const result = await this.repository.listOwned(actor.data, parsed.data);
       if (result.errorCode) return repositoryError(result.errorCode, "write");
       return { data: result.data ?? [], status: "success" };
+    } catch { return STORAGE_UNAVAILABLE; }
+  }
+
+  async listPage(actorId: unknown, input: FolderPageRequest): Promise<FolderResult<FolderPage>> {
+    const actor = actorIdSchema.safeParse(actorId);
+    const filter = folderListFilterSchema.safeParse({
+      ...(input.chapterId === undefined ? {} : { chapterId: input.chapterId }),
+      ...(input.parentId === undefined ? {} : { parentId: input.parentId }),
+      ...(input.subjectId === undefined ? {} : { subjectId: input.subjectId }),
+    });
+    if (!actor.success) return INVALID_ACTOR;
+    if (!filter.success || !Number.isInteger(input.limit) || input.limit < 1 || input.limit > 100) return INVALID_INPUT;
+    try {
+      const result = await this.repository.listPageOwned(actor.data, {
+        ...filter.data, cursor: input.cursor, limit: input.limit + 1,
+      });
+      if (result.errorCode) return repositoryError(result.errorCode, "write");
+      const rows = result.data ?? [];
+      const items = rows.slice(0, input.limit);
+      const last = items.at(-1);
+      return {
+        data: {
+          items,
+          nextCursor: rows.length > input.limit && last
+            ? { createdAt: last.createdAt, id: last.id, position: last.position }
+            : null,
+        },
+        status: "success",
+      };
     } catch { return STORAGE_UNAVAILABLE; }
   }
 

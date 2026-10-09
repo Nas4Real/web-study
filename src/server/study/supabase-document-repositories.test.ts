@@ -77,6 +77,26 @@ describe("Supabase document hierarchy repositories", () => {
     expect(builder.is).toHaveBeenCalledWith("parent_id", null);
   });
 
+  it("lists a bounded owner-scoped folder page with deterministic ordering", async () => {
+    const builder = chain({ data: [folderRow], error: null });
+    const client = { from: vi.fn().mockReturnValue(builder) };
+    const result = await createSupabaseFolderRepository(client as never).listPageOwned(USER_ID, {
+      chapterId: CHAPTER_ID,
+      cursor: { createdAt: folderRow.created_at, id: FOLDER_ID, position: 0 },
+      limit: 21,
+      subjectId: SUBJECT_ID,
+    });
+    expect(result).toMatchObject({ data: [{ id: FOLDER_ID }], errorCode: null });
+    expect(builder.eq.mock.calls).toEqual(expect.arrayContaining([
+      ["user_id", USER_ID], ["subject_id", SUBJECT_ID], ["chapter_id", CHAPTER_ID],
+    ]));
+    expect(builder.or).toHaveBeenCalledOnce();
+    expect(builder.order).toHaveBeenNthCalledWith(1, "position", { ascending: true });
+    expect(builder.order).toHaveBeenNthCalledWith(2, "created_at", { ascending: true });
+    expect(builder.order).toHaveBeenNthCalledWith(3, "id", { ascending: true });
+    expect(builder.limit).toHaveBeenCalledWith(21);
+  });
+
   it("delegates descendant checks to the owner-scoped invoker function", async () => {
     const client = { rpc: vi.fn().mockResolvedValue({ data: true, error: null }) };
     expect(await createSupabaseFolderRepository(client as never).isDescendantOwned(USER_ID, FOLDER_ID, PARENT_ID))

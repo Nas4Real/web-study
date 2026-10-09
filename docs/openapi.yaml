@@ -216,6 +216,16 @@ components:
         parent_id: { type: [string, 'null'], format: uuid }
         name: { type: string, minLength: 1, maxLength: 160 }
         position: { type: integer, minimum: 0 }
+    Folder:
+      type: object
+      required: [id, subject_id, chapter_id, parent_id, name, position]
+      properties:
+        id: { type: string, format: uuid }
+        subject_id: { type: string, format: uuid }
+        chapter_id: { type: [string, 'null'], format: uuid }
+        parent_id: { type: [string, 'null'], format: uuid }
+        name: { type: string }
+        position: { type: integer, minimum: 0 }
     FolderPatch:
       type: object
       minProperties: 1
@@ -622,10 +632,22 @@ paths:
       tags: [Folders]
       summary: List folders
       parameters:
+        - { $ref: '#/components/parameters/Cursor' }
+        - { $ref: '#/components/parameters/PageLimit' }
         - { in: query, name: subject_id, required: false, schema: { type: string, format: uuid } }
         - { in: query, name: chapter_id, required: false, schema: { type: string, format: uuid } }
         - { in: query, name: parent_id, required: false, schema: { type: string, format: uuid } }
-      responses: { '200': { description: OK } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, pagination]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Folder' } }
+                  pagination: { $ref: '#/components/schemas/PageInfo' }
     post:
       tags: [Folders]
       summary: Create folder
