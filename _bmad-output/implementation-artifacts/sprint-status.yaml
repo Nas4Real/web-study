@@ -15,7 +15,7 @@ stories:
   epic_08: [08-01, 08-02, 08-03, 08-04]
   epic_09: [09-01, 09-02, 09-03, 09-04, 09-05, 09-06, 09-07]
 optimization_delivery:
-  status: planned
+  status: implementation-in-progress
   next_story: 09-01
   core_stories: [09-01, 09-02, 09-03, 09-04, 09-07]
   conditional_stories: [09-05, 09-06]

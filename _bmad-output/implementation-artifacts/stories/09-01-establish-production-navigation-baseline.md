@@ -1,7 +1,7 @@
 # Story 09-01: Establish production navigation baseline
 
 Epic: epic-09
-Status: ready-for-implementation
+Status: in-progress
 Dependencies: none
 Scope: medium; profiling procedure, report and focused browser instrumentation
 
@@ -38,3 +38,21 @@ The profiling procedure can be repeated against the same conditions, the report
 distinguishes local and hosted evidence, and the proposed work is tied to observed
 bottlenecks. If hosted login is unavailable, mark the baseline incomplete; do not
 invent timings or proceed with a claimed production diagnosis.
+
+## Execution notes — 2026-10-10
+
+Diagnostic tooling is implemented under `scripts/performance/`, with metric and
+privacy-category tests in `src/tooling/navigation-metrics.test.ts`. Two approved
+auto-confirmed test users were created; only the populated user received synthetic
+subjects/tasks/sessions. No production bypass, real-user data changes or application
+optimization has been introduced.
+
+See `docs/performance/README.md` for repeatable commands and measurement limitations.
+Hosted sidebar/search samples (400) and local production Tasks/Calendar samples
+(160) are captured in `docs/performance/BASELINE-2026-10-10.md`, with hypotheses in
+`docs/performance/EXPERIMENTS.md`. This first run includes concurrent profiling and some overlapping quality
+checks: retain it as exploratory evidence, not a controlled before/after comparison.
+Controlled repeats and Calendar/task/session interaction profiling remain required.
+
+Separate finding: hosted chapter creation returned 503 for the dedicated test user.
+Chapter metadata is excluded from the populated dataset until that is investigated.

@@ -37,7 +37,8 @@ notifications, developer settings, account deletion or storage activation.
   content even without mutations.
 - Existing resource APIs live under `src/app/api/v1`; shared adapters and
   services are under `src/server/api` and `src/server/study`.
-- Previous local fixture timing is exploratory. Hosted timings remain unknown.
+- Previous local fixture timing is exploratory. Real-auth hosted/local exploratory
+  timings are captured in `docs/performance/BASELINE-2026-10-10.md`.
 
 ## Implementation plan
 
@@ -124,6 +125,10 @@ commit and environment metadata. Do not enable development auth in production.
 
 - [x] 2026-10-10: Plan/spec/epic and seven stories prepared; sprint index extended.
 - [ ] 09-01 production baseline and reproducible report.
+- [x] 2026-10-10: First 09-01 slice: isolated real-auth accounts, sanitized browser
+  profiler, local production runner and provider-call diagnostics implemented.
+- [x] 2026-10-10: Captured 400 hosted and 160 local exploratory samples; saved
+  sanitized aggregate report, limitations and experiment ledger. Quality gates passed.
 - [ ] 09-02 request reads optimized and measured.
 - [ ] 09-03 navigation feedback/prefetch verified and measured.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
@@ -139,8 +144,23 @@ commit and environment metadata. Do not enable development auth in production.
 - Loading feedback and actual-content timing must be reported independently.
 - This plan follows existing BMAD artifacts; no installed BMAD skill was found.
 - Planning-only delivery does not start any runtime optimization automatically.
+- The current approved sidebar exposes navigation search only in the mobile
+  header; profile sidebar at 1440x900 and search at 375x812 separately.
+- Supabase connector project access was denied; the existing dashboard session
+  allowed explicitly approved test-account creation and reading the public key.
+- Real-auth production runs reproduce slow navigation. Some RSC streams are
+  cancelled after consumption: headers/first byte are not full-body completion.
+- Initial profiling runs overlap each other and some quality checks. Keep them
+  exploratory and repeat in isolation before making optimization gain claims.
+- Hosted test-account chapter creation returned 503. No unrelated API fix is
+  bundled into the profiling slice; record it for investigation.
+- Deployment inspection confirms Vercel `iad1`; Supabase Infrastructure confirms
+  `eu-central-1`. Co-location is a hypothesis, not a default infrastructure change.
+- Local sibling navigation traces show one profile read and no auth-user call
+  per observed Tasks/Calendar RSC request. Initial entry needs separate evidence.
 
 ## Completion evidence
 
-Planning artifacts are complete. Runtime measurements, implementation tests,
-production improvements and release evidence are pending story execution.
+Planning and the first diagnostic tooling slice are complete. Story 09-01 is
+in progress; controlled baseline/interaction coverage, production improvements
+and release evidence remain pending. See `docs/performance/README.md`.
