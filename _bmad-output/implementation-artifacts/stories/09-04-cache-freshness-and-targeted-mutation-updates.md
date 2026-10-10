@@ -62,11 +62,18 @@ post-edit/delete reconciliation; Session Details at 320px failed on screenshot
 height (802px expected, 870px actual). Temporarily restoring all three application
 files to their pre-change contents reproduced the identical 21,670-pixel/height
 mismatch. The candidate was restored afterward. No baselines were updated.
-The candidate's independent 768px visual check also fails by the same additional
-68px document height (1026px expected, 1094px actual). The 1024px check remains
-pending; do not claim the visual suite passes. Full unit suite, typecheck, lint
+The candidate's independent 768px visual check also failed by the same additional
+68px document height (1026px expected, 1094px actual). Full unit suite, typecheck, lint
 (one existing modal ref-cleanup warning), production build and diff check pass.
-The candidate is committed for review, not merged or deployed. The existing
-visual mismatch and remaining Epic 09 measurements still gate release.
+Subsequent browser geometry localized the mismatch to the mobile shell: its 56px
+header and 12px gap were added above a Calendar retaining desktop viewport height.
+A separate responsive height correction subtracts those 68px below `lg`, retaining
+desktop height and the short-screen minimum. The direct document-height regression
+fails on the original source at 320/768px and passes after. All 21 Calendar/session
+browser checks now pass, including the unchanged 320/768/1024px Session Details
+snapshots. Full units, typecheck, lint (same existing warning), build and diff check
+pass for this correction. No snapshots updated; no dialog styling changed.
+The candidates are for review, not merged or deployed. Remaining Epic 09
+measurements and final integration checks still gate release.
 This experiment does not complete the whole story or bypass the cache lifecycle
 and release gates; its remaining work still depends on 09-03.

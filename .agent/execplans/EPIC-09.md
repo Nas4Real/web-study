@@ -137,10 +137,13 @@ commit and environment metadata. Do not enable development auth in production.
 - [x] 2026-10-10: Early independent 09-04 close-handler candidate: local browser
   regression failed with one route GET before and passes with zero after.
   Calendar/Dashboard read-only close restores focus; edit/delete still reconcile.
-- [ ] Investigate existing 320px Session Details screenshot-height mismatch
-  (802px expected vs 870px actual), reproduced identically on unchanged source.
-  The 768px candidate also differs by 68px height; 1024px remains pending.
-  Do not update baselines or claim the visual/release gate is green.
+- [x] 2026-10-10: Resolved existing Session Details screenshot-height mismatch.
+  Browser geometry identified the 56px mobile shell header plus 12px gap above
+  a calendar still reserving desktop viewport height. Subtract that 68px only
+  below `lg`; preserve desktop height and the 680px minimum for short screens.
+  Direct geometry regression fails before (870/1094px), passes after
+  (802/1026px). All 21 Calendar/session checks, including unchanged 320/768/1024px
+  Session Details snapshots, pass. No snapshots updated or content hidden.
 - [ ] 09-02 request reads optimized and measured.
 - [ ] 09-03 navigation feedback/prefetch verified and measured.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
@@ -187,4 +190,6 @@ The independent session-close candidate passes its red→green browser regressio
 15 relevant functional/Calendar checks, full units, typecheck, lint (existing
 warning), production build and diff check. Calendar/Dashboard close callbacks no
 longer refresh; mutation-success callbacks preserve refresh. No styling/auth/cache
-changes. Session visual gate remains open as recorded above; no release claim.
+changes in that slice. A subsequent responsive Calendar sizing correction resolves
+the pre-existing visual mismatch; all 21 relevant browser checks now pass. No
+production speedup or release claim; full Epic 09 integration gates remain pending.

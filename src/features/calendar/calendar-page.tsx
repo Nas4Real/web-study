@@ -61,7 +61,8 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
   const session = data.fixture ? sessionDetailFixture : detail.data?.detail;
 
   return (
-    <div className="flex h-[calc(100vh-24px)] min-h-[680px] flex-col overflow-hidden">
+    // Mobile reserves 56px for navigation plus its 12px gap; desktop only reserves shell padding.
+    <div className="flex h-[calc(100vh-92px)] min-h-[680px] flex-col overflow-hidden lg:h-[calc(100vh-24px)]">
       <CalendarHeader
         greetingName={data.greetingName}
         onShift={shiftPeriod}
