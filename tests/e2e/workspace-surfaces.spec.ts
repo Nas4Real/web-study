@@ -131,7 +131,7 @@ test.describe("workspace surfaces", () => {
 
   test("matches the approved task dialog visual baselines", async ({ page }) => {
     await page.goto("/tasks");
-    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("button", { name: "New Task" })).toBeVisible();
     await page.getByRole("button", { name: "New Task" }).click();
     await expect(page.getByRole("dialog", { name: "Create new task" })).toBeVisible();
     await hideNextDevTools(page);

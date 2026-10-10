@@ -5,7 +5,7 @@ import { hideNextDevTools } from "./visual-test-helpers";
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1200 });
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await expect(page.getByRole("region", { name: "Today's summary" })).toBeVisible();
 });
 
 test("renders the approved Dashboard and application shell", async ({ page }) => {
