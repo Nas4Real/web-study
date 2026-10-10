@@ -63,3 +63,15 @@ interaction harness completed 80 populated-account samples; see
 `docs/performance/INTERACTIONS-2026-10-10.md` for assertion-timing limitations,
 prefetch separation and the confirmed read-only Calendar refresh candidate.
 Full baseline acceptance remains incomplete; no whole-epic speedup is claimed.
+
+The isolated populated navigation repeat completed with another 200 samples at
+`2026-10-10T18:56:41.958Z`; see
+`docs/performance/ISOLATED-POPULATED-NAVIGATION-2026-10-10.md`. All 20 groups have
+ten samples. Warm-sidebar content p95 is 792–1255ms, with no observed long tasks;
+paint-after-sampled-readiness p95 is <= 6.785ms for warm groups. The app source is
+unchanged from the hosted baseline, not the optimization branch candidate.
+Only 8/200 first-observed RSC streams completed successfully in the observed
+window; headers-to-readiness must not be labeled client rendering time.
+Empty/populated runs occurred at different times and do not isolate dataset cost.
+Initial-entry/provider attribution, precise interaction timing and session-mutation
+coverage remain open; keep this story in-progress.

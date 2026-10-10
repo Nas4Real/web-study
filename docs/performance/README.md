@@ -4,7 +4,9 @@ This is diagnostic tooling, not an application optimization. Story 09-01 remains
 in progress until the full interaction matrix and controlled repeats are complete.
 No new design, authentication bypass, schema migration or production logging is added.
 
-See the [exploratory baseline](BASELINE-2026-10-10.md) and
+See the [exploratory baseline](BASELINE-2026-10-10.md),
+[isolated empty navigation](ISOLATED-NAVIGATION-2026-10-10.md),
+[isolated populated navigation](ISOLATED-POPULATED-NAVIGATION-2026-10-10.md) and
 [experiment ledger](EXPERIMENTS.md) before proposing optimizations.
 
 ## Repeat a run
@@ -98,6 +100,9 @@ Screenshots contain only the dedicated synthetic workspace and remain ignored.
 
 ## Pending to finish 09-01
 
-Controlled isolated repeats; Calendar date/view changes; task/session detail and
-mutation flows; interaction readiness/React commit attribution; hosted provider
-counts/regions. Do not mark these complete based on sidebar timing alone.
+Empty and populated isolated hosted navigation repeats are complete (200 samples
+each). Calendar date/view and task/detail flows have a supplementary 80-sample
+assertion-timing report, not exact interaction timing. Initial-entry/provider
+attribution, precise interaction readiness/React timing and session-mutation
+coverage remain pending. Regions are recorded; hosted provider call counts remain
+unavailable. Do not mark 09-01 complete based on sidebar timing alone.

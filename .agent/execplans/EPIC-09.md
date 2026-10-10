@@ -131,6 +131,11 @@ commit and environment metadata. Do not enable development auth in production.
   sanitized aggregate report, limitations and experiment ledger. Quality gates passed.
 - [x] 2026-10-10: Completed isolated hosted empty-account repeat (200 samples).
   Warm-sidebar content p95 remains 710–994 ms; see isolated report.
+- [x] 2026-10-10: Completed isolated hosted populated-account navigation (200
+  samples). Warm-sidebar content p95 792–1255ms; every route misses 700ms.
+  No long tasks observed; warm paint-after-readiness p95 <= 6.785ms.
+  See `docs/performance/ISOLATED-POPULATED-NAVIGATION-2026-10-10.md` for all groups
+  and stream/readiness limits. Provider/precise interaction work remains pending.
 - [x] 2026-10-10: Captured 80 real-auth interaction samples. Read-only Session
   Details close sends a same-route non-prefetch GET, unlike Task Details close.
   Assertion timings are upper bounds, not exact React/paint measurements.
