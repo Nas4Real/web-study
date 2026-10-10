@@ -83,3 +83,14 @@ occurrence calls; subject duration median 79–96ms. See
 `docs/performance/INITIAL-PROVIDER-2026-10-10.md` for counts/timings and local
 instrumentation/automation limits. No application change is bundled here.
 Precise interaction/session-mutation and hosted-provider evidence remain pending.
+
+A diagnostic-only detail-readiness follow-up now has 40 real-auth local production
+samples (ten each for task/session open/read-only close). Actual page click,
+frame-sampled visible-dialog/enabled-control readiness and a following frame are
+reported separately from assertion-observed timing. Open readiness medians are
+604ms session / 489ms task; read-only close medians are 10–11ms with zero captured
+RSC/POST per close. No data writes in the opt-in detail-only run. This improves
+measurement precision, not application speed. Four red→green probe tests, full
+units/typecheck/build and lint (existing warning) pass. See
+`docs/performance/DETAIL-FRAMES-2026-10-10.md` for boundaries/overhead; React/paint,
+session mutations and hosted provider attribution are still incomplete.

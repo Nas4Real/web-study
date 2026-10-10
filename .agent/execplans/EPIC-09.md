@@ -155,6 +155,15 @@ commit and environment metadata. Do not enable development auth in production.
   (802/1026px). All 21 Calendar/session checks, including unchanged 320/768/1024px
   Session Details snapshots, pass. No snapshots updated or content hidden.
 - [ ] 09-02 request reads optimized and measured.
+- [x] 2026-10-10: Added diagnostic-only detail readiness sampling and opt-in
+  read-only interaction mode. Four red→green probe tests pass; all 40 genuine-auth
+  local production samples complete. Sampled-ready median/p95: session open
+  604/1148ms, task open 489/668ms; closes 10–11ms median, zero RSC/POST each.
+  Assertion-observed values are substantially higher; report this as measurement
+  overhead, not an application speedup. Full units/typecheck/build pass; lint's
+  existing warning remains. No app/data changes or concurrent tests/builds during
+  capture. React/paint, session mutation and hosted attribution remain pending.
+  See `docs/performance/DETAIL-FRAMES-2026-10-10.md`.
 - [x] 2026-10-10: Narrow 09-02 Calendar experiment retained: owner/window-aware
   subject and occurrence reads overlap; same five provider calls. Matching
   20-sample local production entries: provider-span median 437→348ms, observed
@@ -218,6 +227,15 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-10: Continue 09-01 with a diagnostic-only detail-readiness probe.
+  Existing assertion timing remains an upper bound; add actual click capture,
+  animation-frame DOM/control readiness and the following frame as separate
+  fields, never labelled React commit/paint/hydration. Unit-test sampling,
+  missing readiness and cleanup first. Add an opt-in read-only detail mode to
+  the existing genuine-auth profiler, compare at least ten local samples per
+  scenario with unchanged app code and no simultaneous builds/tests. Preserve
+  legacy measurements and keep session-mutation/hosted attribution gates open.
 
 - 2026-10-10: Extend the genuine-auth production shell diagnostic to all five
   destinations, desktop sidebar (including secondary Settings) and 320px

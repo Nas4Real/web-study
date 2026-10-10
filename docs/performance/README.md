@@ -137,6 +137,15 @@ Screenshots contain only the dedicated synthetic workspace and remain ignored.
 
 ## Initial-entry provider attribution
 
+The [frame-sampled detail run](DETAIL-FRAMES-2026-10-10.md) adds an opt-in
+`PERF_DETAILS_ONLY=1` read-only mode to `profile-interactions.ts`. It measures
+task/session open and close with an actual page click, frame-sampled visible
+detail/enabled-control readiness and a following frame. Version-2 reports retain
+the older assertion-observed upper bound separately. Default mode still runs
+all eight original scenarios; unprobed flows do not acquire invented timings.
+This is DOM/frame sampling, not exact React commit, paint, INP or hydration.
+
+
 With local production and `PERF_PROVIDER_TIMING=true`, run sequentially for
 `PERF_DATASET=empty` and `populated` (ten samples per page by default):
 
@@ -155,6 +164,8 @@ not exact paint/React/INP. See [initial provider report](INITIAL-PROVIDER-2026-1
 Empty and populated isolated hosted navigation repeats are complete (200 samples
 each). Calendar date/view and task/detail flows have a supplementary 80-sample
 assertion-timing report, not exact interaction timing. Local initial-entry/provider
-attribution is complete (100 samples). Precise interaction readiness/React timing
-and session-mutation coverage remain pending. Regions are recorded; hosted provider call counts remain
+attribution is complete (100 samples). A 40-sample read-only local detail run now
+separates frame-sampled readiness from assertion polling. Broader precise
+interaction/React timing and session-mutation coverage remain pending.
+Regions are recorded; hosted provider call counts remain
 unavailable. Do not mark 09-01 complete based on sidebar timing alone.
