@@ -182,12 +182,32 @@ commit and environment metadata. Do not enable development auth in production.
   snapshot updates. Six boundary rendering tests include unknown-path privacy.
   Final local production build and staged whitespace check also pass.
   See `docs/performance/WORKSPACE-LOADING-2026-10-10.md`.
+- [x] 2026-10-10: 80-sample correlated candidate/control/control/candidate
+  Calendar repeat: content medians nearly equal, provider/content correlation
+  0.989–0.996, one destination RSC and four provider calls per sample, no errors
+  or long tasks. Candidate content tails remain worse; no new product fix or
+  no-regression/release claim. Preserve useful fallback candidate under review.
+  Three diagnostic red→green tests cover old-log collision, missing correlation
+  and sanitized projection. Boundary/test restored exactly after controls.
+  Full 657 units/typecheck pass; lint has only its existing warning. Control
+  and restored candidate production builds pass; no application diff.
+  See `docs/performance/LOADING-CONTENT-ATTRIBUTION-2026-10-10.md`.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
 - [ ] 09-05 implement/defer verdict and required work complete.
 - [ ] 09-06 implement/defer verdict and required work complete.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-10: Investigate the loading candidate's content-timing gap with a
+  candidate/control/control/candidate local production repeat, ten warm Calendar
+  samples per input per batch. Extend only the ignored/local diagnostic path
+  with per-request provider correlation, excluding pre-run log rows and missing
+  attribution rather than calling it zero. Keep the same profiler patch in
+  both builds; temporarily remove only the boundary and its rendering test for
+  control, then restore exactly. No tests/builds alongside timing captures.
+  Attribute waits before any new product optimization; retain content/hosted
+  gates unless the resulting evidence supports closure.
 
 - Continue 09-03 with a generic, destination-labelled skeleton below the existing
   authenticated layout. Add rendering tests first, then verify the boundary with

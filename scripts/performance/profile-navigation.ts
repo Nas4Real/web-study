@@ -1,12 +1,16 @@
 import { chromium, type Page } from "@playwright/test";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 // Node's native TypeScript runner requires the real extension.
 // @ts-expect-error TS5097: supported by the Node 24 runner used below.
-import { classifyResource, summarize } from "./metrics.ts";
+import { classifyResource, correlateProviderTimeline, summarize } from "./metrics.ts";
 
 const origin = process.env.PERF_ORIGIN ?? "https://web-study-pearl.vercel.app";
 if (!["https://web-study-pearl.vercel.app", "http://localhost:3100"].includes(origin)) throw new Error("Profiling origin must be the existing app or local production server");
+const correlateProvider = process.env.PERF_CORRELATE_PROVIDER === "true";
+if (correlateProvider && origin !== "http://localhost:3100") throw new Error("Provider correlation is local-only");
+const readProviderLog = () => readFile("test-results/performance/provider-calls.jsonl", "utf8").catch(() => "");
+const providerLogBoundary = correlateProvider ? (await readProviderLog()).length : 0;
 const dataset = process.env.PERF_DATASET ?? "empty";
 if (!["empty", "populated"].includes(dataset)) throw new Error("Invalid dataset");
 const email = process.env[`PERF_${dataset.toUpperCase()}_EMAIL`];
@@ -45,9 +49,9 @@ try {
 const storageState = await login.storageState();
 await login.close();
 
-type Resource = { kind: string; start: number; headers?: number; firstByte?: number; lastByte?: number; end?: number; terminal?: number; failed?: boolean; cancelled?: boolean; providerRequestId?: string };
+type Resource = { kind: string; start: number; headers?: number; firstByte?: number; lastByte?: number; end?: number; terminal?: number; failed?: boolean; cancelled?: boolean; providerRequestId?: string; destinationRsc?: boolean; prefetch?: boolean };
 type TraceEvent = { name: string; ts: number; dur?: number };
-type Sample = { dataset: string; destination: string; mode: string; input: string; click: number; feedback: number; shellFeedback: number; domReady: number; frameAfterReady: number; firstPaint: number | null; resources: Resource[]; longTasks: { start: number; duration: number }[]; scriptEvaluationMs: number };
+type Sample = { dataset: string; destination: string; mode: string; input: string; click: number; feedback: number; shellFeedback: number; domReady: number; frameAfterReady: number; firstPaint: number | null; resources: Resource[]; longTasks: { start: number; duration: number }[]; scriptEvaluationMs: number; provider: ReturnType<typeof correlateProviderTimeline> };
 const samples: Sample[] = [];
 let failed = false;
 
@@ -95,7 +99,11 @@ try {
           const resources = new Map<string, Resource>();
           cdp.on("Network.requestWillBeSent", (event) => {
             const kind = classifyResource(event.request.url, new URL(origin).host, event.type ?? "unknown");
-            if (kind !== "other") resources.set(event.requestId, { kind, start: event.timestamp * 1000 - offset });
+            if (kind !== "other") resources.set(event.requestId, {
+              kind, start: event.timestamp * 1000 - offset,
+              destinationRsc: kind === "rsc" && new URL(event.request.url).pathname === destination.path,
+              prefetch: Object.entries(event.request.headers).some(([key, value]) => key.toLowerCase() === "next-router-prefetch" && value === "1"),
+            });
           });
           cdp.on("Network.responseReceived", (event) => { const r = resources.get(event.requestId); if (r) { r.headers = event.timestamp * 1000 - offset; const id = event.response.headers["x-perf-request"]; if (typeof id === "string" && /^\d+$/.test(id)) r.providerRequestId = id; } });
           cdp.on("Network.dataReceived", (event) => { const r = resources.get(event.requestId); if (r) { r.lastByte = event.timestamp * 1000 - offset; r.firstByte ??= r.lastByte; } });
@@ -132,14 +140,21 @@ try {
           await page.waitForFunction(() => (window as Window & { navigationMeasurement?: { frameAfterReady: number } }).navigationMeasurement?.frameAfterReady);
           // Capture any stream tail; this delay is not included in the usability milestone.
           await page.waitForTimeout(500);
-          const state = await page.evaluate(() => (window as Window & { navigationMeasurement?: Omit<Sample, "dataset" | "destination" | "mode" | "input" | "resources" | "firstPaint" | "scriptEvaluationMs"> }).navigationMeasurement);
+          const state = await page.evaluate(() => (window as Window & { navigationMeasurement?: Omit<Sample, "dataset" | "destination" | "mode" | "input" | "resources" | "firstPaint" | "scriptEvaluationMs" | "provider"> }).navigationMeasurement);
           if (!state) throw new Error("Navigation instrumentation was lost");
           const complete = new Promise<void>((resolve) => cdp.once("Tracing.tracingComplete", () => resolve()));
           await cdp.send("Tracing.end");
           await complete;
           const relevant = trace.filter((e) => e.ts / 1000 - offset >= state.domReady);
           const firstPaint = relevant.filter((e) => e.name === "Paint").sort((a, b) => a.ts - b.ts)[0];
-          samples.push({ ...state, dataset, destination: destination.label, mode, input, resources: [...resources.values()], firstPaint: firstPaint ? firstPaint.ts / 1000 - offset : null, scriptEvaluationMs: trace.filter((e) => e.name === "EvaluateScript").reduce((sum, e) => sum + (e.dur ?? 0) / 1000, 0) });
+          const destinationRequests = [...resources.values()].filter(resource => resource.destinationRsc && !resource.prefetch);
+          let provider: Sample["provider"] = null;
+          if (correlateProvider) {
+            if (destinationRequests.length !== 1) throw new Error("Expected one attributable destination RSC request");
+            provider = correlateProviderTimeline(await readProviderLog(), providerLogBoundary, destinationRequests[0].providerRequestId, destination.path);
+            if (!provider) throw new Error("Provider correlation missing; no zero-call claim made");
+          }
+          samples.push({ ...state, dataset, destination: destination.label, mode, input, resources: [...resources.values()], provider, firstPaint: firstPaint ? firstPaint.ts / 1000 - offset : null, scriptEvaluationMs: trace.filter((e) => e.name === "EvaluateScript").reduce((sum, e) => sum + (e.dur ?? 0) / 1000, 0) });
           console.log(`${dataset} ${destination.label} ${input} ${mode} ${i + 1}/${count}: ${Math.round(state.frameAfterReady - state.click)} ms`);
           await context.close();
         }
@@ -154,7 +169,20 @@ try {
 
 const groups = selectedDestinations.flatMap((d) => ["sidebar", "search"].flatMap((input) => modes.map((mode) => {
   const group = samples.filter((s) => s.destination === d.label && s.input === input && s.mode === mode);
-  return { destination: d.label, input, mode, feedbackMs: summarize(group.map((s) => s.feedback - s.click)), shellFeedbackMs: summarize(group.filter(s => s.shellFeedback > 0).map(s => s.shellFeedback - s.click)), shellSamples: group.filter(s => s.shellFeedback > 0).length, usableFrameMs: summarize(group.map((s) => s.frameAfterReady - s.click)) };
+  const destinationRequests = (sample: Sample) => sample.resources.filter(resource => resource.destinationRsc && !resource.prefetch);
+  return {
+    destination: d.label, input, mode,
+    feedbackMs: summarize(group.map(s => s.feedback - s.click)),
+    shellFeedbackMs: summarize(group.filter(s => s.shellFeedback > 0).map(s => s.shellFeedback - s.click)),
+    shellSamples: group.filter(s => s.shellFeedback > 0).length,
+    usableFrameMs: summarize(group.map(s => s.frameAfterReady - s.click)),
+    readyToFrameMs: summarize(group.map(s => s.frameAfterReady - s.domReady)),
+    providerSamples: group.filter(s => s.provider !== null).length,
+    providerSpanMs: summarize(group.flatMap(s => s.provider?.spanMs == null ? [] : [s.provider.spanMs])),
+    providerErrors: group.reduce((total, s) => total + (s.provider?.errors ?? 0), 0),
+    destinationRscCounts: summarize(group.map(s => destinationRequests(s).length)),
+    headersToReadyMs: summarize(group.flatMap(s => destinationRequests(s).flatMap(resource => resource.headers === undefined ? [] : [s.domReady - resource.headers]))),
+  };
 })));
 await mkdir("test-results/performance", { recursive: true });
 const environment = new URL(origin).hostname === "localhost" ? "local" : "hosted";

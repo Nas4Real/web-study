@@ -25,6 +25,13 @@ See `docs/performance/WORKSPACE-LOADING-2026-10-10.md` for limits and reproducti
 The boundary does not cover the initial-layout auth wait; all-route and hosted
 gates remain pending. Nothing is deployed.
 
+An 80-sample candidate/control/control/candidate correlated local repeat shows
+nearly equal content medians, close provider/content tracking, identical four
+provider calls per navigation and no long tasks. Candidate content p95 remains
+worse, so this does not close no-regression or establish faster data. The
+boundary is restored exactly after control builds; diagnostic changes are
+local-only. See `docs/performance/LOADING-CONTENT-ATTRIBUTION-2026-10-10.md`.
+
 ## User outcome
 
 As a user changing screens, I want immediate destination feedback while its

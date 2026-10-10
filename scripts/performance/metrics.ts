@@ -60,3 +60,13 @@ export function providerTimeline(input: ProviderCall[]) {
     calls: sorted.map(call => ({ kind: call.kind, startMs: call.start - start!, endMs: call.end - start!, status: call.status, failed: call.failed })),
   };
 }
+
+// Callers capture the character boundary before a run; IDs reset on restart.
+export function correlateProviderTimeline(log: string, boundary: number, requestId: string | undefined, route: string) {
+  if (!Number.isInteger(boundary) || boundary < 0 || boundary > log.length) throw new Error("Provider log boundary changed");
+  if (!requestId || !/^\d+$/.test(requestId)) return null;
+  const rows = log.slice(boundary).trim().split("\n").filter(Boolean)
+    .map(line => JSON.parse(line) as ProviderCall & { requestId: string | null; route: string });
+  const calls = rows.filter(row => row.requestId === requestId && row.route === route);
+  return calls.length ? providerTimeline(calls) : null;
+}

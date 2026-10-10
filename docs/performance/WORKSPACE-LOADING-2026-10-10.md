@@ -7,6 +7,10 @@ The main area shows a destination-labelled skeleton while page data is pending;
 the reused shell remains interactive. This is not an actual-content speedup.
 Content non-regression, all-route coverage and hosted verification remain open.
 
+Follow-up: an [80-sample correlated repeat](LOADING-CONTENT-ATTRIBUTION-2026-10-10.md)
+finds inconsistent median differences and close provider/content tracking in both
+variants. Candidate content tails remain worse; no broad no-regression claim.
+
 The boundary uses existing tokens, has no animation or fake page controls, and
 sits below the authenticated workspace layout. It does not cover that layout's
 initial authentication/profile wait. Default Link prefetch is unchanged.

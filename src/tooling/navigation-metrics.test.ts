@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { summarize, classifyResource, classifyProvider, providerTimeline } from "../../scripts/performance/metrics";
+import { summarize, classifyResource, classifyProvider, providerTimeline, correlateProviderTimeline } from "../../scripts/performance/metrics";
 
 describe("navigation report boundaries", () => {
   it("uses nearest-rank p95 without mutating the input", () => {
@@ -37,5 +37,24 @@ describe("navigation report boundaries", () => {
     expect(providerTimeline([])).toEqual({ counts: {}, busyMs: null, spanMs: null, errors: 0, calls: [] });
     expect(() => providerTimeline([{ kind: "private-table", start: 0, end: 1, status: 200, failed: false }])).toThrow();
     expect(() => providerTimeline([{ kind: "profile", start: 2, end: 1, status: 200, failed: false }])).toThrow();
+  });
+  it("excludes old log rows with colliding request IDs and other route/request rows", () => {
+    const row = { requestId: "7", route: "/calendar", kind: "profile", start: 10, end: 30, status: 200, failed: false };
+    const oldLog = JSON.stringify({ ...row, end: 1000 }) + "\n";
+    const freshLog = [row, { ...row, requestId: "8" }, { ...row, route: "/tasks" }].map(value => JSON.stringify(value)).join("\n");
+    const result = correlateProviderTimeline(oldLog + freshLog, oldLog.length, "7", "/calendar");
+    expect(result?.counts).toEqual({ profile: 1 });
+    expect(result?.spanMs).toBe(20);
+  });
+  it("keeps absent correlation unknown instead of recording zero provider calls", () => {
+    expect(correlateProviderTimeline("", 0, "7", "/calendar")).toBeNull();
+    expect(correlateProviderTimeline("", 0, undefined, "/calendar")).toBeNull();
+    expect(() => correlateProviderTimeline("", 1, "7", "/calendar")).toThrow();
+  });
+  it("projects correlation into sanitized timings without retaining extra log fields", () => {
+    const log = JSON.stringify({ requestId: "7", route: "/calendar", kind: "subject", start: 10, end: 30, status: 200, failed: false, privateValue: "do-not-output" });
+    const result = correlateProviderTimeline(log, 0, "7", "/calendar");
+    expect(JSON.stringify(result)).not.toContain("do-not-output");
+    expect(JSON.stringify(result)).not.toContain("requestId");
   });
 });

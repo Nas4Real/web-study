@@ -89,6 +89,14 @@ milestone and `shellSamples`; older reports without it did not measure it.
 The shell milestone is separate from existing pending feedback and content.
 Default Link prefetch remains unchanged; actual-content non-regression is open.
 
+The [correlated content repeat](LOADING-CONTENT-ATTRIBUTION-2026-10-10.md)
+adds optional `PERF_CORRELATE_PROVIDER=true` for local production only. Start
+the traced server first. It excludes pre-run log rows and fails incomplete when
+a single destination RSC or its completed provider attribution is missing.
+Reports separate provider span, headers-to-readiness and readiness-to-frame;
+none is an exact client-rendering measurement. Both variants must use the same
+diagnostic patch. Actual-content and hosted gates remain open after the repeat.
+
 ## Interaction checks
 
 Run `profile-interactions.ts` with the same ignored credential environment after
