@@ -30,3 +30,33 @@ export function classifyProvider(path: string) {
   if (["chapters", "folders", "files", "storage_usage"].includes(table)) return "document";
   return "other";
 }
+
+type ProviderCall = { kind: string; start: number; end: number; status: number | null; failed: boolean };
+
+// Numeric/category projection only; union time is not the sum of overlapping calls.
+export function providerTimeline(input: ProviderCall[]) {
+  const kinds = ["auth-user", "auth-other", "profile", "subject", "task", "calendar", "document", "other"];
+  for (const call of input) {
+    if (!kinds.includes(call.kind) || !Number.isFinite(call.start) || !Number.isFinite(call.end) || call.end < call.start ||
+      (call.status !== null && (!Number.isInteger(call.status) || call.status < 100 || call.status > 599)) || typeof call.failed !== "boolean") {
+      throw new Error("Invalid sanitized provider timing");
+    }
+  }
+  const sorted = [...input].sort((a, b) => a.start - b.start);
+  const counts: Record<string, number> = {};
+  const start = sorted[0]?.start;
+  let busyMs = 0;
+  let coveredUntil = start ?? 0;
+  for (const call of sorted) {
+    counts[call.kind] = (counts[call.kind] ?? 0) + 1;
+    busyMs += Math.max(0, call.end - Math.max(call.start, coveredUntil));
+    coveredUntil = Math.max(coveredUntil, call.end);
+  }
+  return {
+    counts,
+    busyMs: start === undefined ? null : busyMs,
+    spanMs: start === undefined ? null : coveredUntil - start,
+    errors: sorted.filter(call => call.failed || (call.status !== null && call.status >= 400)).length,
+    calls: sorted.map(call => ({ kind: call.kind, startMs: call.start - start!, endMs: call.end - start!, status: call.status, failed: call.failed })),
+  };
+}

@@ -139,6 +139,10 @@ commit and environment metadata. Do not enable development auth in production.
 - [x] 2026-10-10: Captured 80 real-auth interaction samples. Read-only Session
   Details close sends a same-route non-prefetch GET, unlike Task Details close.
   Assertion timings are upper bounds, not exact React/paint measurements.
+- [x] 2026-10-10: Captured 100 local production initial-entry samples across both
+  accounts. Every correlated document has 1 profile and 1 auth-user call; no
+  duplicate-read evidence. All 20 Calendar samples serialize subject before
+  occurrence calls; subject median 79–96ms. See initial-provider report.
 - [x] 2026-10-10: Early independent 09-04 close-handler candidate: local browser
   regression failed with one route GET before and passes with zero after.
   Calendar/Dashboard read-only close restores focus; edit/delete still reconcile.
@@ -183,7 +187,10 @@ commit and environment metadata. Do not enable development auth in production.
 - Deployment inspection confirms Vercel `iad1`; Supabase Infrastructure confirms
   `eu-central-1`. Co-location is a hypothesis, not a default infrastructure change.
 - Local sibling navigation traces show one profile read and no auth-user call
-  per observed Tasks/Calendar RSC request. Initial entry needs separate evidence.
+  per observed Tasks/Calendar RSC request. Initial-entry follow-up now records
+  one profile and one auth-user call across all five routes/both accounts.
+  Defer speculative identity/profile memoization; first test Calendar independent
+  reads in 09-02. Local instrumentation is not hosted-provider attribution.
 
 ## Completion evidence
 

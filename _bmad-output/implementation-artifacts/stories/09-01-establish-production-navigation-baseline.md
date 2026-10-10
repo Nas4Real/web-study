@@ -75,3 +75,11 @@ window; headers-to-readiness must not be labeled client rendering time.
 Empty/populated runs occurred at different times and do not isolate dataset cost.
 Initial-entry/provider attribution, precise interaction timing and session-mutation
 coverage remain open; keep this story in-progress.
+
+Local initial-entry attribution is complete: 100 production-build samples, ten
+per route/dataset. Each document made one profile and one auth-user read; no
+duplicates observed. All 20 Calendar entries waited for subjects before starting
+occurrence calls; subject duration median 79–96ms. See
+`docs/performance/INITIAL-PROVIDER-2026-10-10.md` for counts/timings and local
+instrumentation/automation limits. No application change is bundled here.
+Precise interaction/session-mutation and hosted-provider evidence remain pending.

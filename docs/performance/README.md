@@ -98,11 +98,26 @@ stay unknown, and a GET count alone does not prove a forced router refresh.
 No bodies, raw URLs, query strings, cookies or authorization headers are saved.
 Screenshots contain only the dedicated synthetic workspace and remain ignored.
 
+## Initial-entry provider attribution
+
+With local production and `PERF_PROVIDER_TIMING=true`, run sequentially for
+`PERF_DATASET=empty` and `populated` (ten samples per page by default):
+
+```text
+rtk proxy node --env-file=.env.performance.local scripts/performance/profile-initial-entry.ts
+```
+
+Finish builds/tests first; do not restart the traced server during a run. The
+read-only harness is local-only with genuine test-account auth. It correlates
+document IDs, excludes old log rows/prefetches, and fails incomplete when traces
+are missing. Busy time is interval union; readiness is an observed upper bound,
+not exact paint/React/INP. See [initial provider report](INITIAL-PROVIDER-2026-10-10.md).
+
 ## Pending to finish 09-01
 
 Empty and populated isolated hosted navigation repeats are complete (200 samples
 each). Calendar date/view and task/detail flows have a supplementary 80-sample
-assertion-timing report, not exact interaction timing. Initial-entry/provider
-attribution, precise interaction readiness/React timing and session-mutation
-coverage remain pending. Regions are recorded; hosted provider call counts remain
+assertion-timing report, not exact interaction timing. Local initial-entry/provider
+attribution is complete (100 samples). Precise interaction readiness/React timing
+and session-mutation coverage remain pending. Regions are recorded; hosted provider call counts remain
 unavailable. Do not mark 09-01 complete based on sidebar timing alone.
