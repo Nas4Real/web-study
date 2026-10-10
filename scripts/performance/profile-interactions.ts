@@ -7,6 +7,8 @@ import { classifyResource, summarize } from "./metrics.ts";
 import { installDetailProbe, type DetailProbeCriteria, type DetailProbeResult } from "./interaction-probe.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { correlateDetailProviders } from "./detail-provider-metrics.ts";
+// @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
+import { detailVisitKinds } from "./detail-visit-metrics.ts";
 
 const origin = process.env.PERF_ORIGIN ?? "https://web-study-pearl.vercel.app";
 if (!["https://web-study-pearl.vercel.app", "http://localhost:3100"].includes(origin)) throw new Error("Unapproved profiling origin");
@@ -17,6 +19,8 @@ const count = Number(process.env.PERF_SAMPLES ?? 10);
 if (!Number.isInteger(count) || count < 1 || count > 30) throw new Error("Invalid sample count");
 const detailsOnly = process.env.PERF_DETAILS_ONLY === "1";
 if (process.env.PERF_DETAILS_ONLY && !["0", "1"].includes(process.env.PERF_DETAILS_ONLY)) throw new Error("Invalid detail-only mode");
+const detailVisits = detailVisitKinds(detailsOnly, process.env.PERF_DETAIL_REOPEN);
+const reopenDetails = detailVisits.includes("warm");
 const correlateDetails = process.env.PERF_CORRELATE_PROVIDER === "true";
 if (process.env.PERF_CORRELATE_PROVIDER && !["true", "false"].includes(process.env.PERF_CORRELATE_PROVIDER)) throw new Error("Invalid provider correlation mode");
 if (correlateDetails && (!detailsOnly || origin !== "http://localhost:3100")) throw new Error("Detail provider correlation requires local read-only mode");
@@ -33,6 +37,7 @@ await mkdir("test-results/performance", { recursive: true });
 let currentScenario = "login";
 let complete = false;
 let signedIn = false;
+let failure: "timeout" | "measurement" | null = null;
 
 // Timing is an assertion-observed upper bound, not an exact DOM commit or paint.
 async function measure(scenario: string, action: () => Promise<void>, ready: () => Promise<void>, probeCriteria?: DetailProbeCriteria) {
@@ -97,6 +102,12 @@ async function measure(scenario: string, action: () => Promise<void>, ready: () 
     await page.waitForTimeout(1000);
     let provider: Sample["provider"] = null;
     if (traceOpen) {
+      // Cached DOM can be ready before revalidation ends. Do not truncate that
+      // provider timeline or add its completion wait to the readiness metric.
+      currentScenario = `${scenario}-provider-completion`;
+      // Next may cancel a consumed stream; successful body completion is not
+      // required to read the action ID and match completed provider events.
+      await expect.poll(() => [...requests.values()].filter(entry => entry.method === "POST" && entry.currentRoute && entry.headersMs !== undefined).length, { timeout: 30000 }).toBe(1);
       const posts = [...requests.values()].filter(entry => entry.method === "POST" && entry.currentRoute);
       const ids = await Promise.all(posts.map(entry => correlationIds.get(entry) ?? Promise.resolve(null)));
       provider = correlateDetailProviders(await readProviderLog(), logBoundary, ids, sourceRoute);
@@ -118,6 +129,7 @@ try {
   for (let i = 0; i < count; i++) {
     const view = (name: string) => page.getByRole("button", { name, exact: true });
     if (!detailsOnly) {
+      currentScenario = "calendar-view-setup";
       await page.goto(`${origin}/calendar?date=2026-10-10&view=day`);
       await expect(view("Day")).toHaveAttribute("aria-pressed", "true");
       await measure("calendar-view-week", () => view("Week").click(), async () => {
@@ -130,28 +142,37 @@ try {
         await expect(page.getByRole("button", { name: "Open Performance session 2", exact: true })).toHaveCount(0);
       });
     }
+    currentScenario = "session-initial-navigation";
     await page.goto(`${origin}/calendar?date=2026-10-10&view=day`);
     const session = page.getByRole("dialog", { name: "Performance session 1", exact: true });
     const sessionSelector = '[role="dialog"][aria-labelledby="session-detail-title"]';
-    await measure("session-detail-open", () => view("Open Performance session 1").click(), () => expect(session.getByRole("button", { name: "Edit", exact: true })).toBeEnabled(), { selector: sessionSelector, buttonText: "Edit" });
-    await measure("session-read-only-close", () => session.getByRole("button", { name: "Close", exact: true }).click(), () => expect(session).toBeHidden(), { selector: sessionSelector, absent: true });
+    for (const visit of detailVisits) {
+      const prefix = visit === "warm" ? "session-warm" : "session";
+      await measure(`${prefix}-detail-open`, () => view("Open Performance session 1").click(), () => expect(session.getByRole("button", { name: "Edit", exact: true })).toBeEnabled(), { selector: sessionSelector, buttonText: "Edit" });
+      await measure(`${prefix}-read-only-close`, () => session.getByRole("button", { name: "Close", exact: true }).click(), () => expect(session).toBeHidden(), { selector: sessionSelector, absent: true });
+    }
 
+    currentScenario = "task-initial-navigation";
     await page.goto(`${origin}/tasks`);
     const task = page.getByRole("dialog", { name: "Performance task 1", exact: true });
     const taskSelector = '[role="dialog"][aria-labelledby="task-detail-title"]';
-    await measure("task-detail-open", () => view("Open Performance task 1").click(), () => expect(task.getByText("Synthetic profiling data", { exact: true })).toBeVisible(), { selector: taskSelector, buttonText: "Complete" });
-    await expect(task.getByRole("button", { name: "Complete", exact: true })).toBeEnabled();
-    if (!detailsOnly) {
-      await measure("task-complete-confirmed", () => task.getByRole("button", { name: "Complete", exact: true }).click(), () => expect(task.getByRole("button", { name: "Reopen", exact: true })).toBeEnabled());
-      await measure("task-reopen-confirmed", () => task.getByRole("button", { name: "Reopen", exact: true }).click(), () => expect(task.getByRole("button", { name: "Complete", exact: true })).toBeEnabled());
+    for (const visit of detailVisits) {
+      const prefix = visit === "warm" ? "task-warm" : "task";
+      await measure(`${prefix}-detail-open`, () => view("Open Performance task 1").click(), () => expect(task.getByText("Synthetic profiling data", { exact: true })).toBeVisible(), { selector: taskSelector, buttonText: "Complete" });
+      await expect(task.getByRole("button", { name: "Complete", exact: true })).toBeEnabled();
+      if (!detailsOnly) {
+        await measure("task-complete-confirmed", () => task.getByRole("button", { name: "Complete", exact: true }).click(), () => expect(task.getByRole("button", { name: "Reopen", exact: true })).toBeEnabled());
+        await measure("task-reopen-confirmed", () => task.getByRole("button", { name: "Reopen", exact: true }).click(), () => expect(task.getByRole("button", { name: "Complete", exact: true })).toBeEnabled());
+      }
+      await measure(`${prefix}-read-only-close`, () => task.getByRole("button", { name: "Close dialog", exact: true }).click(), () => expect(task).toBeHidden(), { selector: taskSelector, absent: true });
     }
-    await measure("task-read-only-close", () => task.getByRole("button", { name: "Close dialog", exact: true }).click(), () => expect(task).toBeHidden(), { selector: taskSelector, absent: true });
     if (i === 0) await page.screenshot({ path: "test-results/performance/synthetic-tasks.png" });
   }
   complete = true;
-} catch {
+} catch (cause) {
+  failure = cause instanceof Error && cause.name === "TimeoutError" ? "timeout" : "measurement";
   // No error payload, page content, user identifiers or credentials in output.
-  console.log(`Interaction profiling incomplete at ${currentScenario}. ${detailsOnly ? "Detail-only mode does not mutate study data." : "Synthetic task may need reopening if a mutation failed."}`);
+  console.log(`Interaction profiling incomplete at ${currentScenario} (${failure}). ${detailsOnly ? "Detail-only mode does not mutate study data." : "Synthetic task may need reopening if a mutation failed."}`);
   if (signedIn && ["/tasks", "/calendar"].includes(new URL(page.url()).pathname)) {
     await page.screenshot({ path: "test-results/performance/synthetic-interaction-failure.png" }).catch(() => {});
   }
@@ -166,5 +187,5 @@ const groups = [...new Set(samples.map(s => s.scenario))].map(scenario => {
   return { scenario, providerSamples: providers.length, providerCounts: Object.fromEntries(kinds.map(kind => [kind, summarize(providers.map(provider => provider.counts[kind] ?? 0))])), providerSpanMs: summarize(providers.flatMap(provider => provider.spanMs === null ? [] : [provider.spanMs])), providerErrors: providers.reduce((sum, provider) => sum + provider.errors, 0), observedReadyFrameMs: summarize(group.map(s => s.observedReadyFrameMs)), sampledReadyMs: summarize(group.flatMap(s => s.sampledReadyMs === null ? [] : [s.sampledReadyMs])), sampledNextFrameMs: summarize(group.flatMap(s => s.sampledNextFrameMs === null ? [] : [s.sampledNextFrameMs])), rscRequests: summarize(group.map(s => s.network.filter(r => r.kind === "rsc").length)), currentRouteNonPrefetchRsc: summarize(group.map(s => s.network.filter(r => r.kind === "rsc" && r.currentRoute && r.prefetch === false).length)), unknownPrefetchFlags: summarize(group.map(s => s.network.filter(r => r.kind === "rsc" && r.prefetch === null).length)), posts: summarize(group.map(s => s.network.filter(r => r.kind === "post").length)) };
 });
 const environment = origin.includes("localhost") ? "local" : "hosted";
-await writeFile(`test-results/performance/${environment}-interactions${detailsOnly ? "-details" : ""}${correlateDetails ? "-providers" : ""}.json`, JSON.stringify({ version: 3, complete, detailsOnly, correlateDetails, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
+await writeFile(`test-results/performance/${environment}-interactions${detailsOnly ? "-details" : ""}${correlateDetails ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 4, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, reopenDetails, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
 if (!complete) process.exitCode = 1;

@@ -153,6 +153,14 @@ close null/empty provider fields are not zero-work evidence. All 20 opens in the
 40-sample run have sequential provider reads. Same-page warm reopen, mutation
 freshness and hosted attribution remain separate follow-ups, not measured gains.
 
+The [same-page reopen repeat](DETAIL-WARM-REOPEN-2026-10-10.md) adds
+`PERF_DETAIL_REOPEN=1` to read-only mode (80 samples with initial/warm visits and
+their closes). Warm DOM readiness is 11–14ms median, following frame 83–90ms;
+each warm open still performs one fresh POST. Opens now await response/action
+attribution separately from readiness rather than truncating slow background
+reads or requiring a successfully completed Next stream. No TTL change in this
+slice: cached readiness is not freshly revalidated data or exact paint.
+
 The [session cache freshness fix](SESSION-CACHE-FRESHNESS-2026-10-10.md) removes
 only an affected series's cached details on successful writes. Four delayed-read
 checks pass; read-only cache reuse and existing page reconciliation stay intact.

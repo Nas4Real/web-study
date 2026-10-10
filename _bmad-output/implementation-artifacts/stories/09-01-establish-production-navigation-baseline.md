@@ -106,3 +106,15 @@ conditions and limits. App source is unchanged, so do not claim a speedup betwee
 batches. Next: measure same-page warm detail reopen and freshness before cache
 changes, or test a scoped owner-aware round-trip reduction. Effective recurrence
 and subject dependencies must remain correct. Keep this story in-progress.
+
+The same-page warm follow-up completes 80 local production read-only samples:
+ten per initial/warm task/session open and close. All 40 opens have exact action
+attribution; warm sampled-ready medians are 10.7ms session / 13.75ms task, while
+following-frame medians are 90/83ms. Each warm open still makes one fresh POST
+(four/three provider calls); cached readiness is not revalidated data or paint.
+Closes capture zero RSC/POST. Three interrupted attempts are archived separately,
+including a 38.1s profile outlier and previous attribution-window/stream limits.
+Five new visit-policy tests pass red→green; full units/typecheck/build pass and
+lint's existing warning remains. No TTL/shared-cache change or speedup claim.
+See `docs/performance/DETAIL-WARM-REOPEN-2026-10-10.md`; prioritize cold-open
+round trips, leaving precise mutation/React/hosted attribution gates open.

@@ -124,6 +124,13 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-10: Same-page warm detail repeat complete: 80 isolated local
+  read-only samples; all 40 opens attributed. Warm session/task sampled-ready
+  medians 10.7/13.75ms, following frame 90/83ms, one fresh POST and four/three
+  provider reads each. No TTL/shared-cache change; cached DOM is not fresh data
+  or exact paint. Three interrupted attempts preserved separately. Five policy
+  tests red→green, full units/typecheck/build pass, existing lint warning. See
+  detail-warm-reopen report; cold-open/mutation/hosted/React gates remain open.
 - [x] 2026-10-10: Narrow 09-04 session freshness defect reproduced on Calendar
   and Dashboard: reopen after an occurrence edit repaints pre-write room data
   while the new detail POST is held. Both regressions fail before/pass after
