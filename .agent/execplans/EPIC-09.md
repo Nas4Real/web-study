@@ -124,6 +124,13 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-10: Detail-provider diagnostic slice: 40 isolated local real-auth
+  read-only samples; 20/20 opens attributed to exact fresh POSTs. Session/task
+  ready medians 489/405ms, provider spans 456/356ms; four/three sequential calls
+  with no overlap, correlations 0.981/0.979. No duplicate profile-read evidence.
+  Six red→green tests and full units/typecheck/build pass; existing lint warning.
+  No app change/speedup claim. Warm-reopen/freshness, session mutations, React/paint
+  and hosted attribution remain open. See detail-provider report.
 - [x] 2026-10-10: Plan/spec/epic and seven stories prepared; sprint index extended.
 - [ ] 09-01 production baseline and reproducible report.
 - [x] 2026-10-10: First 09-01 slice: isolated real-auth accounts, sanitized browser
@@ -227,6 +234,15 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-10: Attribute the remaining detail-open wait before any application
+  change. Extend only the local read-only profiler with exact single-POST
+  provider correlation. Exclude earlier log rows and reject missing/ambiguous
+  IDs/events; never infer zero provider work from missing evidence. Capture ten
+  samples per open/close with the unchanged production app, no concurrent tests
+  or builds, and report provider span/counts separately from sampled DOM time.
+  Inspect the matching service/repository sequence for ranked hypotheses. Keep
+  warm-reopen/cache and session-mutation work separate until measured.
 
 - 2026-10-10: Continue 09-01 with a diagnostic-only detail-readiness probe.
   Existing assertion timing remains an upper bound; add actual click capture,

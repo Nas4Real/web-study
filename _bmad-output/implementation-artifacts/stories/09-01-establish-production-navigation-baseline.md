@@ -94,3 +94,15 @@ measurement precision, not application speed. Four red→green probe tests, full
 units/typecheck/build and lint (existing warning) pass. See
 `docs/performance/DETAIL-FRAMES-2026-10-10.md` for boundaries/overhead; React/paint,
 session mutations and hosted provider attribution are still incomplete.
+
+A second 40-sample local read-only run correlates all 20 detail opens with one
+exact fresh POST/provider timeline. Session/task sampled-ready medians are
+489/405ms, provider-span medians 456/356ms; four/three sequential reads with no
+overlap and zero provider errors. Close remains 10–11ms median with zero captured
+RSC/POST; close provider work is not attributed. Six correlation tests pass
+red→green; full units/typecheck/build pass and lint's existing warning remains.
+See `docs/performance/DETAIL-PROVIDERS-2026-10-10.md` for source dependencies,
+conditions and limits. App source is unchanged, so do not claim a speedup between
+batches. Next: measure same-page warm detail reopen and freshness before cache
+changes, or test a scoped owner-aware round-trip reduction. Effective recurrence
+and subject dependencies must remain correct. Keep this story in-progress.

@@ -145,6 +145,14 @@ the older assertion-observed upper bound separately. Default mode still runs
 all eight original scenarios; unprobed flows do not acquire invented timings.
 This is DOM/frame sampling, not exact React commit, paint, INP or hydration.
 
+The [detail provider follow-up](DETAIL-PROVIDERS-2026-10-10.md) adds optional
+`PERF_CORRELATE_PROVIDER=true` to local read-only detail mode. Version-3 reports
+require one exact fresh action attribution per open and retain sanitized provider
+spans/counts separately from browser readiness. Missing attribution fails the run;
+close null/empty provider fields are not zero-work evidence. All 20 opens in the
+40-sample run have sequential provider reads. Same-page warm reopen, mutation
+freshness and hosted attribution remain separate follow-ups, not measured gains.
+
 
 With local production and `PERF_PROVIDER_TIMING=true`, run sequentially for
 `PERF_DATASET=empty` and `populated` (ten samples per page by default):
@@ -165,7 +173,8 @@ Empty and populated isolated hosted navigation repeats are complete (200 samples
 each). Calendar date/view and task/detail flows have a supplementary 80-sample
 assertion-timing report, not exact interaction timing. Local initial-entry/provider
 attribution is complete (100 samples). A 40-sample read-only local detail run now
-separates frame-sampled readiness from assertion polling. Broader precise
+separates frame-sampled readiness from assertion polling; a second 40-sample run
+attributes all opens to sequential provider calls. Broader precise
 interaction/React timing and session-mutation coverage remain pending.
 Regions are recorded; hosted provider call counts remain
 unavailable. Do not mark 09-01 complete based on sidebar timing alone.
