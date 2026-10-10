@@ -42,3 +42,31 @@ Use task/session detail and mutation browser tests with delayed/out-of-order
 responses. Test sign-out and second-user sign-in before stale content paints.
 Measure close/reopen/update request counts and timing. Run focused cache/state
 tests, relevant visuals, lint, typecheck, unit suite and build.
+
+## Early independent experiment — 2026-10-10
+
+The ExecPlan permits a narrow close-handler slice while the full 09-01 baseline
+remains open. Ten hosted Session Details closes each produced a current-route
+non-prefetch GET; source confirmed unconditional refresh on Calendar/Dashboard.
+The new browser regression failed with one route read before implementation.
+
+`SessionDetailsModal` now has separate required `onClose` and `onMutated`
+callbacks. Calendar/Dashboard dismiss without refreshing for read-only closes;
+edit/delete success still closes and refreshes. No visual styling, shared query
+cache, auth lifecycle, optimistic mutations or recurrence rules changed.
+
+The focused close/focus test passes with zero route reads on Calendar and
+Dashboard (before: one Calendar read, failing assertion). The combined session/
+calendar run passed 15 functional/Calendar visual tests, including immediate
+post-edit/delete reconciliation; Session Details at 320px failed on screenshot
+height (802px expected, 870px actual). Temporarily restoring all three application
+files to their pre-change contents reproduced the identical 21,670-pixel/height
+mismatch. The candidate was restored afterward. No baselines were updated.
+The candidate's independent 768px visual check also fails by the same additional
+68px document height (1026px expected, 1094px actual). The 1024px check remains
+pending; do not claim the visual suite passes. Full unit suite, typecheck, lint
+(one existing modal ref-cleanup warning), production build and diff check pass.
+The candidate is committed for review, not merged or deployed. The existing
+visual mismatch and remaining Epic 09 measurements still gate release.
+This experiment does not complete the whole story or bypass the cache lifecycle
+and release gates; its remaining work still depends on 09-03.

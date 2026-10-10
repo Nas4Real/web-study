@@ -14,8 +14,9 @@ function formatTime(value: string, timeZone: string) {
   return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone }).format(new Date(value));
 }
 
-export function SessionDetailsModal({ onClose, invokerFocusId, session, subjects, timeZone }: {
+export function SessionDetailsModal({ onClose, onMutated, invokerFocusId, session, subjects, timeZone }: {
   onClose: () => void;
+  onMutated: () => void;
   invokerFocusId?: string;
   session: CalendarOccurrenceDetailDTO;
   subjects: readonly Readonly<{ id: string; name: string }>[];
@@ -51,7 +52,7 @@ export function SessionDetailsModal({ onClose, invokerFocusId, session, subjects
   if (mode === "edit") {
     return <EditSessionModal
       onCancel={() => setMode(session.isRecurring ? "scope" : "detail")}
-      onSaved={onClose}
+      onSaved={onMutated}
       scope={scope}
       session={session}
       subjects={subjects}
@@ -61,7 +62,7 @@ export function SessionDetailsModal({ onClose, invokerFocusId, session, subjects
   if (mode === "delete") {
     return <DeleteSessionModal
       onCancel={() => returnToDetail("session-delete-button")}
-      onDeleted={onClose}
+      onDeleted={onMutated}
       onScopeChange={setScope}
       scope={scope}
       session={session}

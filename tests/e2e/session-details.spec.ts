@@ -3,6 +3,29 @@ import { hideNextDevTools } from "./visual-test-helpers";
 
 test.describe.configure({ mode: "serial" });
 
+test("read-only session closes do not refresh Calendar or Dashboard", async ({ page }) => {
+  for (const path of ["/calendar?e2eScope=session-close-read-only&date=2026-10-02&view=day", "/?e2eScope=session-close-dashboard"]) {
+    await page.goto(path);
+    const invoker = page.getByRole("button", { name: "Open Physics lecture", exact: true });
+    await invoker.click();
+    const dialog = page.getByRole("dialog", { name: "Physics lecture", exact: true });
+    await expect(dialog.getByRole("button", { name: "Edit", exact: true })).toBeEnabled();
+    const reads: string[] = [];
+    const listener = (request: import("@playwright/test").Request) => {
+      const url = new URL(request.url());
+      if (request.method() === "GET" && url.pathname === new URL(page.url()).pathname && url.searchParams.has("_rsc")) reads.push("route-read");
+    };
+    page.on("request", listener);
+    await dialog.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(dialog).toBeHidden();
+    await expect(invoker).toBeFocused();
+    // Negative network assertion needs an observation window after closing.
+    await page.waitForTimeout(1000);
+    page.off("request", listener);
+    expect(reads).toEqual([]);
+  }
+});
+
 async function openCalendarSession(page: Page, scope: string, date: string, view: "day" | "week" = "day") {
   await page.goto(`/calendar?e2eScope=${scope}&date=${date}&view=${view}`);
   const invoker = page.getByRole("button", { name: "Open Physics lecture", exact: true });
@@ -89,6 +112,9 @@ test("edits and deletes a one-time session without a recurring-scope prompt", as
   const editDialog = page.getByRole("dialog", { name: "Edit session", exact: true });
   await editDialog.getByLabel("Exam title", { exact: true }).fill("Updated physics midterm");
   await editDialog.getByRole("button", { name: "Save changes", exact: true }).click();
+  // Success still reconciles the underlying page without a manual reload.
+  await expect(page.getByRole("button", { name: "Open Updated physics midterm", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open Physics midterm", exact: true })).toHaveCount(0);
   await page.reload();
   await page.getByRole("button", { name: "Open Updated physics midterm", exact: true }).click();
   detail = page.getByRole("dialog", { name: "Updated physics midterm", exact: true });
@@ -97,6 +123,7 @@ test("edits and deletes a one-time session without a recurring-scope prompt", as
   await expect(deleteDialog.getByRole("radio")).toHaveCount(0);
   await deleteDialog.getByRole("button", { name: "Delete session", exact: true }).click();
   await expect(deleteDialog).toBeHidden();
+  await expect(page.getByRole("button", { name: "Open Updated physics midterm", exact: true })).toHaveCount(0);
   await page.reload();
   await expect(page.getByText("Updated physics midterm", { exact: true })).toHaveCount(0);
 });

@@ -51,6 +51,10 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
   function closeDetail() {
     setDialog(null);
     setSelectedOccurrence(null);
+  }
+
+  function finishSessionMutation() {
+    closeDetail();
     if (!data.fixture) router.refresh();
   }
 
@@ -86,6 +90,7 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
       {dialog === "detail" && session ? (
         <SessionDetailsModal
           onClose={closeDetail}
+          onMutated={finishSessionMutation}
           invokerFocusId={selectedOccurrence ? `session-open-${selectedOccurrence.seriesId}:${selectedOccurrence.originalStart}` : undefined}
           session={session}
           subjects={data.subjects}

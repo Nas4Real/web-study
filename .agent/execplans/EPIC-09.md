@@ -134,6 +134,13 @@ commit and environment metadata. Do not enable development auth in production.
 - [x] 2026-10-10: Captured 80 real-auth interaction samples. Read-only Session
   Details close sends a same-route non-prefetch GET, unlike Task Details close.
   Assertion timings are upper bounds, not exact React/paint measurements.
+- [x] 2026-10-10: Early independent 09-04 close-handler candidate: local browser
+  regression failed with one route GET before and passes with zero after.
+  Calendar/Dashboard read-only close restores focus; edit/delete still reconcile.
+- [ ] Investigate existing 320px Session Details screenshot-height mismatch
+  (802px expected vs 870px actual), reproduced identically on unchanged source.
+  The 768px candidate also differs by 68px height; 1024px remains pending.
+  Do not update baselines or claim the visual/release gate is green.
 - [ ] 09-02 request reads optimized and measured.
 - [ ] 09-03 navigation feedback/prefetch verified and measured.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
@@ -175,3 +182,9 @@ commit and environment metadata. Do not enable development auth in production.
 Planning and the first diagnostic tooling slice are complete. Story 09-01 is
 in progress; controlled baseline/interaction coverage, production improvements
 and release evidence remain pending. See `docs/performance/README.md`.
+
+The independent session-close candidate passes its red→green browser regression,
+15 relevant functional/Calendar checks, full units, typecheck, lint (existing
+warning), production build and diff check. Calendar/Dashboard close callbacks no
+longer refresh; mutation-success callbacks preserve refresh. No styling/auth/cache
+changes. Session visual gate remains open as recorded above; no release claim.
