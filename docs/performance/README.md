@@ -21,6 +21,7 @@ rtk proxy node --env-file=.env.performance.local scripts/performance/profile-nav
 
 Optional environment variables: `PERF_ORIGIN`, `PERF_DATASET=empty|populated`,
 `PERF_SAMPLES` (default 10), `PERF_DESTINATIONS` (comma-separated route labels),
+`PERF_MODES` (comma-separated `first-visit,warm`, defaults to both),
 and `PERF_DEPLOYED_COMMIT`. Prefer setting these in the ignored environment file.
 Use a single profiling process on an otherwise idle machine for comparison runs.
 Do not run builds or the test suite alongside a controlled baseline/candidate run.
@@ -72,6 +73,10 @@ Playwright replaces `test-results` when running browser tests. Archive compariso
 reports in ignored `.performance-artifacts/` before invoking it; never commit
 raw profiling artifacts or auth state. The Calendar parallel-read comparison
 uses this archive; see [experiment results](CALENDAR-PARALLEL-READS-2026-10-10.md).
+The narrow pending-feedback comparison also uses the archive; see
+[navigation feedback](NAVIGATION-FEEDBACK-2026-10-10.md). The profiler detects
+visible destination-specific shell/search pending status in addition to the
+existing active-link/content signals; it does not equate status with content.
 Older reports' working JSON files may already have been overwritten or cleared;
 their committed aggregates refer to the capture times recorded in those reports.
 Only sanitized aggregates are promoted into documentation using nearest-rank p95.

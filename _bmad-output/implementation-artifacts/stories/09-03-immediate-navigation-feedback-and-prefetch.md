@@ -1,9 +1,20 @@
 # Story 09-03: Immediate navigation feedback and prefetch
 
 Epic: epic-09
-Status: planned
+Status: in-progress
 Dependencies: 09-02
 Scope: medium; route loading boundary, shell/search and browser checks
+
+## Progress
+
+The narrow sidebar/search pending-feedback candidate is implemented. Stalled-read
+regressions fail before and pass after; completed visual baselines are unchanged.
+Two local production batches per variant/input (80 samples) show feedback p95
+above 500ms before and below 26ms after. Content tails vary/worsen in one batch,
+so content non-regression remains open. See
+`docs/performance/NAVIGATION-FEEDBACK-2026-10-10.md`.
+No workspace loading boundary or new prefetch behavior is implemented yet;
+initial-layout, all-route and hosted gates remain pending. Nothing is deployed.
 
 ## User outcome
 

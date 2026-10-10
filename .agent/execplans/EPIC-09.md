@@ -161,12 +161,28 @@ commit and environment metadata. Do not enable development auth in production.
   loader tests, full units/typecheck/build and 27 browser/visual checks pass.
   See Calendar comparison report; hosted/warm-navigation gains remain unverified.
 - [ ] 09-03 navigation feedback/prefetch verified and measured.
+- [x] 2026-10-10: Narrow pending-feedback candidate: Next link status and search
+  transition acknowledge Calendar navigation. Two 10-sample batches per input
+  and variant (80 local real-auth production samples) reduce feedback p95 from
+  >500ms to <26ms. One RSC request per sample remains. Content tail/non-regression
+  is unresolved; no actual-content speedup or hosted claim. All 33 focused
+  browser checks and unchanged visual baselines pass after replacing two flaky
+  network-idle waits with explicit UI readiness, retaining all assertions.
+  Loading boundary, initial-layout and production/hosted prefetch remain pending.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
 - [ ] 09-05 implement/defer verdict and required work complete.
 - [ ] 09-06 implement/defer verdict and required work complete.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-10: Start 09-03 with a narrow pending-feedback slice. Test withheld
+  RSC responses before changing shell/search. Use Next's link pending state and
+  a React transition for search rather than maintaining a second navigation
+  router. Add the lightweight workspace boundary separately, keeping initial
+  layout authentication outside it. Default Link prefetch remains unchanged;
+  production request-count and timing evidence are still required before closing
+  the story. Completed geometry must remain identical; no artificial delay.
 
 - User authorized the next narrow 09-02 Calendar parallel-read slice after the
   initial-provider findings. Full 09-01 remains open; this independent experiment

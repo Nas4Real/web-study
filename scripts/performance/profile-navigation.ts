@@ -25,6 +25,8 @@ const destinations = [
 const requestedDestinations = process.env.PERF_DESTINATIONS?.split(",");
 if (requestedDestinations?.some(label => !destinations.some(d => d.label === label))) throw new Error("Unknown destination");
 const selectedDestinations = requestedDestinations ? destinations.filter(d => requestedDestinations.includes(d.label)) : destinations;
+const modes = process.env.PERF_MODES?.split(",") ?? ["first-visit", "warm"];
+if (modes.some(mode => !["first-visit", "warm"].includes(mode))) throw new Error("Unknown navigation mode");
 const browser = await chromium.launch();
 const login = await browser.newContext();
 const loginPage = await login.newPage();
@@ -63,7 +65,7 @@ async function navigate(page: Page, destination: typeof destinations[number], in
 try {
   for (const destination of selectedDestinations) {
     for (const input of ["sidebar", "search"]) {
-      for (const mode of ["first-visit", "warm"]) {
+      for (const mode of modes) {
         for (let i = 0; i < count; i++) {
           // The approved sidebar exposes search only in the mobile header.
           const viewport = input === "search" ? { width: 375, height: 812 } : { width: 1440, height: 900 };
@@ -104,13 +106,16 @@ try {
             for (const e of value) if (["Paint", "EvaluateScript", "FunctionCall"].includes(e.name)) trace.push({ name: e.name, ts: Number(e.ts), dur: Number(e.dur ?? 0) });
           });
           await cdp.send("Tracing.start", { categories: "devtools.timeline", transferMode: "ReportEvents" });
-          await page.evaluate(({ path, ready }) => {
+          await page.evaluate(({ path, ready, label }) => {
             const state = { click: 0, feedback: 0, domReady: 0, frameAfterReady: 0, longTasks: [] as { start: number; duration: number }[] };
             Object.assign(window, { navigationMeasurement: state });
             new PerformanceObserver((list) => { for (const e of list.getEntries()) state.longTasks.push({ start: e.startTime, duration: e.duration }); }).observe({ type: "longtask" });
             const inspect = () => {
               const time = performance.now();
-              if (!state.feedback && (document.querySelector(`nav a[aria-current="page"][href="${path}"]`) || document.querySelector('main [role="status"]') || (location.pathname === path && document.querySelector(ready)))) state.feedback = time;
+              const pendingDestination = [...document.querySelectorAll('[role="status"]')].some(element =>
+                element.textContent?.includes(`Loading ${label}`) && element.getBoundingClientRect().width > 0,
+              );
+              if (!state.feedback && (pendingDestination || document.querySelector(`nav a[aria-current="page"][href="${path}"]`) || document.querySelector('main [role="status"]') || (location.pathname === path && document.querySelector(ready)))) state.feedback = time;
               if (!state.domReady && location.pathname === path && document.querySelector(ready)) {
                 state.domReady = time;
                 requestAnimationFrame(() => requestAnimationFrame(() => { state.frameAfterReady = performance.now(); }));
@@ -120,7 +125,7 @@ try {
             const start = () => { if (!state.click) { state.click = performance.now(); requestAnimationFrame(inspect); } };
             document.addEventListener("click", start, { once: true, capture: true });
             document.addEventListener("keydown", (e) => { if (e.key === "Enter") start(); }, { once: true, capture: true });
-          }, { path: destination.path, ready: destination.ready });
+          }, { path: destination.path, ready: destination.ready, label: destination.label });
           if (input === "search") await page.getByRole("combobox", { name: "Search Web Study navigation" }).first().press("Enter");
           else await page.locator(`nav a[href="${destination.path}"]`).filter({ visible: true }).first().click();
           await page.waitForFunction(() => (window as Window & { navigationMeasurement?: { frameAfterReady: number } }).navigationMeasurement?.frameAfterReady);
@@ -146,7 +151,7 @@ try {
   await browser.close();
 }
 
-const groups = selectedDestinations.flatMap((d) => ["sidebar", "search"].flatMap((input) => ["first-visit", "warm"].map((mode) => {
+const groups = selectedDestinations.flatMap((d) => ["sidebar", "search"].flatMap((input) => modes.map((mode) => {
   const group = samples.filter((s) => s.destination === d.label && s.input === input && s.mode === mode);
   return { destination: d.label, input, mode, feedbackMs: summarize(group.map((s) => s.feedback - s.click)), usableFrameMs: summarize(group.map((s) => s.frameAfterReady - s.click)) };
 })));
