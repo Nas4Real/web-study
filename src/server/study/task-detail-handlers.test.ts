@@ -29,6 +29,31 @@ function context(): TaskDetailContext {
 }
 
 describe("task detail request handlers", () => {
+  it("reads task detail while timezone is pending, but returns only the resolved timezone", async () => {
+    let release!: (value: string) => void;
+    const timeZone = new Promise<string>(resolve => { release = resolve; });
+    const request = context();
+    let settled = false;
+    const result = readTaskDetailHandler(async () => ({ ...request, timeZone }), TASK_ID);
+    void result.then(() => { settled = true; });
+    await vi.waitFor(() => expect(request.subjectService.find).toHaveBeenCalledWith(ACTOR, SUBJECT_ID));
+    expect(settled).toBe(false);
+    release("Asia/Tokyo");
+    await expect(result).resolves.toMatchObject({ status: "success", data: { timeZone: "Asia/Tokyo", detail: { id: TASK_ID } } });
+  });
+
+  it("never returns detail when the required timezone read fails", async () => {
+    let reject!: (reason: Error) => void;
+    const timeZone = new Promise<string>((_, fail) => { reject = fail; });
+    // Guard the test double even when the pre-fix handler fails to consume it.
+    void timeZone.catch(() => {});
+    const request = context();
+    const result = readTaskDetailHandler(async () => ({ ...request, timeZone }), TASK_ID);
+    await vi.waitFor(() => expect(request.taskService.find).toHaveBeenCalled());
+    reject(new Error("private provider diagnostic"));
+    await expect(result).resolves.toEqual({ status: "error", code: "STORAGE_UNAVAILABLE", message: "Tasks are temporarily unavailable. Please try again." });
+  });
+
   it("reads minimal detail using the verified request actor and profile timezone", async () => {
     const request = context();
     const result = await readTaskDetailHandler(async () => request, TASK_ID);

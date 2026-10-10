@@ -164,8 +164,17 @@ slice: cached readiness is not freshly revalidated data or exact paint.
 The [session cache freshness fix](SESSION-CACHE-FRESHNESS-2026-10-10.md) removes
 only an affected series's cached details on successful writes. Four delayed-read
 checks pass; read-only cache reuse and existing page reconciliation stay intact.
-The 320×720 series-edit screenshot mismatch reproduces without the fix and remains
-a release gate. This is correctness work, not a cache latency win or story completion.
+The 320×720 series-edit screenshot mismatch reproduces without the fix. The user
+has now deferred mobile work; retain it as a mobile follow-up, not completed work.
+This is correctness work, not a cache latency win or story completion.
+
+The [task first-open experiment](TASK-DETAIL-PARALLEL-READS-2026-10-10.md)
+overlaps required profile/timezone with owner task reads after verified auth.
+Two local-production comparisons improve ready medians by 28.5%/33.6%, with
+three provider calls and one POST unchanged. Eager mutation context and dependent
+subject read remain intact; full units/typecheck/build and 11 desktop browser
+checks pass. Mobile is deferred. No hosted/deployment or whole-story claim;
+the report also records existing build/lint dependency advisories for release triage.
 
 
 With local production and `PERF_PROVIDER_TIMING=true`, run sequentially for

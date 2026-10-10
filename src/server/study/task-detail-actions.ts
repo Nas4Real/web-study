@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import { readTaskDetailHandler, mutateTaskDetailHandler } from "./task-detail-handlers";
-import { resolveTaskRequestContext } from "./task-request-context";
+import { resolveTaskDetailRequestContext, resolveTaskRequestContext } from "./task-request-context";
 
 export async function readTaskDetailAction(taskId: string) {
-  return readTaskDetailHandler(resolveTaskRequestContext, taskId);
+  return readTaskDetailHandler(resolveTaskDetailRequestContext, taskId);
 }
 
 export async function mutateTaskDetailAction(taskId: string, input: unknown) {

@@ -124,6 +124,17 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-10: Narrow 09-02 task detail candidate retained: verified actor
+  first, then required profile/timezone overlaps owner task read; dependent
+  subject and eager mutation context preserved. Four isolated genuine-auth local
+  runs, 160 samples: task-ready medians 356.65→255.10ms and 369.65→245.40ms;
+  provider spans 309.96→198.67ms and 331.99→206.59ms. All 20 candidate task opens
+  overlap versus zero controls, same three provider calls/one POST. Two handler
+  tests red→green; full units/typecheck/build and 11 desktop browser checks pass.
+  Existing lint warning remains; dependency audit flags pre-existing build/lint
+  advisories for separate release triage. User defers mobile; no hosted gain,
+  session adoption, merge or production deployment. See task-detail-parallel report.
+
 - [x] 2026-10-10: Same-page warm detail repeat complete: 80 isolated local
   read-only samples; all 40 opens attributed. Warm session/task sampled-ready
   medians 10.7/13.75ms, following frame 90/83ms, one fresh POST and four/three
@@ -250,6 +261,15 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-10: User deferred mobile. Next narrow 09-02 experiment is task
+  detail first-open only: after unchanged verified actor resolution, overlap
+  the required profile/timezone read with owner-scoped task/subject reads.
+  Return nothing until both succeed; keep mutation context eager and unchanged.
+  Capture isolated real-auth local production control/candidate samples with
+  the existing detail provider profiler. Test deferred timezone, profile errors,
+  unauthenticated requests and per-request actor ownership before retention.
+  Session detail adoption is a separate follow-up; no UI/cache/API/schema change.
 
 - 2026-10-10: Attribute the remaining detail-open wait before any application
   change. Extend only the local read-only profiler with exact single-POST

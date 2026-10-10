@@ -1,7 +1,7 @@
 # Story 09-02: Deduplicate request context reads
 
 Epic: epic-09
-Status: in-progress (independent Calendar-read experiment only)
+Status: in-progress (independent Calendar and task-detail read experiments)
 Dependencies: 09-01
 Scope: medium; shared request helper, context callers and focused tests
 
@@ -63,3 +63,20 @@ before; same five calls. Both ten-sample batches improve, but control/tail
 variation remains. See `docs/performance/CALENDAR-PARALLEL-READS-2026-10-10.md`.
 No hosted/warm-navigation budget claim. Speculative memoization stays deferred
 for lack of duplicate outbound reads; remaining story/release gates stay open.
+
+## Task detail experiment result
+
+Retained first-open-only candidate: after verified auth, overlap the required
+profile/timezone with owned task/subject reads. Subject remains dependent on
+the task; response waits for both results. Mutation/page contexts retain eager
+profile resolution, and auth, RLS, UI/cache/API contracts are unchanged.
+
+Two comparable local-production pairs (ten task opens each per variant) improve
+sampled-ready medians 356.65→255.10ms and 369.65→245.40ms; provider-span medians
+309.96→198.67ms and 331.99→206.59ms. All 20 candidate task reads overlap profile,
+zero controls do; call count stays three, one POST. Two handler tests fail before
+and pass after; full units/typecheck/build and 11 desktop browser checks pass.
+Existing lint warning and newly recorded pre-existing dependency advisories
+remain separate release follow-ups. User deferred mobile. See
+`docs/performance/TASK-DETAIL-PARALLEL-READS-2026-10-10.md` for control differences,
+counts, timings and limits. No hosted, session or whole-story completion claim.
