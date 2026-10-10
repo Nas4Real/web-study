@@ -21,6 +21,7 @@ deployed; see the dedicated comparison report for scope and limitations.
 | 2026-10-10 | Missing loading feedback delays acknowledgement | Hosted warm-sidebar feedback p95 exceeds 200 ms | Pending 09-03 loading-boundary measurement |
 | 2026-10-10 | Framework-owned sidebar/search pending feedback | 80 local production samples: both control batches >500ms feedback p95, both candidate batches <26ms; one post-input RSC each; 33 focused browser/visual checks pass | Retain narrow acknowledgement candidate for review, not release. Content tails/non-regression unresolved; loading boundary/all-route/hosted prefetch still pending. See navigation-feedback report |
 | 2026-10-10 | Sustained client rendering explains delay | Warm-sidebar Paint after DOM readiness p95 4–25 ms; no long tasks | Not established for navigation; interaction traces pending |
+| 2026-10-10 | Workspace loading boundary supplies useful prefetched fallback | Local production held Calendar response: candidate skeleton visible, interruption/mobile focus/anonymous redirect pass. Both desktop variants already send ten prefetch attempts in three seconds; no completed provider reads attributed to those requests. Repeat shell p95 43.2ms sidebar / 47.2ms search | Retain narrow feedback candidate for review, not release. Search content median/tail worse than control; content non-regression/all-route/hosted gates open. See workspace-loading report |
 
 References: [exploratory report](BASELINE-2026-10-10.md),
 [isolated navigation repeat](ISOLATED-NAVIGATION-2026-10-10.md). Do not compare local and

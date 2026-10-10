@@ -82,6 +82,13 @@ their committed aggregates refer to the capture times recorded in those reports.
 Only sanitized aggregates are promoted into documentation using nearest-rank p95.
 `summarize-report.ts` reads the generated reports without printing raw sample data.
 
+The [workspace loading verification](WORKSPACE-LOADING-2026-10-10.md) documents
+the local production fallback, held-response/interruption and prefetch checks.
+The profiler now records an optional destination-specific `shellFeedbackMs`
+milestone and `shellSamples`; older reports without it did not measure it.
+The shell milestone is separate from existing pending feedback and content.
+Default Link prefetch remains unchanged; actual-content non-regression is open.
+
 ## Interaction checks
 
 Run `profile-interactions.ts` with the same ignored credential environment after

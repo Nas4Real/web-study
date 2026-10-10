@@ -13,8 +13,17 @@ Two local production batches per variant/input (80 samples) show feedback p95
 above 500ms before and below 26ms after. Content tails vary/worsen in one batch,
 so content non-regression remains open. See
 `docs/performance/NAVIGATION-FEEDBACK-2026-10-10.md`.
-No workspace loading boundary or new prefetch behavior is implemented yet;
-initial-layout, all-route and hosted gates remain pending. Nothing is deployed.
+A lightweight destination-labelled workspace loading boundary is implemented
+below the existing authenticated layout; default Link prefetch is unchanged.
+Local genuine-auth production withheld-response checks verify a useful cached
+Calendar fallback, desktop/mobile interruption, retained search focus, 320px
+overflow and anonymous redirect. Both desktop variants already prefetch; no
+completed private provider reads were recorded for the observed prefetch IDs.
+The repeat's loading-shell p95 is 43.2ms sidebar / 47.2ms search. Search content
+timing worsens relative to this control, so content non-regression remains open.
+See `docs/performance/WORKSPACE-LOADING-2026-10-10.md` for limits and reproduction.
+The boundary does not cover the initial-layout auth wait; all-route and hosted
+gates remain pending. Nothing is deployed.
 
 ## User outcome
 

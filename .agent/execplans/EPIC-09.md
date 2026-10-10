@@ -31,7 +31,8 @@ notifications, developer settings, account deletion or storage activation.
   `calendar-request-context.ts`; auth in `src/server/auth/request-auth.ts`;
   SSR client in `src/lib/supabase/server.ts` and refresh in `proxy.ts`.
 - Sidebar Links and search live in `src/features/shell/`.
-- No workspace route loading boundary is currently present.
+- A lightweight workspace route loading boundary is present below the layout;
+  the layout's initial authentication/profile wait remains outside it.
 - Details use separate page-mounted providers in `use-task-detail.tsx` and
   `use-session-detail.tsx`. Page close/success handlers sometimes refresh RSC
   content even without mutations.
@@ -169,12 +170,30 @@ commit and environment metadata. Do not enable development auth in production.
   browser checks and unchanged visual baselines pass after replacing two flaky
   network-idle waits with explicit UI readiness, retaining all assertions.
   Loading boundary, initial-layout and production/hosted prefetch remain pending.
+- [x] 2026-10-10: Narrow 09-03 loading boundary: genuine-auth local production
+  held Calendar response shows a useful cached fallback; desktop/mobile
+  interruption, search focus, 320px overflow and anonymous redirect checks pass.
+  Both desktop control/candidate already send ten prefetch attempts in a finite
+  three-second window; no completed provider reads attributed to those IDs.
+  Repeat shell p95 43.2/47.2ms (sidebar/search), but search content worsens against
+  this control. Keep content/all-route/hosted gates open; no deployment claim.
+  Full 654 units/typecheck pass, lint has only its existing warning; all 51
+  focused navigation/workspace/Calendar/session checks pass without retries or
+  snapshot updates. Six boundary rendering tests include unknown-path privacy.
+  Final local production build and staged whitespace check also pass.
+  See `docs/performance/WORKSPACE-LOADING-2026-10-10.md`.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
 - [ ] 09-05 implement/defer verdict and required work complete.
 - [ ] 09-06 implement/defer verdict and required work complete.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- Continue 09-03 with a generic, destination-labelled skeleton below the existing
+  authenticated layout. Add rendering tests first, then verify the boundary with
+  real-auth production shell prefetch and a held Calendar navigation response.
+  Keep layout/context/Link defaults unchanged. Count prefetch resource reads and
+  report initial entry separately; do not infer that this boundary covers auth.
 
 - 2026-10-10: Start 09-03 with a narrow pending-feedback slice. Test withheld
   RSC responses before changing shell/search. Use Next's link pending state and

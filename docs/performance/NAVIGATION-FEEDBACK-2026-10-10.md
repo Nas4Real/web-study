@@ -98,6 +98,10 @@ These are local synthetic results, not hosted/RUM evidence or all-route budgets.
 
 ## Remaining work
 
+Follow-up: the separately measured boundary is now implemented; see
+[workspace loading verification](WORKSPACE-LOADING-2026-10-10.md). The work below
+describes the outstanding scope at this earlier capture, not whole-story closure.
+
 Add/test the lightweight workspace loading boundary separately. Verify initial
 layout waits versus sibling navigation, production shell-prefetch counts, all
 five destinations and hosted preview. Repeat/attribute content tails; do not

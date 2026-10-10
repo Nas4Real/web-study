@@ -47,7 +47,7 @@ await login.close();
 
 type Resource = { kind: string; start: number; headers?: number; firstByte?: number; lastByte?: number; end?: number; terminal?: number; failed?: boolean; cancelled?: boolean; providerRequestId?: string };
 type TraceEvent = { name: string; ts: number; dur?: number };
-type Sample = { dataset: string; destination: string; mode: string; input: string; click: number; feedback: number; domReady: number; frameAfterReady: number; firstPaint: number | null; resources: Resource[]; longTasks: { start: number; duration: number }[]; scriptEvaluationMs: number };
+type Sample = { dataset: string; destination: string; mode: string; input: string; click: number; feedback: number; shellFeedback: number; domReady: number; frameAfterReady: number; firstPaint: number | null; resources: Resource[]; longTasks: { start: number; duration: number }[]; scriptEvaluationMs: number };
 const samples: Sample[] = [];
 let failed = false;
 
@@ -107,7 +107,7 @@ try {
           });
           await cdp.send("Tracing.start", { categories: "devtools.timeline", transferMode: "ReportEvents" });
           await page.evaluate(({ path, ready, label }) => {
-            const state = { click: 0, feedback: 0, domReady: 0, frameAfterReady: 0, longTasks: [] as { start: number; duration: number }[] };
+            const state = { click: 0, feedback: 0, shellFeedback: 0, domReady: 0, frameAfterReady: 0, longTasks: [] as { start: number; duration: number }[] };
             Object.assign(window, { navigationMeasurement: state });
             new PerformanceObserver((list) => { for (const e of list.getEntries()) state.longTasks.push({ start: e.startTime, duration: e.duration }); }).observe({ type: "longtask" });
             const inspect = () => {
@@ -116,6 +116,7 @@ try {
                 element.textContent?.includes(`Loading ${label}`) && element.getBoundingClientRect().width > 0,
               );
               if (!state.feedback && (pendingDestination || document.querySelector(`nav a[aria-current="page"][href="${path}"]`) || document.querySelector('main [role="status"]') || (location.pathname === path && document.querySelector(ready)))) state.feedback = time;
+              if (!state.shellFeedback && location.pathname === path && document.querySelector('main [aria-busy="true"] [role="status"]')?.textContent?.includes(`Loading ${label}`)) state.shellFeedback = time;
               if (!state.domReady && location.pathname === path && document.querySelector(ready)) {
                 state.domReady = time;
                 requestAnimationFrame(() => requestAnimationFrame(() => { state.frameAfterReady = performance.now(); }));
@@ -153,7 +154,7 @@ try {
 
 const groups = selectedDestinations.flatMap((d) => ["sidebar", "search"].flatMap((input) => modes.map((mode) => {
   const group = samples.filter((s) => s.destination === d.label && s.input === input && s.mode === mode);
-  return { destination: d.label, input, mode, feedbackMs: summarize(group.map((s) => s.feedback - s.click)), usableFrameMs: summarize(group.map((s) => s.frameAfterReady - s.click)) };
+  return { destination: d.label, input, mode, feedbackMs: summarize(group.map((s) => s.feedback - s.click)), shellFeedbackMs: summarize(group.filter(s => s.shellFeedback > 0).map(s => s.shellFeedback - s.click)), shellSamples: group.filter(s => s.shellFeedback > 0).length, usableFrameMs: summarize(group.map((s) => s.frameAfterReady - s.click)) };
 })));
 await mkdir("test-results/performance", { recursive: true });
 const environment = new URL(origin).hostname === "localhost" ? "local" : "hosted";
