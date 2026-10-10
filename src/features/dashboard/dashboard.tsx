@@ -37,6 +37,9 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
   }
   function closeSession() {
     setSelectedSession(null);
+  }
+  function finishSessionMutation() {
+    closeSession();
     if (!dashboard.fixture) router.refresh();
   }
   const error = detail.query.error?.message ?? detail.mutation.error?.message;
@@ -78,6 +81,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
       {selectedSession && session ? (
         <SessionDetailsModal
           onClose={closeSession}
+          onMutated={finishSessionMutation}
           invokerFocusId={`session-open-${selectedSession.seriesId}:${selectedSession.originalStart}`}
           session={session}
           subjects={dashboard.subjects}

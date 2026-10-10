@@ -15,11 +15,11 @@ export async function loadCalendarPageData(query: Partial<CalendarQuery>): Promi
     const requestedScope = typeof query.e2eScope === "string" ? query.e2eScope : undefined;
     const context = await resolveCalendarRequestContext(requestedScope);
     if (!context) throw new Error("Unauthenticated");
-    const subjects = await context.subjectService.list(context.actorId);
-    if (subjects.status === "error") throw new Error("Subject read failed");
     const scope = await resolveE2eStudyScope(requestedScope);
     // The scope resolver verifies the development-only test credential.
     if (scope === "visual-baseline" && !requestedScope) {
+      const subjects = await context.subjectService.list(context.actorId);
+      if (subjects.status === "error") throw new Error("Subject read failed");
       return { ...calendarViewFixture, date: calendarViewFixture.anchorDate.slice(0, 10),
         view: "week", fixture: true, greetingName: context.displayName, subjects: subjects.data, timeZone: context.timeZone };
     }
@@ -32,7 +32,12 @@ export async function loadCalendarPageData(query: Partial<CalendarQuery>): Promi
     const view: CalendarView = query.view === "day" || query.view === "month" ? query.view : "week";
     const window = calendarViewWindow(date, view, context.timeZone);
     if (!window) throw new Error("Invalid calendar boundary");
-    const occurrences = await context.calendarService.listOccurrences(context.actorId, window.from, window.to);
+    // Both owned reads are independent once the profile-local window is resolved.
+    const [subjects, occurrences] = await Promise.all([
+      context.subjectService.list(context.actorId),
+      context.calendarService.listOccurrences(context.actorId, window.from, window.to),
+    ]);
+    if (subjects.status === "error") throw new Error("Subject read failed");
     if (occurrences.status === "error") throw new Error("Occurrence read failed");
     const days = projectCalendarDays(window.dates, occurrences.data, subjects.data, context.timeZone, now);
     const events = days[window.dates.indexOf(date)]?.events ?? [];

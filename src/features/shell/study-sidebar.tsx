@@ -19,6 +19,7 @@ import {
 
 import { signOutAction } from "@/server/auth/auth-actions";
 import { NavigationSearch } from "./navigation-search";
+import { NavigationLabel } from "./navigation-label";
 
 const navigation = [
   { id: "dashboard", label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -75,12 +76,12 @@ export function StudySidebar({
                     key={item.id}
                     onClick={() => setMobileOpen(false)}
                   >
-                    <Icon aria-hidden="true" size={17} />{item.label}
+                    <Icon aria-hidden="true" size={17} /><NavigationLabel>{item.label}</NavigationLabel>
                   </Link>
                 );
               })}
               <Link className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold ${activeItem === "settings" ? "bg-card-hover text-white" : "text-text-muted"}`} href="/settings" onClick={() => setMobileOpen(false)}>
-                <Settings aria-hidden="true" size={17} />Settings
+                <Settings aria-hidden="true" size={17} /><NavigationLabel>Settings</NavigationLabel>
               </Link>
             </nav>
             <div className="mt-2 flex items-center gap-3 border-t border-border-panel px-3 py-3">
@@ -117,7 +118,7 @@ export function StudySidebar({
                   key={item.id}
                 >
                   <Icon aria-hidden="true" className={isActive ? "text-white" : "text-zinc-500"} size={20} />
-                  <span>{item.label}</span>
+                  <NavigationLabel>{item.label}</NavigationLabel>
                 </Link>
               );
             })}
@@ -140,7 +141,7 @@ export function StudySidebar({
                 className={activeItem === "settings" ? "text-white" : "text-zinc-500"}
                 size={20}
               />
-              <span>Settings</span>
+              <NavigationLabel>Settings</NavigationLabel>
             </Link>
             <a
               className="flex items-center gap-3.5 rounded-[14px] px-4 py-3 text-[15px] font-semibold text-zinc-400 transition-colors hover:bg-card hover:text-zinc-200"
