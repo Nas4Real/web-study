@@ -1,9 +1,9 @@
 project: web-study
 version: v4
 status: implementation-in-progress
-updated: 2026-10-09
+updated: 2026-10-10
 source_of_truth: live-superdesign
-stories_total: 45
+stories_total: 52
 stories:
   epic_01: [01-01, 01-02, 01-03, 01-04, 01-05, 01-06]
   epic_02: [02-01, 02-02, 02-03, 02-04, 02-05, 02-06]
@@ -13,6 +13,14 @@ stories:
   epic_06: [06-01, 06-02, 06-03, 06-04, 06-05, 06-06]
   epic_07: [07-01, 07-02, 07-03, 07-04, 07-05, 07-06]
   epic_08: [08-01, 08-02, 08-03, 08-04]
+  epic_09: [09-01, 09-02, 09-03, 09-04, 09-05, 09-06, 09-07]
+optimization_delivery:
+  status: planned
+  next_story: 09-01
+  core_stories: [09-01, 09-02, 09-03, 09-04, 09-07]
+  conditional_stories: [09-05, 09-06]
+  spec: _bmad-output/planning-artifacts/specs/spec-navigation-performance.md
+  execplan: .agent/execplans/EPIC-09.md
 completed_stories:
   - 01-01
   - 01-02

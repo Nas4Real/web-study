@@ -1,4 +1,46 @@
-# Implementation Plan: Signed-in usability fixes
+# Active Plan: Navigation and interaction performance
+
+Date: 2026-10-10. Planning complete; implementation pending.
+
+The user requested BMAD-style optimization planning for slow navigation.
+Use the full [Epic 09 ExecPlan](../.agent/execplans/EPIC-09.md) and
+[engineering spec](../_bmad-output/planning-artifacts/specs/spec-navigation-performance.md).
+The older usability plan is retained below as historical context.
+
+## Ordered tasks
+
+1. 09-01: Establish a real authenticated production baseline and locate delays.
+2. 09-02: Share actor/profile reads per render request; parallelize independent reads.
+3. 09-03: Immediate destination feedback and measured, bounded shell prefetch.
+4. 09-04: Cache freshness, targeted mutation synchronization and fewer refreshes.
+5. Decide 09-05 Calendar and 09-06 Tasks client queries independently from evidence.
+6. 09-07: Compare results, verify behavior and release through existing Vercel setup.
+
+## Checkpoints and architecture
+
+Keep initial Server Component reads; introduce JSON queries selectively.
+Remeasure after 09-02/09-03 and 09-04 before conditional client migration.
+Every retained optimization needs before/after evidence; a skeleton is not
+proof that content loads faster. Cache ownership and auth reset are mandatory.
+Five core stories plus two conditional stories are indexed in the sprint file.
+No code changes, runtime tests or performance gains are claimed by this plan.
+
+## Risks and mitigations
+
+- Production cause is unknown: trace real auth and data first; local fixtures are insufficient.
+- Loading shell can hide slow reads: measure usable-content time independently.
+- Shared caches can retain stale/foreign state: actor keys, auth reset and mutation invalidation.
+- Prefetch can add unnecessary work: measure and cap likely destinations.
+- Client migration can duplicate rules: route adapters reuse shared application services.
+
+## Open questions
+
+No product choice blocks planning. Hosted profiling access/conditions and the
+09-05/09-06 implement/defer verdicts are resolved during their named stories.
+
+---
+
+# Historical Plan: Signed-in usability fixes
 
 ## Overview
 
