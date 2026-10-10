@@ -154,6 +154,12 @@ commit and environment metadata. Do not enable development auth in production.
   (802/1026px). All 21 Calendar/session checks, including unchanged 320/768/1024px
   Session Details snapshots, pass. No snapshots updated or content hidden.
 - [ ] 09-02 request reads optimized and measured.
+- [x] 2026-10-10: Narrow 09-02 Calendar experiment retained: owner/window-aware
+  subject and occurrence reads overlap; same five provider calls. Matching
+  20-sample local production entries: provider-span median 437→348ms, observed
+  readiness 650→495ms. Both ten-sample batches improve; controls vary. All 18
+  loader tests, full units/typecheck/build and 27 browser/visual checks pass.
+  See Calendar comparison report; hosted/warm-navigation gains remain unverified.
 - [ ] 09-03 navigation feedback/prefetch verified and measured.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
 - [ ] 09-05 implement/defer verdict and required work complete.
@@ -161,6 +167,13 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- User authorized the next narrow 09-02 Calendar parallel-read slice after the
+  initial-provider findings. Full 09-01 remains open; this independent experiment
+  does not close its interaction/hosted-attribution gaps. Keep context/auth reads
+  unchanged because measured duplicate outbound reads are absent. Compare local
+  production baseline/candidate with real populated auth, repeat samples and
+  provider overlap evidence; preserve visual-fixture early return and all errors.
 
 - While full 09-01 remains open, isolate the independent read-only session-close
   defect as an early, narrow 09-04 experiment. Split close from edit/delete success

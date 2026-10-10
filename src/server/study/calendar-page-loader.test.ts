@@ -34,6 +34,24 @@ describe("calendar page loader", () => {
     expect(data.weekDays[0].events[0].title).toBe("Réduction des endomorphismes");
     expect(listOccurrences).not.toHaveBeenCalled();
   });
+  it("starts owned occurrence reads while independent subjects are still pending", async () => {
+    let releaseSubjects!: (value: { status: "success"; data: typeof subjects }) => void;
+    list.mockReturnValueOnce(new Promise(resolve => { releaseSubjects = resolve; }));
+    const pending = loadCalendarPageData({ date: "2026-10-05", view: "day" });
+    try {
+      await vi.waitFor(() => expect(listOccurrences).toHaveBeenCalledWith(
+        "actor-1", "2026-10-04T23:00:00.000Z", "2026-10-05T23:00:00.000Z",
+      ), { timeout: 300 });
+    } finally {
+      releaseSubjects({ status: "success", data: subjects });
+    }
+    expect(await pending).toMatchObject({ subjects, fixture: false, date: "2026-10-05", view: "day" });
+  });
+  it.each(["subjects", "occurrences"])("sanitizes a rejected parallel %s read", async failure => {
+    if (failure === "subjects") list.mockRejectedValueOnce(new Error("private subject provider detail"));
+    else listOccurrences.mockRejectedValueOnce(new Error("private occurrence provider detail"));
+    await expect(loadCalendarPageData({})).rejects.toThrow("Unable to load calendar");
+  });
   it("does not let an untrusted scope or query enable fixture data", async () => {
     const data = await loadCalendarPageData({ e2eScope: "visual-baseline", date: "not-a-date", view: "invalid" });
     expect(data).toMatchObject({ date: "2026-10-03", view: "week", fixture: false });

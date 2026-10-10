@@ -68,6 +68,12 @@ Chapter creation is excluded after an observed hosted 503; investigate separatel
   RSC is descriptive, not guaranteed to be the only critical response.
 
 JSON reports and provider events remain under ignored `test-results/performance/`.
+Playwright replaces `test-results` when running browser tests. Archive comparison
+reports in ignored `.performance-artifacts/` before invoking it; never commit
+raw profiling artifacts or auth state. The Calendar parallel-read comparison
+uses this archive; see [experiment results](CALENDAR-PARALLEL-READS-2026-10-10.md).
+Older reports' working JSON files may already have been overwritten or cleared;
+their committed aggregates refer to the capture times recorded in those reports.
 Only sanitized aggregates are promoted into documentation using nearest-rank p95.
 `summarize-report.ts` reads the generated reports without printing raw sample data.
 

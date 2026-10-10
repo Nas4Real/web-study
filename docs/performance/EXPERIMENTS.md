@@ -2,7 +2,9 @@
 
 Keep rejected and inconclusive ideas here so they are not mistaken for wins.
 Each retained optimization requires comparable isolated before/after evidence
-and green correctness gates. No runtime optimization is retained yet.
+and green correctness gates. Retained candidates below are not deployed.
+The narrow Calendar parallel-read candidate is now retained for review, not
+deployed; see the dedicated comparison report for scope and limitations.
 
 | Date | Experiment / hypothesis | Evidence | Verdict / next step |
 | --- | --- | --- | --- |
@@ -15,6 +17,7 @@ and green correctness gates. No runtime optimization is retained yet.
 | 2026-10-10 | Duplicate auth/profile reads | Sibling Tasks/Calendar: 1 profile, 0 auth-user. 100 initial documents: exactly 1 profile + 1 auth-user each | Not established in measured local scopes; defer speculative memoization, retain independent auth checks |
 | 2026-10-10 | Deployment-region mismatch | Functions Virginia, database Frankfurt; no region change | Candidate; establish provider attribution and scoped experiment first |
 | 2026-10-10 | Calendar subject/occurrence reads are sequential | All 20 local initial Calendar documents start occurrence calls after subject end; subject median 79–96ms; source confirms sequence | Supports scoped 09-02 parallel-read experiment; no measured candidate gain yet |
+| 2026-10-10 | Parallel independent Calendar reads | Matching 20 local Calendar entries each: provider span median 437→348ms, observed-ready 650→495ms; overlap 0→84ms median; call counts unchanged; both 10-sample candidate batches faster | Retain narrow candidate; full units/typecheck/build and 27 browser/visual checks pass. Controls/provider tails vary; no hosted or whole-epic gain claim |
 | 2026-10-10 | Missing loading feedback delays acknowledgement | Hosted warm-sidebar feedback p95 exceeds 200 ms | Pending 09-03 loading-boundary measurement |
 | 2026-10-10 | Sustained client rendering explains delay | Warm-sidebar Paint after DOM readiness p95 4–25 ms; no long tasks | Not established for navigation; interaction traces pending |
 
