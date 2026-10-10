@@ -70,6 +70,10 @@ accounts need no duplicate creation. Hosted sign-in, smoke checks and comparable
 timing remain pending; no protection changes, token/cookie export, merge or
 production deployment were performed.
 
+Follow-up: [hosted signed-in smoke](HOSTED-LOADING-SMOKE-2026-10-10.md) subsequently
+passes in the authorized in-app browser using the existing synthetic account.
+This resolves sign-in/navigation smoke, not the comparable hosted timing gate.
+
 One functional sample per scenario is not a ten-sample timing matrix or p95
 estimate. The content-tail non-regression gate from the correlated Calendar
 repeat remains open. Initial-layout authentication is outside the loading boundary.

@@ -206,6 +206,14 @@ commit and environment metadata. Do not enable development auth in production.
   `docs/performance/ALL-ROUTE-LOADING-2026-10-10.md`. Final genuine-auth local
   production build and whitespace check pass; local production server stopped.
 - [ ] 09-05 implement/defer verdict and required work complete.
+- [x] 2026-10-10: Hosted signed-in smoke completed in Codex's authorized browser
+  with the existing verified populated synthetic account; no duplicate account
+  creation or protection changes. All five routes load via desktop sidebar and
+  320px keyboard search; destination-labelled mobile loading, focus/no overflow,
+  desktop/mobile history and mobile competing navigation pass. Console checks
+  capture no warnings/errors. No record edits or cookie/token exports. Viewport
+  reset afterward. This is not controlled hosted timing or content non-regression;
+  09-03 remains open. See hosted-loading-smoke report.
 - [ ] 09-06 implement/defer verdict and required work complete.
 - [ ] 09-07 final evidence, gates and hosted release.
 

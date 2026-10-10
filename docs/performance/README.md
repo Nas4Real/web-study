@@ -95,7 +95,10 @@ scenarios), including interruption/history and anonymous entry. Repeat the local
 shell diagnostic with `PERF_EXPECT_SHELL=1`, `PERF_INPUT=sidebar|search` and
 `PERF_DESTINATION=Dashboard|Tasks|Calendar|Documents|Settings`. Mobile search warms
 the destination first; it is not evidence of hidden-sidebar prefetch. Hosted
-authenticated checks, global request bounds and content timing remain open.
+[signed-in smoke checks](HOSTED-LOADING-SMOKE-2026-10-10.md) now pass in Codex's
+authorized in-app browser for all five routes at desktop/320px, including history
+and mobile competing navigation. Controlled hosted timing, global request bounds
+and content non-regression remain open; this smoke check is not a benchmark.
 
 The [correlated content repeat](LOADING-CONTENT-ATTRIBUTION-2026-10-10.md)
 adds optional `PERF_CORRELATE_PROVIDER=true` for local production only. Start

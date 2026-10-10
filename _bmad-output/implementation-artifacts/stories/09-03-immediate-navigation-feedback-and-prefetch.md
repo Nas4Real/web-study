@@ -38,8 +38,16 @@ desktop sidebar and 320px keyboard search (ten functional scenarios). Interrupti
 completed destination, history, anonymous redirect and mobile focus/overflow pass.
 Mobile destinations are warmed before the hold; do not infer universal mobile
 prefetch. One scenario per route/input is not a timing/p95 matrix or a global
-request bound. Hosted authenticated navigation and usable-content non-regression
-remain open. See `docs/performance/ALL-ROUTE-LOADING-2026-10-10.md`.
+request bound. See `docs/performance/ALL-ROUTE-LOADING-2026-10-10.md`.
+
+Hosted signed-in smoke now passes using the existing verified synthetic account
+in Codex's authorized in-app browser: five desktop/sidebar and 320px/search
+destinations, correct loading labels, completed content, search focus, page-level
+overflow, history and mobile competing navigation. No captured console warnings
+or errors. No account creation, protection changes, cookie export or record edits.
+Controlled hosted timing and usable-content non-regression remain open; story
+status/acceptance checkboxes are unchanged. See
+`docs/performance/HOSTED-LOADING-SMOKE-2026-10-10.md`.
 
 ## User outcome
 
