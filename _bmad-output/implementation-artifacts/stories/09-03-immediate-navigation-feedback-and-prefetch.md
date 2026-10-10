@@ -23,7 +23,8 @@ The repeat's loading-shell p95 is 43.2ms sidebar / 47.2ms search. Search content
 timing worsens relative to this control, so content non-regression remains open.
 See `docs/performance/WORKSPACE-LOADING-2026-10-10.md` for limits and reproduction.
 The boundary does not cover the initial-layout auth wait; all-route and hosted
-gates remain pending. Nothing is deployed.
+timing gates remain pending. Nothing is merged or deployed to production;
+an automatic protected branch preview exists.
 
 An 80-sample candidate/control/control/candidate correlated local repeat shows
 nearly equal content medians, close provider/content tracking, identical four
@@ -31,6 +32,14 @@ provider calls per navigation and no long tasks. Candidate content p95 remains
 worse, so this does not close no-regression or establish faster data. The
 boundary is restored exactly after control builds; diagnostic changes are
 local-only. See `docs/performance/LOADING-CONTENT-ATTRIBUTION-2026-10-10.md`.
+
+All five destinations now pass local production held-response checks with both
+desktop sidebar and 320px keyboard search (ten functional scenarios). Interruption,
+completed destination, history, anonymous redirect and mobile focus/overflow pass.
+Mobile destinations are warmed before the hold; do not infer universal mobile
+prefetch. One scenario per route/input is not a timing/p95 matrix or a global
+request bound. Hosted authenticated navigation and usable-content non-regression
+remain open. See `docs/performance/ALL-ROUTE-LOADING-2026-10-10.md`.
 
 ## User outcome
 

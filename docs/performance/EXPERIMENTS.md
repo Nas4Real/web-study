@@ -2,9 +2,9 @@
 
 Keep rejected and inconclusive ideas here so they are not mistaken for wins.
 Each retained optimization requires comparable isolated before/after evidence
-and green correctness gates. Retained candidates below are not deployed.
-The narrow Calendar parallel-read candidate is now retained for review, not
-deployed; see the dedicated comparison report for scope and limitations.
+and green correctness gates. Retained candidates are not merged or deployed to
+production. GitHub creates protected branch previews automatically; preview
+existence is not evidence that hosted verification passed.
 
 | Date | Experiment / hypothesis | Evidence | Verdict / next step |
 | --- | --- | --- | --- |
@@ -23,6 +23,7 @@ deployed; see the dedicated comparison report for scope and limitations.
 | 2026-10-10 | Sustained client rendering explains delay | Warm-sidebar Paint after DOM readiness p95 4–25 ms; no long tasks | Not established for navigation; interaction traces pending |
 | 2026-10-10 | Workspace loading boundary supplies useful prefetched fallback | Local production held Calendar response: candidate skeleton visible, interruption/mobile focus/anonymous redirect pass. Both desktop variants already send ten prefetch attempts in three seconds; no completed provider reads attributed to those requests. Repeat shell p95 43.2ms sidebar / 47.2ms search | Retain narrow feedback candidate for review, not release. Search content median/tail worse than control; content non-regression/all-route/hosted gates open. See workspace-loading report |
 | 2026-10-10 | Loading boundary causes large content/rendering delay | 80 correlated local production warm Calendar samples in candidate/control/control/candidate order. Content medians nearly equal; provider/content correlation 0.989–0.996, same four provider calls and one destination RSC, no long tasks. Candidate content p95 still worse (sidebar 559.7 vs 542.7ms, search 597.1 vs 522.1ms) | Large rendering regression not established; no new product fix. Keep useful feedback candidate under review, not release, and leave content/all-route/hosted gates open. See correlated-content report |
+| 2026-10-10 | Loading fallback across every workspace destination | Ten genuine-auth local production checks: five routes × desktop/sidebar or 320px/search; all fallback, interruption, completed-content, history and anonymous-entry assertions pass. Desktop initial prefetch attempts 9 each, search 1–2; correlated destination provider counts recorded | Functional coverage only, not latency/p95 or a global request bound. Search warms the destination first. Hosted authentication and content-tail gates stay open; see all-route-loading report |
 
 References: [exploratory report](BASELINE-2026-10-10.md),
 [isolated navigation repeat](ISOLATED-NAVIGATION-2026-10-10.md). Do not compare local and

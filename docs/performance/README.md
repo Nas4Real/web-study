@@ -89,6 +89,14 @@ milestone and `shellSamples`; older reports without it did not measure it.
 The shell milestone is separate from existing pending feedback and content.
 Default Link prefetch remains unchanged; actual-content non-regression is open.
 
+The [all-route loading verification](ALL-ROUTE-LOADING-2026-10-10.md) covers five
+destinations with desktop sidebar and 320px keyboard search (ten functional
+scenarios), including interruption/history and anonymous entry. Repeat the local
+shell diagnostic with `PERF_EXPECT_SHELL=1`, `PERF_INPUT=sidebar|search` and
+`PERF_DESTINATION=Dashboard|Tasks|Calendar|Documents|Settings`. Mobile search warms
+the destination first; it is not evidence of hidden-sidebar prefetch. Hosted
+authenticated checks, global request bounds and content timing remain open.
+
 The [correlated content repeat](LOADING-CONTENT-ATTRIBUTION-2026-10-10.md)
 adds optional `PERF_CORRELATE_PROVIDER=true` for local production only. Start
 the traced server first. It excludes pre-run log rows and fails incomplete when

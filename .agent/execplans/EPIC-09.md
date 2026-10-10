@@ -193,11 +193,31 @@ commit and environment metadata. Do not enable development auth in production.
   and restored candidate production builds pass; no application diff.
   See `docs/performance/LOADING-CONTENT-ATTRIBUTION-2026-10-10.md`.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
+- [x] 2026-10-10: Extended the local genuine-auth shell diagnostic across all
+  five routes and desktop/320px keyboard search. All ten scenarios pass held
+  fallback, interruption, completed content, back/forward and anonymous entry;
+  search also retains focus without overflow. Six allowlist tests and full units,
+  typecheck and lint pass (existing warning). Inspected Dashboard desktop and
+  Settings mobile screenshots. Captured finite prefetch windows/provider counts;
+  no global bound, timing/p95 or hosted-success claim. The protected automatic
+  preview reaches app sign-in in Codex but Vercel login in the isolated profiler.
+  Existing synthetic accounts are verified; hosted authenticated checks remain
+  pending. No duplicate accounts, merge or production deployment. See
+  `docs/performance/ALL-ROUTE-LOADING-2026-10-10.md`. Final genuine-auth local
+  production build and whitespace check pass; local production server stopped.
 - [ ] 09-05 implement/defer verdict and required work complete.
 - [ ] 09-06 implement/defer verdict and required work complete.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-10: Extend the genuine-auth production shell diagnostic to all five
+  destinations, desktop sidebar (including secondary Settings) and 320px
+  keyboard search. Keep route/source/interruption selection allowlisted and
+  test it before running. Hold only destination non-prefetch RSC; check fallback,
+  interrupted destination, mobile focus/overflow and fresh anonymous entry.
+  Inspect the existing GitHub-triggered preview read-only before hosted checks;
+  do not merge, redeploy production or weaken deployment protection.
 
 - 2026-10-10: Investigate the loading candidate's content-timing gap with a
   candidate/control/control/candidate local production repeat, ten warm Calendar
