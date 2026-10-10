@@ -153,6 +153,12 @@ close null/empty provider fields are not zero-work evidence. All 20 opens in the
 40-sample run have sequential provider reads. Same-page warm reopen, mutation
 freshness and hosted attribution remain separate follow-ups, not measured gains.
 
+The [session cache freshness fix](SESSION-CACHE-FRESHNESS-2026-10-10.md) removes
+only an affected series's cached details on successful writes. Four delayed-read
+checks pass; read-only cache reuse and existing page reconciliation stay intact.
+The 320×720 series-edit screenshot mismatch reproduces without the fix and remains
+a release gate. This is correctness work, not a cache latency win or story completion.
+
 
 With local production and `PERF_PROVIDER_TIMING=true`, run sequentially for
 `PERF_DATASET=empty` and `populated` (ten samples per page by default):

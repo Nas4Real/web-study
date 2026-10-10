@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { dashboardFixture, sessionDetailFixture } from "@/fixtures";
@@ -23,6 +24,7 @@ export function Dashboard({ dashboard = dashboardFixture }: { dashboard?: Dashbo
 
 function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedSession, setSelectedSession] = useState<SessionOccurrenceTarget | null>(null);
   const sessionDetail = useSessionDetail(dashboard.fixture ? null : selectedSession);
@@ -39,6 +41,8 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
     setSelectedSession(null);
   }
   function finishSessionMutation() {
+    // A series write can change any cached sibling occurrence.
+    if (selectedSession) queryClient.removeQueries({ queryKey: ["session-detail", selectedSession.seriesId] });
     closeSession();
     if (!dashboard.fixture) router.refresh();
   }

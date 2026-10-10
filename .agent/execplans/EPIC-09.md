@@ -124,6 +124,15 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-10: Narrow 09-04 session freshness defect reproduced on Calendar
+  and Dashboard: reopen after an occurrence edit repaints pre-write room data
+  while the new detail POST is held. Both regressions fail before/pass after
+  removing only that series's cached detail queries on successful writes. Keep
+  read-only cache and the existing route refresh. All four new cache checks pass;
+  related run 24/25 passes. The 320×720 series-edit height mismatch reproduces
+  identically with all nine app lines removed; no baseline/layout edits. Full
+  units/typecheck/production build pass, existing lint warning. See session-cache-freshness report;
+  broad cache lifecycle and release remain open.
 - [x] 2026-10-10: Detail-provider diagnostic slice: 40 isolated local real-auth
   read-only samples; 20/20 opens attributed to exact fresh POSTs. Session/task
   ready medians 489/405ms, provider spans 456/356ms; four/three sequential calls
@@ -335,3 +344,11 @@ longer refresh; mutation-success callbacks preserve refresh. No styling/auth/cac
 changes in that slice. A subsequent responsive Calendar sizing correction resolves
 the pre-existing visual mismatch; all 21 relevant browser checks now pass. No
 production speedup or release claim; full Epic 09 integration gates remain pending.
+
+Latest 09-04 freshness slice passes four new delayed-read cache checks and
+24/25 related browser checks. The short 320×720 entire-series edit screenshot
+still fails (774px vs 722px); all nine application lines removed reproduce the
+same 16,370-pixel mismatch. This latest reproduction is a separate visual release
+gate, not evidence that the current cache fix changes layout. Keep the historical
+21-check result above scoped to its earlier capture; do not claim every current
+visual check passes. See `docs/performance/SESSION-CACHE-FRESHNESS-2026-10-10.md`.

@@ -1,5 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -22,6 +24,7 @@ export function CalendarPage({ data, scope }: { data: CalendarPageDataDTO; scope
 
 function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope?: string }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [fixtureView, setFixtureView] = useState<CalendarView>(data.view);
   const [fixtureDate, setFixtureDate] = useState(() => new Date(data.anchorDate));
   const view = data.fixture ? fixtureView : data.view;
@@ -54,6 +57,8 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
   }
 
   function finishSessionMutation() {
+    // Refresh preserves client state; do not repaint a pre-write occurrence.
+    if (selectedOccurrence) queryClient.removeQueries({ queryKey: ["session-detail", selectedOccurrence.seriesId] });
     closeDetail();
     if (!data.fixture) router.refresh();
   }

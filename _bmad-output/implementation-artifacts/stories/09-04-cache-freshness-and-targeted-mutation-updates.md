@@ -77,3 +77,20 @@ The candidates are for review, not merged or deployed. Remaining Epic 09
 measurements and final integration checks still gate release.
 This experiment does not complete the whole story or bypass the cache lifecycle
 and release gates; its remaining work still depends on 09-03.
+
+## Narrow session cache freshness fix — 2026-10-10
+
+Same-page warm inspection uncovered a correctness defect: after editing an
+occurrence, Calendar and Dashboard repaint the pre-write room from detail cache
+while the new read is pending. Both delayed-read regressions failed before the
+fix. Success handlers now remove only the changed series's detail query prefix,
+then close and keep the existing route refresh. Read-only closes and failed
+writes retain their cache; unrelated series/task entries are untouched.
+
+All four new cache browser checks pass, including warm cached rendering during
+revalidation. Related run passes 24/25; the 320×720 entire-series edit screenshot
+height mismatch reproduces identically with the cache change removed. No visuals
+or baselines were altered. Full units/typecheck/production build pass, lint's existing warning
+remains. See `docs/performance/SESSION-CACHE-FRESHNESS-2026-10-10.md` for reproduction,
+constraints and the remaining visual release gate. This is correctness work, not
+a cache latency gain or completion of the shared-cache lifecycle story.
