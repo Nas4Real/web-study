@@ -56,3 +56,10 @@ Controlled repeats and Calendar/task/session interaction profiling remain requir
 
 Separate finding: hosted chapter creation returned 503 for the dedicated test user.
 Chapter metadata is excluded from the populated dataset until that is investigated.
+
+The isolated empty-account repeat completed with 200 samples; see
+`docs/performance/ISOLATED-NAVIGATION-2026-10-10.md`. A supplementary real-auth
+interaction harness completed 80 populated-account samples; see
+`docs/performance/INTERACTIONS-2026-10-10.md` for assertion-timing limitations,
+prefetch separation and the confirmed read-only Calendar refresh candidate.
+Full baseline acceptance remains incomplete; no whole-epic speedup is claimed.

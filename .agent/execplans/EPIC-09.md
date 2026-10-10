@@ -129,6 +129,11 @@ commit and environment metadata. Do not enable development auth in production.
   profiler, local production runner and provider-call diagnostics implemented.
 - [x] 2026-10-10: Captured 400 hosted and 160 local exploratory samples; saved
   sanitized aggregate report, limitations and experiment ledger. Quality gates passed.
+- [x] 2026-10-10: Completed isolated hosted empty-account repeat (200 samples).
+  Warm-sidebar content p95 remains 710–994 ms; see isolated report.
+- [x] 2026-10-10: Captured 80 real-auth interaction samples. Read-only Session
+  Details close sends a same-route non-prefetch GET, unlike Task Details close.
+  Assertion timings are upper bounds, not exact React/paint measurements.
 - [ ] 09-02 request reads optimized and measured.
 - [ ] 09-03 navigation feedback/prefetch verified and measured.
 - [ ] 09-04 cache freshness/mutation synchronization verified and measured.
@@ -137,6 +142,12 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- While full 09-01 remains open, isolate the independent read-only session-close
+  defect as an early, narrow 09-04 experiment. Split close from edit/delete success
+  on Calendar and Dashboard; require a failing browser regression and preservation
+  of mutation reconciliation. This does not start broad cache/auth changes or
+  mark 09-02/09-03/09-04 complete. Initial hosted request-count baseline is captured.
 
 - Retain initial Server Component reads. Conditional client querying is an
   extension of the existing architecture, not proof that JSON is faster.

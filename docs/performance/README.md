@@ -69,6 +69,33 @@ JSON reports and provider events remain under ignored `test-results/performance/
 Only sanitized aggregates are promoted into documentation using nearest-rank p95.
 `summarize-report.ts` reads the generated reports without printing raw sample data.
 
+## Interaction checks
+
+Run `profile-interactions.ts` with the same ignored credential environment after
+other profiling/test/build processes finish. It accepts only the dedicated
+populated test user and the same approved origins. It measures ten repetitions
+by default of Calendar day-to-week and next-week changes, task/session detail
+opening and read-only closing, and task completion followed by reopening.
+It modifies only synthetic task 1; an interrupted/failed run can leave it completed
+and reports that possibility. No sessions or real-user data are changed.
+
+```text
+rtk proxy node --env-file=.env.performance.local scripts/performance/profile-interactions.ts
+```
+
+This supplementary harness records a click-to-assertion-observed frame **upper
+bound**, not an exact DOM-ready time, React commit, paint, INP or optimistic
+feedback metric. Enabled mutation controls are observed after pending work;
+the mutation labels do not represent direct database-commit timestamps.
+Each scenario also includes one second of network observation after readiness,
+excluded from the frame metric. Network times use the harness clock from setup,
+not the browser click clock. A session's repeat visits may reuse a query cache;
+these are not fresh-context samples. Report all-RSC counts separately from
+current-route requests without the non-sensitive prefetch flag. Unknown flags
+stay unknown, and a GET count alone does not prove a forced router refresh.
+No bodies, raw URLs, query strings, cookies or authorization headers are saved.
+Screenshots contain only the dedicated synthetic workspace and remain ignored.
+
 ## Pending to finish 09-01
 
 Controlled isolated repeats; Calendar date/view changes; task/session detail and
