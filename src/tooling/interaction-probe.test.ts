@@ -8,7 +8,7 @@ describe("frame-sampled detail readiness", () => {
   let visible: boolean;
   let enabled: boolean;
   const advance = (time: number) => { now = time; const callback = frame; frame = undefined; callback?.(); };
-  const result = () => (window as unknown as { detailProbe: { status: string; readyMs: number | null; nextFrameMs: number | null } }).detailProbe;
+  const result = () => (window as unknown as { detailProbe: { status: string; readyMs: number | null; nextFrameMs: number | null; feedbackMs: number | null } }).detailProbe;
 
   beforeEach(() => {
     now = 100;
@@ -71,5 +71,39 @@ describe("frame-sampled detail readiness", () => {
     installDetailProbe({ selector: "new" });
     expect(click).not.toBe(oldClick);
     expect(result().status).toBe("armed");
+  });
+
+  it("samples pending feedback separately and waits for an enabled page control after dismissal", () => {
+    let pending = false;
+    vi.stubGlobal("document", {
+      addEventListener: (_: string, callback: () => void) => { click = callback; },
+      removeEventListener: () => {},
+      querySelector: (selector: string) => {
+        if (selector === "pending") return pending ? { getClientRects: () => [1] } : null;
+        if (selector === "invoker") return { getClientRects: () => [1], get disabled() { return !enabled; } };
+        return visible ? { getClientRects: () => [1] } : null;
+      },
+    });
+    installDetailProbe({ selector: "editor", absent: true, feedbackSelector: "pending", readyControlSelector: "invoker" });
+    click?.();
+    pending = true;
+    advance(116);
+    expect(result().feedbackMs).toBe(16);
+    visible = false;
+    advance(132);
+    expect(result().readyMs).toBeNull();
+    enabled = true;
+    advance(148);
+    advance(164);
+    expect(result()).toMatchObject({ feedbackMs: 16, readyMs: 48, nextFrameMs: 64, status: "complete" });
+  });
+
+  it("does not invent pending feedback when it never appears", () => {
+    installDetailProbe({ selector: "editor", absent: true, feedbackSelector: "pending" });
+    click?.();
+    visible = false;
+    advance(116);
+    advance(132);
+    expect(result()).toMatchObject({ feedbackMs: null, readyMs: 16, status: "complete" });
   });
 });

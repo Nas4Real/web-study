@@ -126,6 +126,14 @@ original failure stage. See [session mutations and timezone fix](SESSION-MUTATIO
 for the interrupted attempt, synthetic recovery, completed 20-sample run and
 repeat commands. This covers one-time location saves, not the entire mutation matrix.
 
+The [frame-sampled save follow-up](SESSION-MUTATION-FRAMES-2026-10-11.md) separates
+pending feedback, editor dismissal/enabled invoker and the following frame from
+assertion polling. Version-6 reports include numeric click-relative request
+headers/completion and `mutationMilestones`; missing bodies stay unknown. Twenty
+samples complete with unchanged session invariants. Useful streamed data arrives
+before full response completion; header-to-ready is not exact client-render time.
+This is diagnostic evidence, not a new app optimization or whole-story completion.
+
 ```text
 rtk proxy node --env-file=.env.performance.local scripts/performance/profile-interactions.ts
 ```

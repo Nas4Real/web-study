@@ -11,6 +11,8 @@ import { correlateDetailProviders } from "./detail-provider-metrics.ts";
 import { detailVisitKinds } from "./detail-visit-metrics.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { sessionMutationMode, withRestoredSessionLocation } from "./session-mutation-profile.ts";
+// @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
+import { projectClickTiming } from "./interaction-network-metrics.ts";
 
 const origin = process.env.PERF_ORIGIN ?? "https://web-study-pearl.vercel.app";
 if (!["https://web-study-pearl.vercel.app", "http://localhost:3100"].includes(origin)) throw new Error("Unapproved profiling origin");
@@ -33,8 +35,8 @@ const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, timezoneId: "Africa/Tunis" });
 const page = await context.newPage();
 page.setDefaultTimeout(30000);
-type Network = { kind: string; method: string; currentRoute: boolean; prefetch: boolean | null; startMs: number; headersMs?: number; completeMs?: number; failed?: boolean };
-type Sample = { scenario: string; observedReadyFrameMs: number; sampledReadyMs: number | null; sampledNextFrameMs: number | null; provider: ReturnType<typeof correlateDetailProviders> | null; network: Network[] };
+type Network = { kind: string; method: string; currentRoute: boolean; prefetch: boolean | null; startMs: number; headersMs?: number; completeMs?: number; failed?: boolean } & Partial<ReturnType<typeof projectClickTiming>>;
+type Sample = { scenario: string; observedReadyFrameMs: number; sampledFeedbackMs: number | null; sampledReadyMs: number | null; sampledNextFrameMs: number | null; provider: ReturnType<typeof correlateDetailProviders> | null; network: Network[] };
 const samples: Sample[] = [];
 await mkdir("test-results/performance", { recursive: true });
 let currentScenario = "login";
@@ -91,7 +93,7 @@ async function measure(scenario: string, action: () => Promise<void>, ready: () 
         resolve(performance.now() - click);
       }));
     }));
-    let probe: Pick<DetailProbeResult, "readyMs" | "nextFrameMs"> = { readyMs: null, nextFrameMs: null };
+    let probe: Pick<DetailProbeResult, "feedbackMs" | "readyMs" | "nextFrameMs"> = { feedbackMs: null, readyMs: null, nextFrameMs: null };
     if (probeCriteria) {
       await page.waitForFunction(() => {
         const status = (window as Window & { detailProbe?: DetailProbeResult }).detailProbe?.status;
@@ -100,7 +102,7 @@ async function measure(scenario: string, action: () => Promise<void>, ready: () 
       probe = await page.evaluate(() => {
         const result = (window as Window & { detailProbe?: DetailProbeResult }).detailProbe;
         if (result?.status !== "complete") throw new Error("Detail readiness probe incomplete");
-        return { readyMs: result.readyMs, nextFrameMs: result.nextFrameMs };
+        return { feedbackMs: result.feedbackMs, readyMs: result.readyMs, nextFrameMs: result.nextFrameMs };
       });
     }
     // Read-only close counts include a fixed one-second observation window.
@@ -117,7 +119,9 @@ async function measure(scenario: string, action: () => Promise<void>, ready: () 
       const ids = await Promise.all(posts.map(entry => correlationIds.get(entry) ?? Promise.resolve(null)));
       provider = correlateDetailProviders(await readProviderLog(), logBoundary, ids, sourceRoute);
     }
-    samples.push({ scenario, observedReadyFrameMs, sampledReadyMs: probe.readyMs, sampledNextFrameMs: probe.nextFrameMs, provider, network: [...requests.values()] });
+    const clickEpochMs = await page.evaluate(() => performance.timeOrigin + ((window as Window & { interactionClick?: number }).interactionClick ?? Number.NaN));
+    const network = [...requests.entries()].map(([request, entry]) => ({ ...entry, ...projectClickTiming(request.timing(), clickEpochMs) }));
+    samples.push({ scenario, observedReadyFrameMs, sampledFeedbackMs: probe.feedbackMs, sampledReadyMs: probe.readyMs, sampledNextFrameMs: probe.nextFrameMs, provider, network });
     console.log(`${scenario}: ${Math.round(observedReadyFrameMs)} ms`);
   } finally {
     page.off("request", onRequest).off("response", onResponse).off("requestfinished", onFinished).off("requestfailed", onFailed);
@@ -160,6 +164,10 @@ async function profileSessionMutation() {
       await measure(scenario, () => edit.getByRole("button", { name: "Save changes", exact: true }).click(), async () => {
         await expect(edit).toBeHidden();
         await expect(invoker).toBeEnabled();
+      }, {
+        selector: '[role="dialog"][aria-labelledby="edit-session-title"]', absent: true,
+        feedbackSelector: '[role="dialog"][aria-labelledby="edit-session-title"] form[aria-busy="true"]',
+        readyControlSelector: 'button[aria-label="Open Performance session 2"]',
       });
     });
   }, async location => {
@@ -253,8 +261,24 @@ const groups = [...new Set(samples.map(s => s.scenario))].map(scenario => {
   const kinds = [...new Set(providers.flatMap(provider => Object.keys(provider.counts)))];
   return { scenario, providerSamples: providers.length, providerCounts: Object.fromEntries(kinds.map(kind => [kind, summarize(providers.map(provider => provider.counts[kind] ?? 0))])), providerSpanMs: summarize(providers.flatMap(provider => provider.spanMs === null ? [] : [provider.spanMs])), providerErrors: providers.reduce((sum, provider) => sum + provider.errors, 0), observedReadyFrameMs: summarize(group.map(s => s.observedReadyFrameMs)), sampledReadyMs: summarize(group.flatMap(s => s.sampledReadyMs === null ? [] : [s.sampledReadyMs])), sampledNextFrameMs: summarize(group.flatMap(s => s.sampledNextFrameMs === null ? [] : [s.sampledNextFrameMs])), rscRequests: summarize(group.map(s => s.network.filter(r => r.kind === "rsc").length)), currentRouteNonPrefetchRsc: summarize(group.map(s => s.network.filter(r => r.kind === "rsc" && r.currentRoute && r.prefetch === false).length)), unknownPrefetchFlags: summarize(group.map(s => s.network.filter(r => r.kind === "rsc" && r.prefetch === null).length)), posts: summarize(group.map(s => s.network.filter(r => r.kind === "post").length)) };
 });
+const mutationMilestones = sessionMutations ? groups.map(group => {
+  const selected = samples.filter(sample => sample.scenario === group.scenario);
+  const paired = selected.flatMap(sample => {
+    const posts = sample.network.filter(entry => entry.kind === "post" && entry.currentRoute);
+    return posts.length === 1 ? [{ sample, post: posts[0] }] : [];
+  });
+  return {
+    scenario: group.scenario,
+    pairedPosts: paired.length,
+    sampledFeedbackMs: summarize(selected.flatMap(sample => sample.sampledFeedbackMs === null ? [] : [sample.sampledFeedbackMs])),
+    postHeadersMs: summarize(paired.flatMap(({ post }) => post.clickHeadersMs == null ? [] : [post.clickHeadersMs])),
+    postCompleteMs: summarize(paired.flatMap(({ post }) => post.clickCompleteMs == null ? [] : [post.clickCompleteMs])),
+    postHeadersToReadyMs: summarize(paired.flatMap(({ sample, post }) => sample.sampledReadyMs === null || post.clickHeadersMs == null ? [] : [sample.sampledReadyMs - post.clickHeadersMs])),
+    postCompletionToReadyMs: summarize(paired.flatMap(({ sample, post }) => sample.sampledReadyMs === null || post.clickCompleteMs == null ? [] : [sample.sampledReadyMs - post.clickCompleteMs])),
+  };
+}) : null;
 const environment = origin.includes("localhost") ? "local" : "hosted";
 // Cleanup changes currentScenario; retain the first failing stage in the report.
 if (!complete && failedScenario) currentScenario = failedScenario;
-await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? "-session-mutations" : ""}${detailsOnly ? "-details" : ""}${correlateDetails ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 5, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
+await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? "-session-mutations" : ""}${detailsOnly ? "-details" : ""}${correlateDetails ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 6, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, mutationMilestones, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
 if (!complete) process.exitCode = 1;

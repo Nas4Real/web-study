@@ -56,6 +56,14 @@ This is a correctness correction and diagnostic, not a latency win or acceptance
 of the broad cache/mutation lifecycle. All existing story gates remain open;
 mobile is deferred. No merge or production deployment.
 
+The subsequent frame-sampled diagnostic completes 20 saves: pending-feedback
+p95 84.7/88ms; POST-header-to-ready p95 93.77/91.36ms. All 19 known POST bodies
+finish after sampled readiness; one completion remains unknown. All 712 units,
+typecheck/final build and a four-scenario genuine-auth read-only smoke pass;
+existing lint warning remains. No app optimization or precise React/paint claim.
+See `docs/performance/SESSION-MUTATION-FRAMES-2026-10-11.md`. This narrows measurement
+uncertainty, not the remaining cache lifecycle/failure/actor/release gates.
+
 ## Early independent experiment — 2026-10-10
 
 The ExecPlan permits a narrow close-handler slice while the full 09-01 baseline

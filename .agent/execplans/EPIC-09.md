@@ -124,6 +124,16 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-11: Frame-sampled one-time save follow-up completes 20 guarded
+  genuine-auth local production samples. Pending-feedback p95 84.7/88ms; paired
+  POST-header-to-ready p95 93.77/91.36ms. All 19 known POST bodies finish after
+  sampled readiness, one completion remains unknown. No app change/speedup or
+  exact paint/React/provider attribution claim. Eight diagnostic tests red→green,
+  full 712 units/typecheck/final build pass, existing lint warning. Four real-auth
+  read-only detail scenarios also pass; original session location/date/time/
+  duration remain restored. See frame-sampled save report. Mobile and story/
+  hosted release gates remain open; no merge or production deployment.
+
 - [x] 2026-10-11: Local one-time session mutation diagnostic uncovered profile/
   series timezone mismatch. Three component regressions fail before/pass after
   using canonical session timezone throughout the editor; server ownership and
@@ -287,6 +297,14 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-11: Extend only diagnostic tooling for one-time session saves: frame-
+  sampled pending feedback, editor dismissal plus enabled Calendar invoker,
+  and click-relative POST headers/completion. Retain assertion upper bounds,
+  unknown/cancelled body timings, first failure stage and existing restoration
+  checks. Header-to-ready includes remaining stream work; it is not React/paint
+  attribution. No application change or cache/transport migration is authorized
+  by this measurement alone. Mobile remains deferred.
 
 - 2026-10-11: Next diagnostic slice covers session saves/reconciliation on
   existing synthetic one-time Performance session 2 only. Opt-in local mutation

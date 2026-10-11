@@ -34,6 +34,10 @@ existence is not evidence that hosted verification passed.
 | 2026-10-11 | Overlap session-detail profile with owned effective occurrence | Five isolated local production runs, 200 samples. All 20 candidate opens overlap versus zero of 30 controls; four reads/one POST unchanged. Reverse-order control ready median 496.85ms vs candidate 451.95ms, but candidate ready/provider tails worse and unchanged-task medians also vary substantially | Rejected; restore seven candidate source/test files to HEAD 76dac6b. Stable gain beyond provider/run variability not established. Prior task/Calendar candidates unchanged; mobile and release gates remain open. See [session experiment](SESSION-DETAIL-PARALLEL-READS-2026-10-11.md) |
 
 Session mutation follow-up: [local saves and timezone correction](SESSION-MUTATIONS-2026-10-11.md).
+The [frame-sampled follow-up](SESSION-MUTATION-FRAMES-2026-10-11.md) completes 20
+unchanged-app saves: pending-feedback p95 <=88ms and paired headers-to-ready
+p95 <94ms. Useful readiness precedes all 19 known POST body completions; one
+completion stays unknown. Diagnostic precision only, no speedup/hosted claim.
 Location-only edits shifted timestamps when profile/series timezones differed.
 Three regressions red→green; synthetic timestamp recovered; 20 guarded local
 save samples complete with unchanged date/time/duration and one mutation POST/

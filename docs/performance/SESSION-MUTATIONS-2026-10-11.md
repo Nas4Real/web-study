@@ -32,7 +32,7 @@ API configuration/provider verification is separate from this diagnostic.
 ## Completed local capture
 
 Windows, Node 24.18.1, Next 16.3.8 production build, Chromium 153.0.8010.12,
-1440×900, `http://localhost:3100`, populated synthetic account. Capture began
+1440×900, `http://localhost:3100`, populated synthetic account. Capture completed
 2026-10-11 10:38 UTC on working-tree changes above base `141a1e3` (not that
 unchanged commit). Provider tracing disabled. No builds/tests/other profilers ran
 alongside capture. Ten edit/restore cycles produced 20 samples.
