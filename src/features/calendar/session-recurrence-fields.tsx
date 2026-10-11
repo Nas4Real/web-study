@@ -20,10 +20,11 @@ export interface SessionRecurrenceValue {
   until?: string;
 }
 
-export function SessionRecurrenceFields({ date, initialValue, timeZone }: {
+export function SessionRecurrenceFields({ date, initialValue, timeZone, timeZoneSource = "profile" }: {
   date: string;
   initialValue?: SessionRecurrenceValue;
   timeZone: string;
+  timeZoneSource?: "profile" | "session";
 }) {
   const [frequency, setFrequency] = useState(initialValue?.frequency ?? "none");
   const [interval, setInterval] = useState(String(initialValue?.interval ?? 1));
@@ -89,7 +90,7 @@ export function SessionRecurrenceFields({ date, initialValue, timeZone }: {
         </div>
         {frequency === "monthly" ? <p className="text-[12px] leading-5 text-zinc-400">Repeats on the same day of the month. Months without that date are skipped.</p> : null}
         <p aria-live="polite" className="text-[12px] font-medium leading-5 text-zinc-300">{summary}.</p>
-        <p className="text-[11px] leading-4 text-zinc-500">Times follow your profile timezone: {timeZone}.</p>
+        <p className="text-[11px] leading-4 text-zinc-500">Times follow your {timeZoneSource} timezone: {timeZone}.</p>
       </div> : null}
     </div>
   );

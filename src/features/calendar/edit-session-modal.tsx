@@ -82,7 +82,7 @@ function scopeSummary(session: CalendarOccurrenceDetailDTO, scope: SessionMutati
   return `${date} at ${time}. Other sessions in the series stay unchanged.`;
 }
 
-export function EditSessionModal({ onCancel, onSaved, scope, session, subjects, timeZone }: {
+export function EditSessionModal({ onCancel, onSaved, scope, session, subjects }: {
   onCancel: () => void;
   onSaved: () => void;
   scope: SessionMutationScope;
@@ -92,6 +92,9 @@ export function EditSessionModal({ onCancel, onSaved, scope, session, subjects, 
 }) {
   const editingSeries = scope === "series";
   const master = session.seriesMaster;
+  // The server interprets civil form values in the owned series timezone,
+  // which can differ from the profile timezone used by the calendar display.
+  const timeZone = session.timezone;
   const start = civilParts(editingSeries ? master.startsAt : session.startsAt, timeZone);
   const initialRecurrence = parseRecurrence(master.recurrenceRule, timeZone, master.startsAt);
   const occurrenceDuration = Math.round((new Date(session.endsAt).getTime() - new Date(session.startsAt).getTime()) / 60_000);
@@ -224,7 +227,7 @@ export function EditSessionModal({ onCancel, onSaved, scope, session, subjects, 
               </div>)}
             </div>
           </section>
-          {scope === "series" ? <SessionRecurrenceFields date={start.date} initialValue={initialRecurrence} timeZone={timeZone} /> : null}
+          {scope === "series" ? <SessionRecurrenceFields date={start.date} initialValue={initialRecurrence} timeZone={timeZone} timeZoneSource="session" /> : null}
           {error ? <p className="text-[13px] text-red-300" role="alert">{error}</p> : null}
         </fieldset>
         <footer className="sticky bottom-0 flex flex-col items-stretch gap-3 border-t border-[#27272a] bg-[#101012] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
