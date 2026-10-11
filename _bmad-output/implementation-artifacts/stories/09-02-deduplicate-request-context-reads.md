@@ -1,7 +1,7 @@
 # Story 09-02: Deduplicate request context reads
 
 Epic: epic-09
-Status: in-progress (independent Calendar and task-detail read experiments)
+Status: in-progress (Calendar/task candidates retained; session candidate rejected)
 Dependencies: 09-01
 Scope: medium; shared request helper, context callers and focused tests
 
@@ -80,3 +80,20 @@ Existing lint warning and newly recorded pre-existing dependency advisories
 remain separate release follow-ups. User deferred mobile. See
 `docs/performance/TASK-DETAIL-PARALLEL-READS-2026-10-10.md` for control differences,
 counts, timings and limits. No hosted, session or whole-story completion claim.
+
+## Session detail experiment result — 2026-10-11
+
+Rejected the profile/occurrence overlap candidate after five isolated local
+production runs, 200 read-only samples. Concurrency occurs in all 20 candidate
+opens and zero of 30 controls, with the same four reads and one POST. Initial
+pairs improve medians, but substantial unchanged-task/provider variation and a
+reverse-order control reduce the credible delta: Candidate 2 ready median
+451.95ms versus Control 3 496.85ms, with worse readiness/provider tails.
+Improvement beyond run variability/non-regression is not established.
+
+Restore the seven candidate application/test files to HEAD 76dac6b; do not retain
+extra orchestration merely because correctness tests pass. Prior task/Calendar
+optimizations remain unchanged. See
+`docs/performance/SESSION-DETAIL-PARALLEL-READS-2026-10-11.md` for conditions,
+counts, verification and the rejected attempt. Mobile and story/release gates
+remain open; no session, hosted or whole-app speedup claim.

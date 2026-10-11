@@ -124,6 +124,17 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-11: Session-detail overlap experiment rejected, not shipped.
+  Five isolated genuine-auth local runs (200 read-only samples) prove concurrency
+  with unchanged four reads/one POST, but reverse-order control reduces the
+  candidate median gain to 44.9ms within observed run variability, with worse
+  tails. Restore all seven candidate source/test files to HEAD 76dac6b; preserve
+  existing task/Calendar optimizations. Record the failed hypothesis in the
+  session-detail-parallel report. All 19 desktop checks pass on both candidate
+  and restored code; restored full units/typecheck/lint/production build pass
+  (existing lint warning). No snapshot updates, merge or production deployment.
+  Mobile and full story/release gates stay open.
+
 - [x] 2026-10-10: Narrow 09-02 task detail candidate retained: verified actor
   first, then required profile/timezone overlaps owner task read; dependent
   subject and eager mutation context preserved. Four isolated genuine-auth local
@@ -261,6 +272,15 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-10 (evaluated and rejected 2026-10-11): Session detail first-open candidate:
+  reuse verified service construction, finish calendar repository setup, then
+  overlap required profile/timezone with the existing owner-aware occurrence
+  and effective-subject chain. No await between starting profile and returning
+  the read context, so its rejection is promptly consumed by the handler.
+  Retain eager Calendar mutation/page contexts. Test deferred/failing profile,
+  unauthenticated setup and preserved effective occurrences; compare isolated
+  local production runs before retaining. Mobile remains user-deferred.
 
 - 2026-10-10: User deferred mobile. Next narrow 09-02 experiment is task
   detail first-open only: after unchanged verified actor resolution, overlap

@@ -177,6 +177,12 @@ checks pass. Mobile is deferred. No hosted/deployment or whole-story claim;
 the report also records existing build/lint dependency advisories for release triage.
 
 
+The [session first-open experiment](SESSION-DETAIL-PARALLEL-READS-2026-10-11.md)
+is rejected after five controlled runs: overlap is proven, but provider/run
+variability and a worse reverse-control tail prevent a stable speedup claim.
+The application and candidate-only tests are restored; prior task/Calendar
+optimizations remain. Mobile and story/release gates stay open.
+
 With local production and `PERF_PROVIDER_TIMING=true`, run sequentially for
 `PERF_DATASET=empty` and `populated` (ten samples per page by default):
 
