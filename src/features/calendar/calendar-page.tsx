@@ -57,10 +57,9 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
   }
 
   function finishSessionMutation() {
-    // Refresh preserves client state; do not repaint a pre-write occurrence.
+    // The Server Action revalidates this range; discard pre-write detail only.
     if (selectedOccurrence) queryClient.removeQueries({ queryKey: ["session-detail", selectedOccurrence.seriesId] });
     closeDetail();
-    if (!data.fixture) router.refresh();
   }
 
   const session = data.fixture ? sessionDetailFixture : detail.data?.detail;

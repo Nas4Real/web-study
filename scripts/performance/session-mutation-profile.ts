@@ -17,6 +17,14 @@ export function sessionProviderMode(value: string | undefined, mode: { origin: s
   return true;
 }
 
+export function expectedSessionRsc(value: string | undefined, mode: { origin: string; sessionMutations: boolean }) {
+  if (value === undefined) return null;
+  if (!["0", "1"].includes(value) || mode.origin !== "http://localhost:3100" || !mode.sessionMutations) {
+    throw new Error("Session request assertions require local mutation mode and count 0 or 1");
+  }
+  return Number(value);
+}
+
 // A failed response can follow a committed write. Always attempt restoration;
 // verification must complete before callers mark restoration successful.
 export async function withRestoredSessionLocation(

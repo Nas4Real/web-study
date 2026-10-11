@@ -124,6 +124,18 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-11: Calendar reconciliation regression fails before/pass after
+  removing only explicit client refresh from successful session mutations.
+  Server revalidation and series detail-cache invalidation remain. Same-budget
+  20-save control/candidate captures reduce extra current-route RSC GETs one→zero
+  throughout, with fresh visible cards/details and restored synthetic invariants.
+  Confirmation/provider timings are mixed; retain for request efficiency, not
+  a stable latency/hosted gain. All 718 units/typecheck/build and 22 desktop
+  browser/visual checks pass; existing lint warning. New failure/retry coverage
+  retains original content and avoids duplicate cards. Dashboard unchanged;
+  rapid/actor/lifecycle/conditional/release gates remain open. See Calendar
+  reconciliation report; no merge/production deploy or mobile work.
+
 - [x] 2026-10-11: Save provider attribution exposes equivalent-start timestamp
   strings misclassified as schedule rewrites. Two regressions fail before/pass
   after reusing instant-based schedule comparison; genuine start changes still
@@ -309,6 +321,17 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-11: Test Calendar's explicit post-session refresh separately from
+  server-action reconciliation. Next's bundled docs state `revalidatePath` in
+  Server Functions immediately updates the viewed affected path; existing edit
+  and delete actions revalidate Calendar and Dashboard. Extend the guarded local
+  save harness with fresh visible card checks and a post-restoration request-count
+  assertion first; reproduce its zero-extra-RSC expectation before changing app
+  code. Candidate removes only Calendar's redundant client refresh, retaining
+  detail invalidation and all server revalidation. Dashboard is a separate slice.
+  Require same-budget control/candidate captures and edit/delete/failure desktop
+  regressions; no UI/auth/schema changes or whole-story completion.
 
 - 2026-10-11: Retain the equivalent-instant correction for correctness and
   measured pre-write read reduction. Use the existing `scheduleMatches` on

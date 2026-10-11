@@ -21,6 +21,31 @@ async function holdDetailRead(page: Page, pathname: string) {
   return { release, requestStarted };
 }
 
+test("Calendar failed session edit retains content and can retry without duplicate cards", async ({ page }) => {
+  await page.goto("/calendar?e2eScope=session-edit-failure-retry&date=2026-10-02&view=day");
+  const invoker = page.getByRole("button", { name: "Open Physics lecture", exact: true });
+  const detail = page.getByRole("dialog", { name: "Physics lecture", exact: true });
+  await invoker.click();
+  await detail.getByRole("button", { name: "Edit", exact: true }).click();
+  await page.getByRole("dialog", { name: "Edit recurring session", exact: true }).getByRole("button", { name: "Continue" }).click();
+  const edit = page.getByRole("dialog", { name: "Edit session", exact: true });
+  await edit.getByLabel("Class or Lecture Name", { exact: true }).fill("   ");
+  await edit.getByLabel(/Room \/ Location/).fill("Room 499");
+  await edit.getByRole("button", { name: "Save changes", exact: true }).click();
+  await expect(edit.getByRole("alert")).toBeVisible();
+  await expect(edit.getByRole("button", { name: "Save changes", exact: true })).toBeEnabled();
+  await expect(invoker.getByText("Room 401", { exact: true })).toBeVisible();
+  await expect(invoker.getByText("Room 499", { exact: true })).toHaveCount(0);
+
+  await edit.getByLabel("Class or Lecture Name", { exact: true }).fill("Physics lecture");
+  await edit.getByRole("button", { name: "Save changes", exact: true }).click();
+  await expect(edit).toBeHidden();
+  await expect(invoker).toHaveCount(1);
+  await expect(invoker.getByText("Room 499", { exact: true })).toBeVisible();
+  await invoker.click();
+  await expect(detail.getByText("Room 499", { exact: true })).toBeVisible();
+});
+
 for (const surface of surfaces) {
   test(`${surface.name} warm detail reopen shows cached content during revalidation`, async ({ page }) => {
     await page.goto(`${surface.path}?e2eScope=detail-cache-warm-${surface.name}${surface.query}`);

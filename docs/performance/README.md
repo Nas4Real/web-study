@@ -143,6 +143,14 @@ in all 20 repeated saves without removing reconciliation or consistency guards.
 Timing changes are descriptive, not a stable hosted speedup. Read-only provider
 mode remains separate; broader lifecycle and release gates stay open.
 
+The [Calendar reconciliation repeat](CALENDAR-RECONCILIATION-2026-10-11.md)
+adds optional `PERF_SESSION_EXPECT_RSC=0|1` in guarded local mutation mode.
+Assertions run only after restoration. Visible card and same-page detail
+verification remain separate from timed dismissal. Removing Calendar's explicit
+post-session refresh reduces extra route requests one→zero in twenty repeated
+saves, retaining Server Action revalidation and detail invalidation. Timings are
+mixed; no latency/hosted win claim. Dashboard remains a separate follow-up.
+
 ```text
 rtk proxy node --env-file=.env.performance.local scripts/performance/profile-interactions.ts
 ```

@@ -10,7 +10,7 @@ import { correlateDetailProviders } from "./detail-provider-metrics.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { detailVisitKinds } from "./detail-visit-metrics.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
-import { sessionMutationMode, sessionProviderMode, withRestoredSessionLocation } from "./session-mutation-profile.ts";
+import { expectedSessionRsc, sessionMutationMode, sessionProviderMode, withRestoredSessionLocation } from "./session-mutation-profile.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { projectClickTiming } from "./interaction-network-metrics.ts";
 
@@ -30,6 +30,7 @@ if (process.env.PERF_CORRELATE_PROVIDER && !["true", "false"].includes(process.e
 if (correlateDetails && (!detailsOnly || origin !== "http://localhost:3100")) throw new Error("Detail provider correlation requires local read-only mode");
 const sessionMutations = sessionMutationMode(process.env.PERF_SESSION_MUTATIONS, { origin, detailsOnly, reopenDetails, correlateDetails });
 const correlateSessionMutations = sessionProviderMode(process.env.PERF_SESSION_PROVIDER, { origin, sessionMutations });
+const expectedReconciliationRsc = expectedSessionRsc(process.env.PERF_SESSION_EXPECT_RSC, { origin, sessionMutations });
 const readProviderLog = () => readFile("test-results/performance/provider-calls.jsonl", "utf8").catch(() => "");
 
 const browser = await chromium.launch();
@@ -176,6 +177,8 @@ async function profileSessionMutation() {
     await guard(async () => {
       // Reopen on the same page: verify mutation invalidation, not a reload that
       // would hide stale cached detail. Read the form value to handle empty rooms.
+      if (location) await expect(invoker.getByText(location, { exact: true })).toBeVisible();
+      else await expect(invoker.getByText(/^Synthetic profiling room(?: alternate)?$/)).toHaveCount(0);
       await invoker.click();
       await detail.getByRole("button", { name: "Edit", exact: true }).click();
       await expect(edit.getByLabel(/Room \/ Location/)).toHaveValue(location);
@@ -243,6 +246,13 @@ try {
     }
     if (i === 0) await page.screenshot({ path: "test-results/performance/synthetic-tasks.png" });
   }
+  if (expectedReconciliationRsc !== null) {
+    // Run after all finally/restoration checks so a failing count never prevents cleanup.
+    currentScenario = "session-reconciliation-request-count";
+    for (const sample of samples) {
+      expect(sample.network.filter(entry => entry.kind === "rsc" && entry.currentRoute && entry.prefetch === false).length).toBe(expectedReconciliationRsc);
+    }
+  }
   complete = true;
 } catch (cause) {
   failure = cause instanceof Error && cause.name === "TimeoutError" ? "timeout" : "measurement";
@@ -281,5 +291,5 @@ const mutationMilestones = sessionMutations ? groups.map(group => {
 const environment = origin.includes("localhost") ? "local" : "hosted";
 // Cleanup changes currentScenario; retain the first failing stage in the report.
 if (!complete && failedScenario) currentScenario = failedScenario;
-await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? "-session-mutations" : ""}${detailsOnly ? "-details" : ""}${correlateDetails || correlateSessionMutations ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 7, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, correlateSessionMutations, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, mutationMilestones, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
+await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? "-session-mutations" : ""}${detailsOnly ? "-details" : ""}${correlateDetails || correlateSessionMutations ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 8, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, correlateSessionMutations, expectedReconciliationRsc, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, mutationMilestones, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
 if (!complete) process.exitCode = 1;

@@ -79,6 +79,20 @@ prevents a hosted latency claim; refresh/cache lifecycle gates remain open. See
 `docs/performance/SESSION-SAVE-PROVIDERS-2026-10-11.md`. Mobile remains deferred;
 no merge or production deployment.
 
+## Calendar reconciliation follow-up — 2026-10-11
+
+Calendar's explicit post-session client refresh is removed while retaining
+Server Action revalidation and affected-series detail-cache invalidation. A
+real-auth production count regression fails before/pass after: twenty control
+saves have one extra current-route RSC GET each, twenty candidate saves have zero.
+Both verify fresh visible cards and same-page details and restore original
+synthetic invariants. All 718 units/typecheck/build and 22 desktop browser/visual
+checks pass, including a failed-edit/retry test; existing lint warning. Timings
+are mixed, so retention is for request efficiency, not a stable latency gain.
+See `docs/performance/CALENDAR-RECONCILIATION-2026-10-11.md`. Dashboard is unchanged;
+real-auth recurring deletion, rapid/actor/cache lifecycle and hosted release
+remain open. No merge/production deployment; mobile deferred.
+
 ## Early independent experiment — 2026-10-10
 
 The ExecPlan permits a narrow close-handler slice while the full 09-01 baseline

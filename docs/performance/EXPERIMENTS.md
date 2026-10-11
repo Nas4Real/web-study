@@ -52,6 +52,14 @@ stable latency gain: post-write intervals vary substantially as well. Restore al
 synthetic invariants; keep owner/CAS guards and refresh. Broad story/release gates
 remain open.
 
+Calendar reconciliation: [local request reduction](CALENDAR-RECONCILIATION-2026-10-11.md).
+Same-budget 20-save control/candidate captures: extra current-route RSC GETs
+one→zero in all samples, one POST each, fresh visible card/same-page details and
+restored invariants. Zero-extra-request regression fails before/pass after.
+Retain Calendar-only refresh removal for measured request efficiency; mixed
+confirmation medians and worse provider tails do not establish a latency win.
+Server revalidation/cache invalidation stay; Dashboard and release remain open.
+
 References: [exploratory report](BASELINE-2026-10-10.md),
 [isolated navigation repeat](ISOLATED-NAVIGATION-2026-10-10.md). Do not compare local and
 hosted numbers as a measured optimization. Record commit, fixture, browser, sample
