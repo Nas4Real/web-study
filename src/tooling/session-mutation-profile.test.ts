@@ -1,8 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import { sessionMutationMode, withRestoredSessionLocation } from "../../scripts/performance/session-mutation-profile";
+import { sessionMutationMode, sessionProviderMode, withRestoredSessionLocation } from "../../scripts/performance/session-mutation-profile";
 
 describe("session mutation profiling safeguards", () => {
   const mode = { origin: "http://localhost:3100", detailsOnly: false, reopenDetails: false, correlateDetails: false };
+  it("opts into provider attribution only for local session mutations", () => {
+    const safe = { origin: mode.origin, sessionMutations: true };
+    expect(sessionProviderMode(undefined, safe)).toBe(false);
+    expect(sessionProviderMode("false", safe)).toBe(false);
+    expect(sessionProviderMode("true", safe)).toBe(true);
+    expect(() => sessionProviderMode("1", safe)).toThrow();
+    expect(() => sessionProviderMode("true", { ...safe, sessionMutations: false })).toThrow();
+    expect(() => sessionProviderMode("true", { ...safe, origin: "https://web-study-pearl.vercel.app" })).toThrow();
+  });
   it("is opt-in and accepts only the isolated local mutation mode", () => {
     expect(sessionMutationMode(undefined, mode)).toBe(false);
     expect(sessionMutationMode("0", mode)).toBe(false);

@@ -19,4 +19,14 @@ describe("detail provider attribution", () => {
     expect(() => correlateDetailProviders("", 0, ["7"], "/tasks")).toThrow();
     expect(() => correlateDetailProviders(JSON.stringify(call), 0, ["7"], "/calendar")).toThrow();
   });
+  it("retains only allowlisted methods when correlating a mutation and its server rerender", () => {
+    const calls = [
+      { ...call, route: "/calendar", kind: "calendar", method: "PATCH", privateBody: "never-output" },
+      { ...call, route: "/calendar", kind: "profile", method: "GET", start: 35, end: 50 },
+    ];
+    const result = correlateDetailProviders(calls.map(item => JSON.stringify(item)).join("\n"), 0, ["7"], "/calendar");
+    expect(result.calls.map(item => item.method)).toEqual(["PATCH", "GET"]);
+    expect(JSON.stringify(result)).not.toContain("never-output");
+    expect(() => correlateDetailProviders(JSON.stringify({ ...calls[0], method: "private-value" }), 0, ["7"], "/calendar")).toThrow();
+  });
 });

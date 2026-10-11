@@ -124,6 +124,18 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-11: Save provider attribution exposes equivalent-start timestamp
+  strings misclassified as schedule rewrites. Two regressions fail before/pass
+  after reusing instant-based schedule comparison; genuine start changes still
+  reject with exceptions. Keep consistency reread, owner and schedule-CAS guards.
+  All 717 units/typecheck/final build and 21 desktop browser/visual checks pass;
+  existing lint warning. Matching 20-save real-auth repeat removes one pre-write
+  Calendar GET in every sample; original synthetic location/date/time/duration
+  restored. Control captures ten calls in 19 samples, nine in one; fixed nine
+  throughout. Timing variability prevents a stable hosted speedup claim. See
+  `docs/performance/SESSION-SAVE-PROVIDERS-2026-10-11.md`. Mobile, broad lifecycle,
+  conditional querying and release gates remain open; no merge/production deploy.
+
 - [x] 2026-10-11: Frame-sampled one-time save follow-up completes 20 guarded
   genuine-auth local production samples. Pending-feedback p95 84.7/88ms; paired
   POST-header-to-ready p95 93.77/91.36ms. All 19 known POST bodies finish after
@@ -297,6 +309,20 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-11: Retain the equivalent-instant correction for correctness and
+  measured pre-write read reduction. Use the existing `scheduleMatches` on
+  validated merged schedule, not string equality, without dropping the owned
+  master reread or repository schedule predicates. Do not remove client refresh
+  alongside it: action-attached rerender plus separate RSC is a hypothesis for
+  a later scoped experiment, not sufficient proof reconciliation is redundant.
+
+- 2026-10-11: Next save attribution is diagnostic-only: explicitly local
+  `PERF_SESSION_PROVIDER=true` with guarded session mutation mode and the existing
+  provider preload. Correlate one exact save POST, exclude old-log/other-request
+  events, and allowlist HTTP methods in sanitized call projections. Account for
+  action-attached page rerender reads; do not label the whole span as database
+  update time. Preserve restoration/freshness checks and unknown body timings.
 
 - 2026-10-11: Extend only diagnostic tooling for one-time session saves: frame-
   sampled pending feedback, editor dismissal plus enabled Calendar invoker,

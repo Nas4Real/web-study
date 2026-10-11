@@ -24,7 +24,8 @@ if (process.env.PERF_PROVIDER_TIMING === "true") {
   const providerOrigin = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin;
   channel("undici:request:create").subscribe(({ request }) => {
     if (String(request.origin) !== providerOrigin) return;
-    requests.set(request, { ...scope.getStore(), kind: classifyProvider(request.path), start: performance.now() });
+    const method = ["GET", "POST", "PATCH", "PUT", "DELETE", "HEAD", "OPTIONS"].includes(request.method) ? request.method : "other";
+    requests.set(request, { ...scope.getStore(), kind: classifyProvider(request.path), method, start: performance.now() });
   });
   channel("undici:request:headers").subscribe(({ request, response }) => {
     const timing = requests.get(request);
@@ -36,7 +37,7 @@ if (process.env.PERF_PROVIDER_TIMING === "true") {
     requests.delete(request);
     const end = performance.now();
     // Explicit allowlisted numeric/category data only; never log URLs or headers.
-    appendFileSync("test-results/performance/provider-calls.jsonl", JSON.stringify({ event: "provider-call", requestId: timing.requestId ?? null, route: timing.route ?? "unattributed", kind: timing.kind, start: timing.start, headers: timing.headers ?? null, end, duration: end - timing.start, status: timing.status ?? null, failed }) + "\n");
+    appendFileSync("test-results/performance/provider-calls.jsonl", JSON.stringify({ event: "provider-call", requestId: timing.requestId ?? null, route: timing.route ?? "unattributed", kind: timing.kind, method: timing.method, start: timing.start, headers: timing.headers ?? null, end, duration: end - timing.start, status: timing.status ?? null, failed }) + "\n");
   }
   channel("undici:request:trailers").subscribe(({ request }) => complete(request, false));
   channel("undici:request:error").subscribe(({ request }) => complete(request, true));

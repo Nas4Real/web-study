@@ -44,6 +44,14 @@ save samples complete with unchanged date/time/duration and one mutation POST/
 one current-route reconciliation each. Correctness fix retained, not a speedup
 or hosted/release claim. Incomplete first attempt preserved; mobile deferred.
 
+Save provider follow-up: [equivalent-instant correction](SESSION-SAVE-PROVIDERS-2026-10-11.md).
+Control/fixed have 20 saves each; pre-write Calendar GETs are three→two in every
+sample. Two equivalent-format regressions fail before/pass after; real start
+changes still reject with exceptions. Retain correctness/read reduction, not a
+stable latency gain: post-write intervals vary substantially as well. Restore all
+synthetic invariants; keep owner/CAS guards and refresh. Broad story/release gates
+remain open.
+
 References: [exploratory report](BASELINE-2026-10-10.md),
 [isolated navigation repeat](ISOLATED-NAVIGATION-2026-10-10.md). Do not compare local and
 hosted numbers as a measured optimization. Record commit, fixture, browser, sample

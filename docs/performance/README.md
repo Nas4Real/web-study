@@ -119,7 +119,7 @@ It modifies only synthetic task 1; an interrupted/failed run can leave it comple
 and reports that possibility. Default mode does not change sessions or real-user data.
 
 The opt-in `PERF_SESSION_MUTATIONS=1` mode is local-only and exclusive of the
-read-only/warm/provider modes. It edits and restores only synthetic one-time
+read-only/warm/detail-provider modes. It edits and restores only synthetic one-time
 Performance session 2's location; same-page reopens verify date/start/duration
 remain unchanged as well. Restoration runs in finally, and reports retain the
 original failure stage. See [session mutations and timezone fix](SESSION-MUTATIONS-2026-10-11.md)
@@ -133,6 +133,15 @@ headers/completion and `mutationMilestones`; missing bodies stay unknown. Twenty
 samples complete with unchanged session invariants. Useful streamed data arrives
 before full response completion; header-to-ready is not exact client-render time.
 This is diagnostic evidence, not a new app optimization or whole-story completion.
+
+The [provider-attributed save repeat](SESSION-SAVE-PROVIDERS-2026-10-11.md)
+adds `PERF_SESSION_PROVIDER=true` to guarded local mutation mode only. Version-7
+reports retain allowlisted methods and exact POST provider attribution, including
+action-attached page rerender work. Equivalent timestamp formats falsely triggered
+schedule-rewrite checks; the correctness fix removes one pre-write Calendar GET
+in all 20 repeated saves without removing reconciliation or consistency guards.
+Timing changes are descriptive, not a stable hosted speedup. Read-only provider
+mode remains separate; broader lifecycle and release gates stay open.
 
 ```text
 rtk proxy node --env-file=.env.performance.local scripts/performance/profile-interactions.ts

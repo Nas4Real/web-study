@@ -10,7 +10,7 @@ import { correlateDetailProviders } from "./detail-provider-metrics.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { detailVisitKinds } from "./detail-visit-metrics.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
-import { sessionMutationMode, withRestoredSessionLocation } from "./session-mutation-profile.ts";
+import { sessionMutationMode, sessionProviderMode, withRestoredSessionLocation } from "./session-mutation-profile.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { projectClickTiming } from "./interaction-network-metrics.ts";
 
@@ -29,6 +29,7 @@ const correlateDetails = process.env.PERF_CORRELATE_PROVIDER === "true";
 if (process.env.PERF_CORRELATE_PROVIDER && !["true", "false"].includes(process.env.PERF_CORRELATE_PROVIDER)) throw new Error("Invalid provider correlation mode");
 if (correlateDetails && (!detailsOnly || origin !== "http://localhost:3100")) throw new Error("Detail provider correlation requires local read-only mode");
 const sessionMutations = sessionMutationMode(process.env.PERF_SESSION_MUTATIONS, { origin, detailsOnly, reopenDetails, correlateDetails });
+const correlateSessionMutations = sessionProviderMode(process.env.PERF_SESSION_PROVIDER, { origin, sessionMutations });
 const readProviderLog = () => readFile("test-results/performance/provider-calls.jsonl", "utf8").catch(() => "");
 
 const browser = await chromium.launch();
@@ -49,8 +50,8 @@ let failure: "timeout" | "measurement" | null = null;
 // Timing is an assertion-observed upper bound, not an exact DOM commit or paint.
 async function measure(scenario: string, action: () => Promise<void>, ready: () => Promise<void>, probeCriteria?: DetailProbeCriteria) {
   currentScenario = scenario;
-  const traceOpen = correlateDetails && scenario.endsWith("-detail-open");
-  const logBoundary = traceOpen ? (await readProviderLog()).length : 0;
+  const traceAction = (correlateDetails && scenario.endsWith("-detail-open")) || correlateSessionMutations;
+  const logBoundary = traceAction ? (await readProviderLog()).length : 0;
   const sourceRoute = new URL(page.url()).pathname;
   const start = performance.now();
   const requests = new Map<Request, Network>();
@@ -70,7 +71,7 @@ async function measure(scenario: string, action: () => Promise<void>, ready: () 
     const entry = requests.get(response.request());
     if (entry) {
       entry.headersMs = performance.now() - start;
-      if (traceOpen && entry.method === "POST" && entry.currentRoute) {
+      if (traceAction && entry.method === "POST" && entry.currentRoute) {
         correlationIds.set(entry, response.headerValue("x-perf-request").catch(() => null));
       }
     }
@@ -108,7 +109,7 @@ async function measure(scenario: string, action: () => Promise<void>, ready: () 
     // Read-only close counts include a fixed one-second observation window.
     await page.waitForTimeout(1000);
     let provider: Sample["provider"] = null;
-    if (traceOpen) {
+    if (traceAction) {
       // Cached DOM can be ready before revalidation ends. Do not truncate that
       // provider timeline or add its completion wait to the readiness metric.
       currentScenario = `${scenario}-provider-completion`;
@@ -280,5 +281,5 @@ const mutationMilestones = sessionMutations ? groups.map(group => {
 const environment = origin.includes("localhost") ? "local" : "hosted";
 // Cleanup changes currentScenario; retain the first failing stage in the report.
 if (!complete && failedScenario) currentScenario = failedScenario;
-await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? "-session-mutations" : ""}${detailsOnly ? "-details" : ""}${correlateDetails ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 6, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, mutationMilestones, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
+await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? "-session-mutations" : ""}${detailsOnly ? "-details" : ""}${correlateDetails || correlateSessionMutations ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 7, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, correlateSessionMutations, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, mutationMilestones, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
 if (!complete) process.exitCode = 1;

@@ -31,14 +31,16 @@ export function classifyProvider(path: string) {
   return "other";
 }
 
-type ProviderCall = { kind: string; start: number; end: number; status: number | null; failed: boolean };
+type ProviderCall = { kind: string; method?: string; start: number; end: number; status: number | null; failed: boolean };
 
 // Numeric/category projection only; union time is not the sum of overlapping calls.
 export function providerTimeline(input: ProviderCall[]) {
   const kinds = ["auth-user", "auth-other", "profile", "subject", "task", "calendar", "document", "other"];
+  const methods = ["GET", "POST", "PATCH", "PUT", "DELETE", "HEAD", "OPTIONS", "other"];
   for (const call of input) {
     if (!kinds.includes(call.kind) || !Number.isFinite(call.start) || !Number.isFinite(call.end) || call.end < call.start ||
-      (call.status !== null && (!Number.isInteger(call.status) || call.status < 100 || call.status > 599)) || typeof call.failed !== "boolean") {
+      (call.status !== null && (!Number.isInteger(call.status) || call.status < 100 || call.status > 599)) || typeof call.failed !== "boolean"
+      || (call.method !== undefined && !methods.includes(call.method))) {
       throw new Error("Invalid sanitized provider timing");
     }
   }
@@ -57,7 +59,7 @@ export function providerTimeline(input: ProviderCall[]) {
     busyMs: start === undefined ? null : busyMs,
     spanMs: start === undefined ? null : coveredUntil - start,
     errors: sorted.filter(call => call.failed || (call.status !== null && call.status >= 400)).length,
-    calls: sorted.map(call => ({ kind: call.kind, startMs: call.start - start!, endMs: call.end - start!, status: call.status, failed: call.failed })),
+    calls: sorted.map(call => ({ kind: call.kind, ...(call.method === undefined ? {} : { method: call.method }), startMs: call.start - start!, endMs: call.end - start!, status: call.status, failed: call.failed })),
   };
 }
 

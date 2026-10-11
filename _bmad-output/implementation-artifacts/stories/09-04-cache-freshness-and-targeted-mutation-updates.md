@@ -64,6 +64,21 @@ existing lint warning remains. No app optimization or precise React/paint claim.
 See `docs/performance/SESSION-MUTATION-FRAMES-2026-10-11.md`. This narrows measurement
 uncertainty, not the remaining cache lifecycle/failure/actor/release gates.
 
+## Provider-attributed save follow-up — 2026-10-11
+
+Equivalent provider/form timestamp
+serializations were treated as schedule changes, needlessly reading exceptions
+and rejecting recurring content edits with exceptions. Two tests reproduce the
+bug red→green; a true-start-change test retains rejection. The shared service now
+reuses its instant-based schedule comparison, retaining independent owner reads
+and repository concurrent-schedule guards. All 717 units/typecheck/build and 21
+desktop browser/visual checks pass, existing lint warning. Twenty real-auth saves
+remove one pre-write Calendar GET each, verify fresh same-page detail and restore
+the synthetic session's original location/date/time/duration. Timing variability
+prevents a hosted latency claim; refresh/cache lifecycle gates remain open. See
+`docs/performance/SESSION-SAVE-PROVIDERS-2026-10-11.md`. Mobile remains deferred;
+no merge or production deployment.
+
 ## Early independent experiment — 2026-10-10
 
 The ExecPlan permits a narrow close-handler slice while the full 09-01 baseline

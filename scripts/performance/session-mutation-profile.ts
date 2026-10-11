@@ -9,6 +9,14 @@ export function sessionMutationMode(value: string | undefined, mode: {
   return true;
 }
 
+// Explicit opt-in, separate from read-only detail provider correlation.
+export function sessionProviderMode(value: string | undefined, mode: { origin: string; sessionMutations: boolean }) {
+  if (value !== undefined && !["true", "false"].includes(value)) throw new Error("Invalid session provider mode");
+  if (value !== "true") return false;
+  if (mode.origin !== "http://localhost:3100" || !mode.sessionMutations) throw new Error("Session providers require local mutation mode");
+  return true;
+}
+
 // A failed response can follow a committed write. Always attempt restoration;
 // verification must complete before callers mark restoration successful.
 export async function withRestoredSessionLocation(
