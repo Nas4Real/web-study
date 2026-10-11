@@ -1,6 +1,6 @@
 import type { CalendarMonthCellDTO } from "@/domain/dto";
 
-import { calendarToneStyles } from "../calendar-styles";
+import { calendarSubjectStyles, calendarToneStyles } from "../calendar-styles";
 
 const weekdays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"] as const;
 
@@ -53,7 +53,7 @@ export function MonthView({ cells, label }: { cells: readonly CalendarMonthCellD
                       event.inProgress ? "border-analysis/40 bg-[#001f29]" : "border-border-panel bg-card"
                     }`}
                   >
-                    <span aria-hidden="true" className={`size-1.5 shrink-0 rounded-full ${calendarToneStyles[event.tone].dot}`} />
+                    <span aria-hidden="true" className={`size-1.5 shrink-0 rounded-full ${calendarToneStyles[event.tone].dot}`} style={calendarSubjectStyles(event.subjectColor).dot} />
                     <span className="truncate text-[12px] font-semibold leading-tight text-white">{event.title}</span>
                   </div>
                 ))}

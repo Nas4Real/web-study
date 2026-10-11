@@ -39,6 +39,16 @@ describe("Month calendar rendering", () => {
     expect(render([{ ...cell, events: [] }])).not.toContain("First session");
   });
 
+  it("uses each subject's stored color for Month dots", () => {
+    const html = render([{ ...cell, events: [
+      { ...event, subjectColor: "#4ade80" },
+      { ...event, id: "second", title: "Schema review", subjectColor: "#a78bfa" },
+    ] }]);
+    expect(html).toContain('style="background-color:#4ade80"');
+    expect(html).toContain('style="background-color:#a78bfa"');
+    expect(html).not.toContain("<button");
+  });
+
   it.each([28, 35, 42])("uses exactly %i cells with borders only above the final row", count => {
     const html = render(Array.from({ length: count }, (_, index) => ({ ...cell, id: `cell-${index}`, event: null })));
     expect(html).toContain(`grid-rows-${count / 7}`);

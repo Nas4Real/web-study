@@ -56,6 +56,8 @@ export interface CalendarVisualEventDTO {
   originalStart: IsoDateTime;
   title: string;
   subjectLabel: string;
+  /** Stored subject color; omitted only by legacy visual fixtures. */
+  subjectColor?: string;
   tone: CalendarTone;
   startLabel: string;
   endLabel: string;
@@ -82,7 +84,7 @@ export interface CalendarMonthCellDTO {
   day: number;
   outsideMonth: boolean;
   isToday: boolean;
-  event: Pick<CalendarVisualEventDTO, "title" | "tone" | "inProgress"> | null;
+  event: Pick<CalendarVisualEventDTO, "title" | "tone" | "subjectColor" | "inProgress"> | null;
   events?: readonly CalendarVisualEventDTO[];
 }
 
