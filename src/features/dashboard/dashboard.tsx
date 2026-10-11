@@ -41,10 +41,9 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
     setSelectedSession(null);
   }
   function finishSessionMutation() {
-    // A series write can change any cached sibling occurrence.
+    // Server Actions revalidate this page; discard pre-write sibling details.
     if (selectedSession) queryClient.removeQueries({ queryKey: ["session-detail", selectedSession.seriesId] });
     closeSession();
-    if (!dashboard.fixture) router.refresh();
   }
   const error = detail.query.error?.message ?? detail.mutation.error?.message;
   const session = dashboard.fixture && selectedSession ? sessionDetailFixture : sessionDetail.data?.detail;

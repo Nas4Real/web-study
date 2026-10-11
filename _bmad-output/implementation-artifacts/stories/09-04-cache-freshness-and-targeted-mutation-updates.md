@@ -93,6 +93,20 @@ See `docs/performance/CALENDAR-RECONCILIATION-2026-10-11.md`. Dashboard is uncha
 real-auth recurring deletion, rapid/actor/cache lifecycle and hosted release
 remain open. No merge/production deployment; mobile deferred.
 
+## Dashboard reconciliation follow-up — 2026-10-11
+
+Dashboard's session-success refresh is removed separately; task refresh remains.
+Matching twenty-save real-auth local production captures reduce extra current-route
+RSC GETs one→zero in every sample, with fresh visible cards/same-page details and
+restored synthetic location/date/start/duration. Eight prefetch-flagged requests
+remain in every save window; zero-extra-reconciliation is not zero traffic.
+All 719 units/typecheck/build and 25 desktop browser/visual checks pass, including
+new Dashboard failed-edit/retry and occurrence/series deletion coverage. Existing
+lint warning remains. Mixed timing results do not establish stable hosted speedup.
+See `docs/performance/DASHBOARD-RECONCILIATION-2026-10-11.md`. Server revalidation,
+detail invalidation and auth remain; actor/rapid/real-auth recurring deletion and
+release gates remain open. No merge/production deployment; mobile deferred.
+
 ## Early independent experiment — 2026-10-10
 
 The ExecPlan permits a narrow close-handler slice while the full 09-01 baseline

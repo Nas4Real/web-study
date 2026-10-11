@@ -149,7 +149,17 @@ Assertions run only after restoration. Visible card and same-page detail
 verification remain separate from timed dismissal. Removing Calendar's explicit
 post-session refresh reduces extra route requests one→zero in twenty repeated
 saves, retaining Server Action revalidation and detail invalidation. Timings are
-mixed; no latency/hosted win claim. Dashboard remains a separate follow-up.
+mixed; no latency/hosted win claim. Dashboard is tested separately below.
+
+The [Dashboard reconciliation repeat](DASHBOARD-RECONCILIATION-2026-10-11.md)
+extends version-9 reports with `PERF_SESSION_SURFACE=calendar|dashboard`; an
+explicit surface requires guarded local mutation mode, and unset keeps Calendar.
+Dashboard requires the existing one-time synthetic session to be visible today;
+never move it just to run the benchmark. Twenty saves per variant reduce extra
+current-route RSC GETs one→zero, keeping server revalidation, detail invalidation
+and task refresh unchanged. Eight background prefetches remain; timings are mixed.
+Same-page card/details and original synthetic invariants pass. Actor/rapid and
+hosted release gates remain open; mobile deferred.
 
 ```text
 rtk proxy node --env-file=.env.performance.local scripts/performance/profile-interactions.ts

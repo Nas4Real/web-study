@@ -60,6 +60,15 @@ Retain Calendar-only refresh removal for measured request efficiency; mixed
 confirmation medians and worse provider tails do not establish a latency win.
 Server revalidation/cache invalidation stay; Dashboard and release remain open.
 
+Dashboard reconciliation: [separate local repeat](DASHBOARD-RECONCILIATION-2026-10-11.md).
+Twenty saves per variant reduce extra current-route RSC GETs one→zero throughout;
+all observed RSCs nine→eight, with eight background prefetches unchanged. Fresh
+visible cards/details and restoration pass; new failure/retry and both deletion
+scope tests pass. Retain only Dashboard's session refresh removal for request
+efficiency, not stable latency: edit/restore medians move in opposite directions.
+Keep server revalidation, detail invalidation and task refresh. Actor/rapid,
+conditional querying and hosted release gates remain open.
+
 References: [exploratory report](BASELINE-2026-10-10.md),
 [isolated navigation repeat](ISOLATED-NAVIGATION-2026-10-10.md). Do not compare local and
 hosted numbers as a measured optimization. Record commit, fixture, browser, sample

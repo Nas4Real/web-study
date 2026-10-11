@@ -124,6 +124,17 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-11: Dashboard session refresh experiment red→green across matching
+  twenty-save genuine-auth local production runs: extra current-route RSC GETs
+  one→zero throughout, while eight background prefetches remain. Visible cards
+  and same-page details are fresh; original synthetic location/date/start/duration
+  restored. Remove only session-success refresh; retain task refresh, server
+  revalidation and series detail invalidation. All 719 units/typecheck/build and
+  25 desktop browser/visual checks pass, including new Dashboard retry and both
+  deletion scopes; existing lint warning. Timings mixed, no stable latency/hosted
+  gain. See Dashboard reconciliation report. Actor/rapid/conditional/release
+  gates remain open; no merge/production deploy or mobile work.
+
 - [x] 2026-10-11: Calendar reconciliation regression fails before/pass after
   removing only explicit client refresh from successful session mutations.
   Server revalidation and series detail-cache invalidation remain. Same-budget
@@ -321,6 +332,15 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-11: Dashboard session reconciliation is the next separate 09-04
+  experiment. Extend the existing local-only guarded save harness with an
+  allowlisted Dashboard surface, same-page visible-card/detail checks and
+  original location/date/start/duration restoration. Never move the synthetic
+  session into today's range to manufacture coverage. Capture twenty saves
+  before changing only the session-success callback; leave task refresh alone.
+  Require the zero-extra-RSC regression red before/green after and matching
+  edit/delete/failure browser checks. No mobile, UI, auth or schema changes.
 
 - 2026-10-11: Test Calendar's explicit post-session refresh separately from
   server-action reconciliation. Next's bundled docs state `revalidatePath` in

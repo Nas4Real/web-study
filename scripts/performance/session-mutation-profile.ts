@@ -25,6 +25,14 @@ export function expectedSessionRsc(value: string | undefined, mode: { origin: st
   return Number(value);
 }
 
+export function sessionMutationSurface(value: string | undefined, mode: { origin: string; sessionMutations: boolean }): "calendar" | "dashboard" {
+  if (value === undefined) return "calendar";
+  if (!["calendar", "dashboard"].includes(value) || mode.origin !== "http://localhost:3100" || !mode.sessionMutations) {
+    throw new Error("Session surface requires local mutation mode and Calendar or Dashboard");
+  }
+  return value as "calendar" | "dashboard";
+}
+
 // A failed response can follow a committed write. Always attempt restoration;
 // verification must complete before callers mark restoration successful.
 export async function withRestoredSessionLocation(

@@ -1,8 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
-import { expectedSessionRsc, sessionMutationMode, sessionProviderMode, withRestoredSessionLocation } from "../../scripts/performance/session-mutation-profile";
+import { expectedSessionRsc, sessionMutationMode, sessionMutationSurface, sessionProviderMode, withRestoredSessionLocation } from "../../scripts/performance/session-mutation-profile";
 
 describe("session mutation profiling safeguards", () => {
   const mode = { origin: "http://localhost:3100", detailsOnly: false, reopenDetails: false, correlateDetails: false };
+  it("defaults to Calendar and opts into Dashboard only for local guarded mutations", () => {
+    const safe = { origin: mode.origin, sessionMutations: true };
+    expect(sessionMutationSurface(undefined, safe)).toBe("calendar");
+    expect(sessionMutationSurface("calendar", safe)).toBe("calendar");
+    expect(sessionMutationSurface("dashboard", safe)).toBe("dashboard");
+    expect(() => sessionMutationSurface("tasks", safe)).toThrow();
+    expect(() => sessionMutationSurface("dashboard", { ...safe, sessionMutations: false })).toThrow();
+    expect(() => sessionMutationSurface("dashboard", { ...safe, origin: "https://web-study-pearl.vercel.app" })).toThrow();
+    expect(sessionMutationSurface(undefined, { ...safe, sessionMutations: false })).toBe("calendar");
+  });
   it("guards an optional reconciliation request-count assertion", () => {
     const safe = { origin: mode.origin, sessionMutations: true };
     expect(expectedSessionRsc(undefined, safe)).toBeNull();

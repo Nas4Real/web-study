@@ -10,7 +10,7 @@ import { correlateDetailProviders } from "./detail-provider-metrics.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { detailVisitKinds } from "./detail-visit-metrics.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
-import { expectedSessionRsc, sessionMutationMode, sessionProviderMode, withRestoredSessionLocation } from "./session-mutation-profile.ts";
+import { expectedSessionRsc, sessionMutationMode, sessionMutationSurface, sessionProviderMode, withRestoredSessionLocation } from "./session-mutation-profile.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { projectClickTiming } from "./interaction-network-metrics.ts";
 
@@ -31,6 +31,7 @@ if (correlateDetails && (!detailsOnly || origin !== "http://localhost:3100")) th
 const sessionMutations = sessionMutationMode(process.env.PERF_SESSION_MUTATIONS, { origin, detailsOnly, reopenDetails, correlateDetails });
 const correlateSessionMutations = sessionProviderMode(process.env.PERF_SESSION_PROVIDER, { origin, sessionMutations });
 const expectedReconciliationRsc = expectedSessionRsc(process.env.PERF_SESSION_EXPECT_RSC, { origin, sessionMutations });
+const mutationSurface = sessionMutationSurface(process.env.PERF_SESSION_SURFACE, { origin, sessionMutations });
 const readProviderLog = () => readFile("test-results/performance/provider-calls.jsonl", "utf8").catch(() => "");
 
 const browser = await chromium.launch();
@@ -131,7 +132,7 @@ async function measure(scenario: string, action: () => Promise<void>, ready: () 
 }
 
 async function profileSessionMutation() {
-  const path = `${origin}/calendar?date=2026-10-11&view=day`;
+  const path = mutationSurface === "dashboard" ? `${origin}/` : `${origin}/calendar?date=2026-10-11&view=day`;
   const invoker = page.getByRole("button", { name: "Open Performance session 2", exact: true });
   const detail = page.getByRole("dialog", { name: "Performance session 2", exact: true });
   const edit = page.getByRole("dialog", { name: "Edit session", exact: true });
@@ -149,6 +150,10 @@ async function profileSessionMutation() {
   const originalDate = await edit.getByLabel("Date", { exact: true }).inputValue();
   const originalTime = await edit.getByLabel("Start time", { exact: true }).inputValue();
   const originalDuration = await edit.getByLabel("Duration", { exact: true }).inputValue();
+  if (mutationSurface === "dashboard") {
+    // Do not move a synthetic session into today's range just to profile it.
+    await expect(edit.getByLabel("Date", { exact: true })).toHaveValue(new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Tunis" }).format(new Date()));
+  }
   await edit.getByRole("button", { name: "Cancel", exact: true }).click();
   async function guard(operation: () => Promise<void>) {
     try { await operation(); }
@@ -259,7 +264,7 @@ try {
   // No error payload, page content, user identifiers or credentials in output.
   failedScenario ??= currentScenario;
   console.log(`Interaction profiling incomplete at ${failedScenario} (${failure}). ${sessionMutations ? `Synthetic session restoration confirmed: ${sessionRestored}.` : detailsOnly ? "Detail-only mode does not mutate study data." : "Synthetic task may need reopening if a mutation failed."}`);
-  if (signedIn && ["/tasks", "/calendar"].includes(new URL(page.url()).pathname)) {
+  if (signedIn && ["/", "/tasks", "/calendar"].includes(new URL(page.url()).pathname)) {
     await page.screenshot({ path: "test-results/performance/synthetic-interaction-failure.png" }).catch(() => {});
   }
 } finally {
@@ -291,5 +296,5 @@ const mutationMilestones = sessionMutations ? groups.map(group => {
 const environment = origin.includes("localhost") ? "local" : "hosted";
 // Cleanup changes currentScenario; retain the first failing stage in the report.
 if (!complete && failedScenario) currentScenario = failedScenario;
-await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? "-session-mutations" : ""}${detailsOnly ? "-details" : ""}${correlateDetails || correlateSessionMutations ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 8, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, correlateSessionMutations, expectedReconciliationRsc, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, mutationMilestones, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
+await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? `-session-mutations${mutationSurface === "dashboard" ? "-dashboard" : ""}` : ""}${detailsOnly ? "-details" : ""}${correlateDetails || correlateSessionMutations ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 9, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, correlateSessionMutations, expectedReconciliationRsc, mutationSurface: sessionMutations ? mutationSurface : null, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, mutationMilestones, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
 if (!complete) process.exitCode = 1;
