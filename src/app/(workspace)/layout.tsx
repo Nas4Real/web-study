@@ -9,9 +9,9 @@ export default async function WorkspaceLayout({ children }: Readonly<{ children:
   if (!context) redirect("/sign-in");
 
   return (
-    <div className="flex min-h-screen flex-col gap-3 bg-base p-3 text-text antialiased lg:flex-row">
+    <div className="flex min-h-screen w-full flex-col gap-3 bg-base p-3 font-sans text-zinc-200 antialiased selection:bg-white selection:text-black lg:h-screen lg:min-h-0 lg:flex-row lg:overflow-hidden">
       <StudySidebar displayName={context.profile.displayName} email={context.email} />
-      <main className="workspace-shadow min-w-0 flex-1 overflow-hidden rounded-workspace border border-border-panel bg-panel">
+      <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto rounded-[20px] border border-borderPanel bg-panel shadow-2xl lg:h-full">
         {children}
       </main>
     </div>

@@ -1,4 +1,22 @@
-# Active Plan: Navigation and interaction performance
+# Active Plan: Copy the localhost UI
+
+Date: 2026-10-11. Source: `C:/Users/itsna/Desktop/web/app/src`.
+
+Port the existing React markup/classes from `localhost:5173`; do not redesign.
+Keep real Next routes, authentication, services, data, task/session dialogs and mutations.
+Use [the UI parity ExecPlan](../.agent/execplans/LOCALHOST-UI-PARITY.md).
+
+1. Copy shared shell/tokens and Dashboard components; verify desktop layout and actions.
+2. Copy Tasks markup while preserving completion, detail and creation behavior.
+3. Copy Calendar and Documents views while preserving occurrence identity and organization.
+4. Compare Settings, dialogs and authentication with source; port actual differences only.
+5. Verify each slice in the browser and run regression gates before preview publication.
+
+Remaining performance/mobile work stays deferred; it is not part of this port.
+
+---
+
+# Historical Plan: Navigation and interaction performance (remaining work deferred)
 
 Date: 2026-10-10. Planning complete; implementation pending.
 

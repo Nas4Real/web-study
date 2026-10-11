@@ -1,4 +1,19 @@
-# Active: Navigation and interaction performance
+# Active: Copy the localhost UI
+
+- [x] Identify live Vite source and confirm matching `web/app/src` files.
+- [x] Compare source and working app; record source mapping and preserved behavior.
+- [x] Copy shell/tokens and all Dashboard components; browser + regression verification.
+- [x] Copy Tasks screen; verify filters, keyboard details, action menu and creation entry point.
+- [ ] Copy Calendar views/header; verify day/week/month and session actions.
+- [ ] Copy Documents screens; verify subjects/chapters/search and disabled uploads.
+- [ ] Compare/port remaining Settings, dialogs and auth differences.
+- [ ] Publish verified UI slices to the existing preview branch.
+
+Full plan: [LOCALHOST-UI-PARITY](../.agent/execplans/LOCALHOST-UI-PARITY.md).
+
+---
+
+# Historical: Navigation and interaction performance (remaining work deferred)
 
 - [x] Prepare Epic 09 spec, seven stories, ExecPlan and sprint/task indexes.
 - [ ] 09-01: Record authenticated production baseline and ranked bottlenecks.

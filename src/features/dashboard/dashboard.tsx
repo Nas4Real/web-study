@@ -10,6 +10,7 @@ import { useSessionDetail } from "@/features/calendar/use-session-detail";
 import type { SessionOccurrenceTarget } from "@/server/study/session-detail-service";
 import { TaskDetailProvider, useTaskDetail } from "@/features/tasks/use-task-detail";
 import { TaskDetailsModal } from "@/features/tasks/task-details-modal";
+import { NewTaskModal } from "@/features/tasks/new-task-modal";
 
 import { DashboardHeader } from "./dashboard-header";
 import { MiniCalendar } from "./mini-calendar";
@@ -26,6 +27,7 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<SessionOccurrenceTarget | null>(null);
   const sessionDetail = useSessionDetail(dashboard.fixture ? null : selectedSession);
   const detail = useTaskDetail(selectedTaskId, (updated, id) => {
@@ -48,24 +50,29 @@ function DashboardContent({ dashboard }: { dashboard: DashboardFixtureDTO }) {
   const error = detail.query.error?.message ?? detail.mutation.error?.message;
   const session = dashboard.fixture && selectedSession ? sessionDetailFixture : sessionDetail.data?.detail;
   return (
-    <div className="min-h-full space-y-8 overflow-y-auto p-4 sm:p-6 xl:p-8">
-      <DashboardHeader />
-      <SummaryCards dashboard={dashboard} />
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-        <div className="space-y-8 xl:col-span-2">
-          <UpcomingAssignments assignments={dashboard.assignments} onOpen={openTask} />
-          <TaskProgress completed={dashboard.taskSummary.completedToday} tasks={dashboard.tasks}
-            onOpen={openTask} pending={detail.mutation.isPending}
-            onToggle={task => detail.mutate({ type: task.completed ? "reopen" : "complete" }, task.id)} />
-        </div>
-        <div className="space-y-8">
-          <TodayClasses
-            classes={dashboard.todayClasses}
-            onOpen={item => setSelectedSession({ seriesId: item.seriesId, originalStart: item.originalStart })}
-          />
-          <MiniCalendar calendar={dashboard.calendar} />
+    <div className="flex h-full min-h-0 w-full flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-8 sm:pt-10">
+        <div className="mx-auto flex h-full max-w-[1200px] flex-col gap-8">
+          <DashboardHeader onOpenNewTask={() => setNewTaskOpen(true)} />
+          <SummaryCards dashboard={dashboard} />
+          <div className="grid h-full grid-cols-1 items-start gap-6 lg:grid-cols-12">
+            <div className="flex min-w-0 flex-col gap-8 lg:col-span-7">
+              <UpcomingAssignments assignments={dashboard.assignments} onOpen={openTask} />
+              <TaskProgress completed={dashboard.taskSummary.completedToday} tasks={dashboard.tasks}
+                onOpen={openTask} pending={detail.mutation.isPending}
+                onToggle={task => detail.mutate({ type: task.completed ? "reopen" : "complete" }, task.id)} />
+            </div>
+            <div className="flex min-w-0 flex-col gap-6 lg:col-span-5">
+              <TodayClasses
+                classes={dashboard.todayClasses}
+                onOpen={item => setSelectedSession({ seriesId: item.seriesId, originalStart: item.originalStart })}
+              />
+              <MiniCalendar calendar={dashboard.calendar} />
+            </div>
+          </div>
         </div>
       </div>
+      {newTaskOpen ? <NewTaskModal subjects={dashboard.subjects} onClose={() => { setNewTaskOpen(false); router.refresh(); }} /> : null}
       {error && !detail.query.data?.detail ? <p className="text-sm font-semibold text-red-400" role="alert">{error}</p> : null}
       {selectedTaskId && detail.query.isPending ? <p className="sr-only" role="status">Loading task details.</p> : null}
       {selectedTaskId && detail.query.data?.detail ? <TaskDetailsModal key={selectedTaskId}

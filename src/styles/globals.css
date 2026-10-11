@@ -20,11 +20,6 @@ body {
   box-sizing: border-box;
 }
 
-button,
-input {
-  font: inherit;
-}
-
 :focus-visible {
   outline: 2px solid #fafafa;
   outline-offset: 3px;
@@ -39,15 +34,20 @@ input {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
-::-webkit-scrollbar {
-  width: 6px;
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
-::-webkit-scrollbar-track {
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+.custom-scrollbar::-webkit-scrollbar-thumb {
   border-radius: 10px;
   background: #27272a;
 }

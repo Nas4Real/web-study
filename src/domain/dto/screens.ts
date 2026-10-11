@@ -6,6 +6,8 @@ export interface DashboardAssignmentDTO {
   id: EntityId;
   title: string;
   description: string;
+  subjectLabel: string;
+  priority: "normal" | "high";
   dueLabel: string;
   dueTime: string;
   tone: DashboardTone;
@@ -30,6 +32,7 @@ export interface DashboardClassDTO {
   timeLabel: string;
   title: string;
   location: string;
+  subjectLabel: string;
 }
 
 export interface DashboardFixtureDTO {
@@ -44,6 +47,7 @@ export interface DashboardFixtureDTO {
   tasks: readonly DashboardTaskDTO[];
   todayClasses: readonly DashboardClassDTO[];
   calendar: {
+    monthDate: string;
     label: string;
     selectedDay: number;
     leadingDays: readonly number[];

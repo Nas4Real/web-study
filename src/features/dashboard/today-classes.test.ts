@@ -14,11 +14,16 @@ describe("TodayClasses", () => {
       timeLabel: "09:00",
       title: "Physics",
       location: "Room 401",
+      subjectLabel: "Physics",
     };
 
     const html = renderToStaticMarkup(createElement(TodayClasses, { classes: [session], onOpen: vi.fn() }));
 
     expect(html).toContain('<button aria-label="Open Physics"');
     expect(html).not.toContain('href="#display-id"');
+    expect(html).toContain('href="/calendar"');
+    expect(html).toContain("Room 401 • Physics");
+    expect(html).toContain("rounded-[24px]");
+    expect(html).not.toContain("View Schedule");
   });
 });
