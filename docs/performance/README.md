@@ -116,7 +116,15 @@ populated test user and the same approved origins. It measures ten repetitions
 by default of Calendar day-to-week and next-week changes, task/session detail
 opening and read-only closing, and task completion followed by reopening.
 It modifies only synthetic task 1; an interrupted/failed run can leave it completed
-and reports that possibility. No sessions or real-user data are changed.
+and reports that possibility. Default mode does not change sessions or real-user data.
+
+The opt-in `PERF_SESSION_MUTATIONS=1` mode is local-only and exclusive of the
+read-only/warm/provider modes. It edits and restores only synthetic one-time
+Performance session 2's location; same-page reopens verify date/start/duration
+remain unchanged as well. Restoration runs in finally, and reports retain the
+original failure stage. See [session mutations and timezone fix](SESSION-MUTATIONS-2026-10-11.md)
+for the interrupted attempt, synthetic recovery, completed 20-sample run and
+repeat commands. This covers one-time location saves, not the entire mutation matrix.
 
 ```text
 rtk proxy node --env-file=.env.performance.local scripts/performance/profile-interactions.ts

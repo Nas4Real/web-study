@@ -43,6 +43,19 @@ responses. Test sign-out and second-user sign-in before stale content paints.
 Measure close/reopen/update request counts and timing. Run focused cache/state
 tests, relevant visuals, lint, typecheck, unit suite and build.
 
+## Session mutation follow-up — 2026-10-11
+
+Local location-only edits exposed a profile/series timezone mismatch. The editor
+now uses the owned session timezone consistently with server conversion, while
+detail/calendar display remains profile-based. Three timezone regressions fail
+before/pass after. The affected synthetic record's original time was recovered;
+no real-user data changed. Ten edit/restore cycles verify location/date/start/
+duration on the same page; every measured save has one POST and one current-route
+non-prefetch reconciliation. See `docs/performance/SESSION-MUTATIONS-2026-10-11.md`.
+This is a correctness correction and diagnostic, not a latency win or acceptance
+of the broad cache/mutation lifecycle. All existing story gates remain open;
+mobile is deferred. No merge or production deployment.
+
 ## Early independent experiment — 2026-10-10
 
 The ExecPlan permits a narrow close-handler slice while the full 09-01 baseline

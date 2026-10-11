@@ -124,6 +124,21 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-11: Local one-time session mutation diagnostic uncovered profile/
+  series timezone mismatch. Three component regressions fail before/pass after
+  using canonical session timezone throughout the editor; server ownership and
+  display timezone are unchanged. Recover only the known synthetic session's
+  original 09:00 UTC timestamp through the corrected editor. Ten edit/restore
+  cycles complete with same-page location/date/time/duration verification;
+  20 samples have one POST and one current-route non-prefetch reconciliation
+  each. Assertion-observed medians 907.05/914.50ms are diagnostic upper bounds,
+  not paint/provider attribution or a speedup. Original interrupted run retained;
+  local API lookup returned 503 without writes. See session-mutations report.
+  All 704 units/typecheck/final production build and 21 desktop browser/visual
+  checks pass; no snapshots updated. Existing lint warning and cancelled-response
+  E2E server logs retained in the report rather than hidden.
+  No redesign, merge or production deployment; mobile/story/release gates stay open.
+
 - [x] 2026-10-11: Session-detail overlap experiment rejected, not shipped.
   Five isolated genuine-auth local runs (200 read-only samples) prove concurrency
   with unchanged four reads/one POST, but reverse-order control reduces the
@@ -272,6 +287,15 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-11: Next diagnostic slice covers session saves/reconciliation on
+  existing synthetic one-time Performance session 2 only. Opt-in local mutation
+  mode excludes read-only/warm/provider modes and bypasses all unrelated task
+  writes. Save a temporary location, verify same-page fresh detail, restore its
+  original form value in finally and verify again. Use one-time rather than
+  recurring data to avoid leaving an occurrence override. Record restoration
+  outcome and failed attempts; timing stays an assertion-observed upper bound,
+  not exact paint/provider attribution or an optimization. Mobile remains deferred.
 
 - 2026-10-10 (evaluated and rejected 2026-10-11): Session detail first-open candidate:
   reuse verified service construction, finish calendar repository setup, then

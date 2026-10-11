@@ -33,6 +33,13 @@ existence is not evidence that hosted verification passed.
 
 | 2026-10-11 | Overlap session-detail profile with owned effective occurrence | Five isolated local production runs, 200 samples. All 20 candidate opens overlap versus zero of 30 controls; four reads/one POST unchanged. Reverse-order control ready median 496.85ms vs candidate 451.95ms, but candidate ready/provider tails worse and unchanged-task medians also vary substantially | Rejected; restore seven candidate source/test files to HEAD 76dac6b. Stable gain beyond provider/run variability not established. Prior task/Calendar candidates unchanged; mobile and release gates remain open. See [session experiment](SESSION-DETAIL-PARALLEL-READS-2026-10-11.md) |
 
+Session mutation follow-up: [local saves and timezone correction](SESSION-MUTATIONS-2026-10-11.md).
+Location-only edits shifted timestamps when profile/series timezones differed.
+Three regressions red→green; synthetic timestamp recovered; 20 guarded local
+save samples complete with unchanged date/time/duration and one mutation POST/
+one current-route reconciliation each. Correctness fix retained, not a speedup
+or hosted/release claim. Incomplete first attempt preserved; mobile deferred.
+
 References: [exploratory report](BASELINE-2026-10-10.md),
 [isolated navigation repeat](ISOLATED-NAVIGATION-2026-10-10.md). Do not compare local and
 hosted numbers as a measured optimization. Record commit, fixture, browser, sample

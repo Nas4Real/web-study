@@ -9,6 +9,8 @@ import { installDetailProbe, type DetailProbeCriteria, type DetailProbeResult } 
 import { correlateDetailProviders } from "./detail-provider-metrics.ts";
 // @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
 import { detailVisitKinds } from "./detail-visit-metrics.ts";
+// @ts-expect-error TS5097: Node 24 native TypeScript requires the real extension.
+import { sessionMutationMode, withRestoredSessionLocation } from "./session-mutation-profile.ts";
 
 const origin = process.env.PERF_ORIGIN ?? "https://web-study-pearl.vercel.app";
 if (!["https://web-study-pearl.vercel.app", "http://localhost:3100"].includes(origin)) throw new Error("Unapproved profiling origin");
@@ -24,6 +26,7 @@ const reopenDetails = detailVisits.includes("warm");
 const correlateDetails = process.env.PERF_CORRELATE_PROVIDER === "true";
 if (process.env.PERF_CORRELATE_PROVIDER && !["true", "false"].includes(process.env.PERF_CORRELATE_PROVIDER)) throw new Error("Invalid provider correlation mode");
 if (correlateDetails && (!detailsOnly || origin !== "http://localhost:3100")) throw new Error("Detail provider correlation requires local read-only mode");
+const sessionMutations = sessionMutationMode(process.env.PERF_SESSION_MUTATIONS, { origin, detailsOnly, reopenDetails, correlateDetails });
 const readProviderLog = () => readFile("test-results/performance/provider-calls.jsonl", "utf8").catch(() => "");
 
 const browser = await chromium.launch();
@@ -35,8 +38,10 @@ type Sample = { scenario: string; observedReadyFrameMs: number; sampledReadyMs: 
 const samples: Sample[] = [];
 await mkdir("test-results/performance", { recursive: true });
 let currentScenario = "login";
+let failedScenario: string | null = null;
 let complete = false;
 let signedIn = false;
+let sessionRestored = true;
 let failure: "timeout" | "measurement" | null = null;
 
 // Timing is an assertion-observed upper bound, not an exact DOM commit or paint.
@@ -119,6 +124,62 @@ async function measure(scenario: string, action: () => Promise<void>, ready: () 
   }
 }
 
+async function profileSessionMutation() {
+  const path = `${origin}/calendar?date=2026-10-11&view=day`;
+  const invoker = page.getByRole("button", { name: "Open Performance session 2", exact: true });
+  const detail = page.getByRole("dialog", { name: "Performance session 2", exact: true });
+  const edit = page.getByRole("dialog", { name: "Edit session", exact: true });
+  async function openEdit() {
+    // Remount also recovers an uncertain prior request/dialog before cleanup.
+    await page.goto(path);
+    await invoker.click();
+    await detail.getByRole("button", { name: "Edit", exact: true }).click();
+    await expect(edit).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Edit recurring session", exact: true })).toHaveCount(0);
+    await expect(edit.getByLabel("Class or Lecture Name", { exact: true })).toHaveValue("Performance session 2");
+  }
+  await openEdit();
+  const original = await edit.getByLabel(/Room \/ Location/).inputValue();
+  const originalDate = await edit.getByLabel("Date", { exact: true }).inputValue();
+  const originalTime = await edit.getByLabel("Start time", { exact: true }).inputValue();
+  const originalDuration = await edit.getByLabel("Duration", { exact: true }).inputValue();
+  await edit.getByRole("button", { name: "Cancel", exact: true }).click();
+  async function guard(operation: () => Promise<void>) {
+    try { await operation(); }
+    catch (error) { failedScenario ??= currentScenario; throw error; }
+  }
+  sessionRestored = false;
+  await withRestoredSessionLocation(original, async (location, scenario) => {
+    currentScenario = `${scenario}-setup`;
+    await guard(async () => {
+      await openEdit();
+      await expect(edit.getByLabel("Date", { exact: true })).toHaveValue(originalDate);
+      await expect(edit.getByLabel("Start time", { exact: true })).toHaveValue(originalTime);
+      await expect(edit.getByLabel("Duration", { exact: true })).toHaveValue(originalDuration);
+      await edit.getByLabel(/Room \/ Location/).fill(location);
+      await measure(scenario, () => edit.getByRole("button", { name: "Save changes", exact: true }).click(), async () => {
+        await expect(edit).toBeHidden();
+        await expect(invoker).toBeEnabled();
+      });
+    });
+  }, async location => {
+    currentScenario = location === original ? "session-restore-verification" : "session-edit-verification";
+    await guard(async () => {
+      // Reopen on the same page: verify mutation invalidation, not a reload that
+      // would hide stale cached detail. Read the form value to handle empty rooms.
+      await invoker.click();
+      await detail.getByRole("button", { name: "Edit", exact: true }).click();
+      await expect(edit.getByLabel(/Room \/ Location/)).toHaveValue(location);
+      await expect(edit.getByLabel("Date", { exact: true })).toHaveValue(originalDate);
+      await expect(edit.getByLabel("Start time", { exact: true })).toHaveValue(originalTime);
+      await expect(edit.getByLabel("Duration", { exact: true })).toHaveValue(originalDuration);
+      await edit.getByRole("button", { name: "Cancel", exact: true }).click();
+      if (location === original) sessionRestored = true;
+    });
+  });
+  sessionRestored = true;
+}
+
 try {
   await page.goto(`${origin}/sign-in`);
   await page.locator('input[type="email"]').fill(email);
@@ -127,6 +188,11 @@ try {
   await page.getByRole("heading", { name: "Overview", exact: true }).waitFor();
   signedIn = true;
   for (let i = 0; i < count; i++) {
+    if (sessionMutations) {
+      currentScenario = "session-mutation-setup";
+      await profileSessionMutation();
+      continue;
+    }
     const view = (name: string) => page.getByRole("button", { name, exact: true });
     if (!detailsOnly) {
       currentScenario = "calendar-view-setup";
@@ -172,7 +238,8 @@ try {
 } catch (cause) {
   failure = cause instanceof Error && cause.name === "TimeoutError" ? "timeout" : "measurement";
   // No error payload, page content, user identifiers or credentials in output.
-  console.log(`Interaction profiling incomplete at ${currentScenario} (${failure}). ${detailsOnly ? "Detail-only mode does not mutate study data." : "Synthetic task may need reopening if a mutation failed."}`);
+  failedScenario ??= currentScenario;
+  console.log(`Interaction profiling incomplete at ${failedScenario} (${failure}). ${sessionMutations ? `Synthetic session restoration confirmed: ${sessionRestored}.` : detailsOnly ? "Detail-only mode does not mutate study data." : "Synthetic task may need reopening if a mutation failed."}`);
   if (signedIn && ["/tasks", "/calendar"].includes(new URL(page.url()).pathname)) {
     await page.screenshot({ path: "test-results/performance/synthetic-interaction-failure.png" }).catch(() => {});
   }
@@ -187,5 +254,7 @@ const groups = [...new Set(samples.map(s => s.scenario))].map(scenario => {
   return { scenario, providerSamples: providers.length, providerCounts: Object.fromEntries(kinds.map(kind => [kind, summarize(providers.map(provider => provider.counts[kind] ?? 0))])), providerSpanMs: summarize(providers.flatMap(provider => provider.spanMs === null ? [] : [provider.spanMs])), providerErrors: providers.reduce((sum, provider) => sum + provider.errors, 0), observedReadyFrameMs: summarize(group.map(s => s.observedReadyFrameMs)), sampledReadyMs: summarize(group.flatMap(s => s.sampledReadyMs === null ? [] : [s.sampledReadyMs])), sampledNextFrameMs: summarize(group.flatMap(s => s.sampledNextFrameMs === null ? [] : [s.sampledNextFrameMs])), rscRequests: summarize(group.map(s => s.network.filter(r => r.kind === "rsc").length)), currentRouteNonPrefetchRsc: summarize(group.map(s => s.network.filter(r => r.kind === "rsc" && r.currentRoute && r.prefetch === false).length)), unknownPrefetchFlags: summarize(group.map(s => s.network.filter(r => r.kind === "rsc" && r.prefetch === null).length)), posts: summarize(group.map(s => s.network.filter(r => r.kind === "post").length)) };
 });
 const environment = origin.includes("localhost") ? "local" : "hosted";
-await writeFile(`test-results/performance/${environment}-interactions${detailsOnly ? "-details" : ""}${correlateDetails ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 4, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, reopenDetails, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
+// Cleanup changes currentScenario; retain the first failing stage in the report.
+if (!complete && failedScenario) currentScenario = failedScenario;
+await writeFile(`test-results/performance/${environment}-interactions${sessionMutations ? "-session-mutations" : ""}${detailsOnly ? "-details" : ""}${correlateDetails ? "-providers" : ""}${reopenDetails ? "-warm" : ""}.json`, JSON.stringify({ version: 5, complete, failure, failedScenario: complete ? null : currentScenario, detailsOnly, correlateDetails, reopenDetails, sessionMutations, sessionRestored: sessionMutations ? sessionRestored : null, commit: execFileSync("git", ["rev-parse", "HEAD"]).toString().trim(), deployedCommit: process.env.PERF_DEPLOYED_COMMIT ?? null, date: new Date().toISOString(), browser: browser.version(), viewport: [1440, 900], dataset: "populated", count, origin, groups, samples }, null, 2));
 if (!complete) process.exitCode = 1;
