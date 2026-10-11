@@ -178,6 +178,24 @@ stay unknown, and a GET count alone does not prove a forced router refresh.
 No bodies, raw URLs, query strings, cookies or authorization headers are saved.
 Screenshots contain only the dedicated synthetic workspace and remain ignored.
 
+## Cache lifecycle checks
+
+The [cache-lifecycle verification](CACHE-LIFECYCLE-2026-10-11.md) adds four
+rapid-subtask fixture checks and a separate read-only genuine-auth local account
+switch harness. After starting local production, run:
+
+```text
+rtk proxy node --env-file=.env.performance.local scripts/performance/check-account-switching.mjs
+```
+
+It uses existing synthetic accounts only, warms Tasks/Calendar/Dashboard details,
+signs out/in in one tab, checks empty-account sidebar/history revisits and returns
+to populated details. A positive-control rendered-DOM probe retains only a stale-
+marker boolean; the final observation is one second, with zero study writes.
+The report also preserves startup/harness failures and calendar-date constraints.
+No app change or timing gain; cross-tab/auth-loss, other freshness and release
+checks remain open.
+
 ## Initial-entry provider attribution
 
 The [frame-sampled detail run](DETAIL-FRAMES-2026-10-10.md) adds an opt-in

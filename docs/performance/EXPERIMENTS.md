@@ -69,6 +69,14 @@ efficiency, not stable latency: edit/restore medians move in opposite directions
 Keep server revalidation, detail invalidation and task refresh. Actor/rapid,
 conditional querying and hosted release gates remain open.
 
+Cache lifecycle: [rapid mutations and same-tab account replacement](CACHE-LIFECYCLE-2026-10-11.md).
+Four fixture race checks and three genuine-auth local switches pass on unchanged
+app code; positive-control detector observes no previous-account markers, with
+zero study writes/page errors. Twenty scoped browser checks pass without retries.
+Record first startup and Calendar-heading harness failures separately; neither
+establishes an app defect. No shared-cache migration or speedup claim. Cross-tab/
+late auth-loss, other freshness, recurring real-auth writes and release stay open.
+
 References: [exploratory report](BASELINE-2026-10-10.md),
 [isolated navigation repeat](ISOLATED-NAVIGATION-2026-10-10.md). Do not compare local and
 hosted numbers as a measured optimization. Record commit, fixture, browser, sample

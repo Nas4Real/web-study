@@ -107,6 +107,23 @@ See `docs/performance/DASHBOARD-RECONCILIATION-2026-10-11.md`. Server revalidati
 detail invalidation and auth remain; actor/rapid/real-auth recurring deletion and
 release gates remain open. No merge/production deployment; mobile deferred.
 
+## Cache-lifecycle verification — 2026-10-11
+
+Four rapid-subtask fixture regressions pass on existing app code: Tasks/Dashboard
+double-click serialization, successful settlement or originating-task rollback,
+selection preservation and retry/unlock/persistence. All 20 scoped browser checks
+pass without retries. Three genuine-auth local production same-tab switches pass
+after warming task/session details, empty-account sidebar/history revisits and
+returning to the populated account. A positive-control rendered-DOM detector
+observes no prior-account synthetic markers; final observation is one second,
+zero study writes/page errors. Initial runner startup failure did not recur;
+the first auth run's Calendar-heading harness error was corrected using canonical
+readiness selectors. All 719 units/typecheck/build pass; existing lint warning.
+See `docs/performance/CACHE-LIFECYCLE-2026-10-11.md`. No app change/speedup or story
+closure; cross-tab/late auth-loss, subject/profile/timezone freshness, remaining
+real-auth recurring mutations and release gates remain open. Mobile deferred;
+no merge/production deployment.
+
 ## Early independent experiment — 2026-10-10
 
 The ExecPlan permits a narrow close-handler slice while the full 09-01 baseline

@@ -124,6 +124,18 @@ commit and environment metadata. Do not enable development auth in production.
 
 ## Progress log
 
+- [x] 2026-10-11: Cache-lifecycle verification passes four new rapid-subtask
+  fixture checks (Tasks/Dashboard × success/rollback) and all 20 scoped browser
+  checks without retries. Three local production genuine-auth same-tab account
+  switches pass warmed details, empty sidebar/history revisits and populated
+  return; positive-control DOM detector, finite one-second observation, zero
+  study writes/page errors. No app defect/fix or speedup claim. Initial runner
+  startup failure did not recur; first auth run had a corrected Calendar-heading
+  harness error. All 719 units/typecheck/build pass; existing lint warning.
+  See cache-lifecycle report. Cross-tab/auth-loss, subject/profile/timezone,
+  recurring real-auth mutations and release remain open. No merge/deploy/mobile;
+  local production server stopped, 09-04 not closed.
+
 - [x] 2026-10-11: Dashboard session refresh experiment red→green across matching
   twenty-save genuine-auth local production runs: extra current-route RSC GETs
   one→zero throughout, while eight background prefetches remain. Visible cards
@@ -332,6 +344,16 @@ commit and environment metadata. Do not enable development auth in production.
 - [ ] 09-07 final evidence, gates and hosted release.
 
 ## Decisions / discoveries
+
+- 2026-10-11: Next 09-04 verification slice preserves page-mounted providers.
+  Exercise same-tab populated→empty account replacement after warming Task,
+  Calendar and Dashboard detail caches, using existing synthetic accounts and
+  local genuine-auth production. Assert absence of populated markers, revisit
+  warmed routes and return to the populated account without study writes. Add
+  scoped fixture checks for rapid subtask clicks, success/failure serialization
+  and rollback limited to the originating task after selecting another task.
+  No shared-cache/auth architecture change unless these checks reproduce a defect;
+  cross-tab session replacement and late auth-loss responses remain separate.
 
 - 2026-10-11: Dashboard session reconciliation is the next separate 09-04
   experiment. Extend the existing local-only guarded save harness with an
