@@ -1,7 +1,7 @@
 # Story 09-06: Task list client queries if needed
 
 Epic: epic-09
-Status: conditional
+Status: deferred (2026-10-11 user decision; conditional rewrite not implemented)
 Dependencies: 09-01, 09-02, 09-03, 09-04
 Scope: medium per slice; complete read model, then list query/mutation integration
 

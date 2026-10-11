@@ -1,7 +1,7 @@
 # Story 09-04: Cache freshness and targeted mutation updates
 
 Epic: epic-09
-Status: planned
+Status: deferred (2026-10-11 user decision; verified correctness/request-efficiency work retained)
 Dependencies: 09-03
 Scope: medium per slice; cache lifecycle, then read-only close/mutation handlers
 

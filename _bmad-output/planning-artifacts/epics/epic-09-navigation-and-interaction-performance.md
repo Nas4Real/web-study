@@ -1,7 +1,13 @@
 # Epic 09: Navigation and interaction performance
 
-Status: planned
+Status: remaining-work-deferred
 Date: 2026-10-10
+
+Decision 2026-10-11: the user chose to keep verified changes and defer the
+remaining performance program for the private two-user version. Stories 09-01
+through 09-07 remain incomplete, now deferred. Original exit criteria below
+are preserved for future resumption, not asserted as satisfied. See
+`docs/performance/DEFERRED-WORK-2026-10-11.md` from the repository root.
 
 ## Objective
 

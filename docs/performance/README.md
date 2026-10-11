@@ -1,7 +1,16 @@
 # Navigation profiling (Epic 09)
 
-This is diagnostic tooling, not an application optimization. Story 09-01 remains
-in progress until the full interaction matrix and controlled repeats are complete.
+As of 2026-10-11, remaining performance work is **deferred by user decision**.
+Verified implementation and diagnostic evidence are preserved on
+`codex/navigation-optimization-plan`; no further optimization is active. Stories
+09-01 through 09-07 are not marked complete. See
+[the retained work and resume checklist](DEFERRED-WORK-2026-10-11.md).
+The instructions/results below describe historical work and how to resume,
+not a request to run more profiling now. Pushing this branch is not a production
+release; basic critical-flow verification is still required before deployment.
+
+The tooling itself is diagnostic, not an application optimization. Story 09-01
+is incomplete until the full interaction matrix and controlled repeats are complete.
 No new design, authentication bypass, schema migration or production logging is added.
 
 See the [exploratory baseline](BASELINE-2026-10-10.md),

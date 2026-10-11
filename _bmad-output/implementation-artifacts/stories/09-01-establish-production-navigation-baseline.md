@@ -1,7 +1,7 @@
 # Story 09-01: Establish production navigation baseline
 
 Epic: epic-09
-Status: in-progress
+Status: deferred (2026-10-11 user decision; partial evidence retained)
 Dependencies: none
 Scope: medium; profiling procedure, report and focused browser instrumentation
 

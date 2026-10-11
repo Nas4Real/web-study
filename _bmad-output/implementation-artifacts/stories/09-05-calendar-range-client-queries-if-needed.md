@@ -1,7 +1,7 @@
 # Story 09-05: Calendar range client queries if needed
 
 Epic: epic-09
-Status: conditional
+Status: deferred (2026-10-11 user decision; conditional rewrite not implemented)
 Dependencies: 09-01, 09-02, 09-03, 09-04
 Scope: medium per slice; shared read contract, then client range query
 

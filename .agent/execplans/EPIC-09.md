@@ -1,5 +1,17 @@
 # ExecPlan EPIC 09: Navigation and interaction performance
 
+## Current delivery decision — 2026-10-11
+
+Remaining Epic 09 work is deferred at the user's request for the private two-user
+version. Preserve all verified implementation commits; do not continue profiling,
+cache architecture changes, conditional client-query rewrites or region experiments
+unless requested. Stories 09-01 through 09-07 are deferred, not completed. Historical
+progress and open gates below remain evidence, not instructions to resume now.
+See `docs/performance/DEFERRED-WORK-2026-10-11.md` for retained changes and resumption.
+This push does not authorize a merge or production deployment; a future release
+still needs basic desktop critical-flow checks even if extensive profiling stays
+deferred. No known defect is declared fixed merely by deferring its investigation.
+
 ## Purpose / user-visible outcome
 
 Navigation promptly acknowledges the destination, and its usable content arrives

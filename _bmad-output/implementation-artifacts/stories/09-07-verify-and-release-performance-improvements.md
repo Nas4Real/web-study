@@ -1,7 +1,7 @@
 # Story 09-07: Verify and release performance improvements
 
 Epic: epic-09
-Status: planned
+Status: deferred (2026-10-11 user decision; original performance release gates incomplete)
 Dependencies: 09-01 through 09-04; written verdicts for 09-05 and 09-06
 Scope: medium; report, regression coverage and existing deployment workflow
 

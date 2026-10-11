@@ -1,7 +1,7 @@
 # Story 09-03: Immediate navigation feedback and prefetch
 
 Epic: epic-09
-Status: in-progress
+Status: deferred (2026-10-11 user decision; verified feedback/loading work retained)
 Dependencies: 09-02
 Scope: medium; route loading boundary, shell/search and browser checks
 

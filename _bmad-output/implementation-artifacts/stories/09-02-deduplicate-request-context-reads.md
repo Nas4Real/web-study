@@ -1,7 +1,7 @@
 # Story 09-02: Deduplicate request context reads
 
 Epic: epic-09
-Status: in-progress (Calendar/task candidates retained; session candidate rejected)
+Status: deferred (2026-10-11 user decision; Calendar/task candidates retained, session candidate rejected)
 Dependencies: 09-01
 Scope: medium; shared request helper, context callers and focused tests
 
