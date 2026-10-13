@@ -2,6 +2,8 @@
 
 Implement the complete [Calendar JSON import ExecPlan](../.agent/execplans/CALENDAR-JSON-IMPORT.md), including validation, atomic authenticated API, Calendar UI, tests, documentation and preview publication. The user explicitly requests proceeding from planning straight through implementation without review pauses. Existing UI parity and deferred performance work remain preserved below.
 
+Completed 2026-10-13: authenticated atomic imports, Calendar preview/confirmation, deployed migration, real browser/JWT/SQL verification, 807 passing tests, typecheck/lint/build. See [verification report](../docs/testing/CALENDAR-IMPORT-2026-10-13.md). Published through the existing Vercel preview branch; production is unchanged.
+
 ---
 
 # Previous Plan: Copy the localhost UI

@@ -92,7 +92,7 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
       ) : null}
       {dialog === "new" ? <NewSessionModal onClose={() => setDialog(null)} subjects={data.subjects} timeZone={data.timeZone} /> : null}
       {dialog === "import" ? <TimetableImportModal subjects={data.subjects} onClose={() => setDialog(null)}
-        onImported={result => { setImportNotice(result.alreadyImported ? "This timetable is already imported. No duplicates added." : `Imported ${result.sessionCount} session series and ${result.subjectsCreated} new subjects.`); router.refresh(); }}
+        onImported={result => { setImportNotice(result.alreadyImported ? "This timetable is already imported. No duplicates added." : `Imported ${result.sessionCount} session series and ${result.subjectsCreated} new ${result.subjectsCreated === 1 ? "subject" : "subjects"}.`); router.refresh(); }}
         onViewCalendar={result => { setDialog(null); navigate(result.firstDate, "week"); }} /> : null}
       {dialog === "detail" && !data.fixture && detail.isPending ? (
         <p className="sr-only" role="status">Loading session details.</p>

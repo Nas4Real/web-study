@@ -68,7 +68,12 @@ export const timetableImportSchema = documentSchema.superRefine((document, conte
   const sessionKeys = new Set<string>();
   document.sessions.forEach((session, index) => {
     if (session.subject) subjectNames.add(session.subject.toLowerCase());
-    const parsed = calendarSeriesCreateInputSchema.safeParse(sessionInput(session, document.timezone));
+    const input = sessionInput(session, document.timezone);
+    if (!input.startsAt) {
+      context.addIssue({ code: "custom", path: ["sessions", index, "date"], message: "Invalid date or local time in this timezone. Check date/start_time; nonexistent daylight-saving times are not allowed." });
+      return;
+    }
+    const parsed = calendarSeriesCreateInputSchema.safeParse(input);
     if (!parsed.success) {
       parsed.error.issues.forEach(issue => context.addIssue({ code: "custom", message: issue.message, path: ["sessions", index, ...issue.path.map(part => typeof part === "string" ? wireNames[part] ?? part : part)] }));
       return;

@@ -1,10 +1,10 @@
 # Active: Calendar JSON import
 
-- [ ] Validate and normalize bounded JSON timetables with canonical session rules.
-- [ ] Persist imports atomically with per-user idempotency and owner checks.
-- [ ] Add authenticated bulk import API and boundary tests.
-- [ ] Add Calendar Import modal with file preview, example download and refresh.
-- [ ] Verify migrations, browser flows, full regression gates and publish preview.
+- [x] Validate and normalize bounded JSON timetables with canonical session rules.
+- [x] Persist imports atomically with per-user idempotency and owner checks.
+- [x] Add authenticated bulk import API and boundary tests.
+- [x] Add Calendar Import modal with file preview, example download and refresh.
+- [x] Verify migrations, browser flows, full regression gates and publish preview.
 
 Full plan: [CALENDAR-JSON-IMPORT](../.agent/execplans/CALENDAR-JSON-IMPORT.md).
 

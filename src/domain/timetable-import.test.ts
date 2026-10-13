@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { MAX_TIMETABLE_BYTES, parseTimetableFile, timetableImportSchema } from "./timetable-import";
 
 const session = { kind: "university", title: "  Calculus   lecture ", subject: "Mathematics", date: "2026-10-19", start_time: "09:00", duration_minutes: 90 };
 const document = { version: 1, timezone: "Africa/Tunis", sessions: [session] };
 
 describe("JSON timetable contract", () => {
+  it("keeps the downloadable example compatible with the published contract", () => {
+    expect(parseTimetableFile(readFileSync("public/examples/timetable.json", "utf8"))).toMatchObject({ success: true });
+  });
   it("normalizes named subjects and profile-local dates using canonical rules", () => {
     const result = timetableImportSchema.parse(document);
     expect(result.sessions[0]).toMatchObject({ title: "Calculus lecture", subjectName: "Mathematics", startsAt: "2026-10-19T08:00:00.000Z", timezone: "Africa/Tunis", notesItems: [], recurrenceRule: null });
@@ -39,6 +43,10 @@ describe("JSON timetable contract", () => {
   });
   it("rejects nonexistent DST wall-clock times", () => {
     expect(timetableImportSchema.safeParse({ ...document, timezone: "America/New_York", sessions: [{ ...session, date: "2026-03-08", start_time: "02:30" }] }).success).toBe(false);
+  });
+  it("points local date/time errors at the fields present in the file", () => {
+    const result = parseTimetableFile(JSON.stringify({ ...document, sessions: [{ ...session, date: "2026-02-30" }] }));
+    expect(result).toMatchObject({ success: false, issues: [expect.objectContaining({ path: ["sessions", 0, "date"], message: expect.stringContaining("local time") })] });
   });
   it("rejects malformed and oversized file text with useful issues", () => {
     expect(parseTimetableFile("{bad")).toMatchObject({ success: false, issues: [expect.objectContaining({ message: expect.stringContaining("JSON") })] });
