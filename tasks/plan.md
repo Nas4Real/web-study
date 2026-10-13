@@ -1,4 +1,10 @@
-# Active Plan: Copy the localhost UI
+# Active Plan: Calendar JSON import
+
+Implement the complete [Calendar JSON import ExecPlan](../.agent/execplans/CALENDAR-JSON-IMPORT.md), including validation, atomic authenticated API, Calendar UI, tests, documentation and preview publication. The user explicitly requests proceeding from planning straight through implementation without review pauses. Existing UI parity and deferred performance work remain preserved below.
+
+---
+
+# Previous Plan: Copy the localhost UI
 
 Date: 2026-10-11. Source: `C:/Users/itsna/Desktop/web/app/src`.
 

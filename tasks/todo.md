@@ -1,4 +1,16 @@
-# Active: Copy the localhost UI
+# Active: Calendar JSON import
+
+- [ ] Validate and normalize bounded JSON timetables with canonical session rules.
+- [ ] Persist imports atomically with per-user idempotency and owner checks.
+- [ ] Add authenticated bulk import API and boundary tests.
+- [ ] Add Calendar Import modal with file preview, example download and refresh.
+- [ ] Verify migrations, browser flows, full regression gates and publish preview.
+
+Full plan: [CALENDAR-JSON-IMPORT](../.agent/execplans/CALENDAR-JSON-IMPORT.md).
+
+---
+
+# Previous: Copy the localhost UI
 
 - [x] Identify live Vite source and confirm matching `web/app/src` files.
 - [x] Compare source and working app; record source mapping and preserved behavior.
