@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "timezone": "Africa/Tunis",
+  "subjects": [
+    { "name": "UX Import 2026-10-13", "color": "#f59e0b" },
+    { "name": "Physics", "color": "#06b6d4" }
+  ],
+  "sessions": [
+    {
+      "kind": "university", "title": "UX IMPORT 2026-10-13 — Weekly workshop",
+      "subject": "UX Import 2026-10-13", "date": "2026-10-13", "start_time": "16:00",
+      "duration_minutes": 60, "location": "Import test room", "professor": "Test tutor",
+      "notes_items": ["Synthetic import verification only", "Check the next weekly occurrence"],
+      "recurrence_rule": "FREQ=WEEKLY;COUNT=3"
+    },
+    {
+      "kind": "revision", "title": "UX IMPORT 2026-10-13 — Practice session",
+      "subject": "UX Import 2026-10-13", "date": "2026-10-13", "start_time": "19:00",
+      "duration_minutes": 45, "focus_text": "Practice examples", "notes_items": ["Verify saved notes"]
+    },
+    {
+      "kind": "exam", "title": "UX IMPORT 2026-10-13 — Physics quiz",
+      "subject": "Physics", "date": "2026-10-20", "start_time": "15:00", "location": "Test hall"
+    }
+  ]
+}

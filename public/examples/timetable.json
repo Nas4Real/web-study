@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "timezone": "Africa/Tunis",
+  "subjects": [
+    { "name": "Mathematics", "color": "#06b6d4" },
+    { "name": "Physics", "color": "#10b981" }
+  ],
+  "sessions": [
+    {
+      "kind": "university",
+      "title": "Calculus lecture",
+      "subject": "Mathematics",
+      "date": "2026-10-19",
+      "start_time": "09:00",
+      "duration_minutes": 90,
+      "location": "Room 204",
+      "professor": "Dr. Ben Salem",
+      "notes_items": ["Bring the formula sheet"],
+      "recurrence_rule": "FREQ=WEEKLY;COUNT=12"
+    },
+    {
+      "kind": "revision",
+      "title": "Review circuit analysis",
+      "subject": "Physics",
+      "date": "2026-10-19",
+      "start_time": "17:00",
+      "duration_minutes": 60,
+      "focus_text": "Kirchhoff's laws",
+      "notes_items": ["Solve exercises 1–5"]
+    },
+    {
+      "kind": "exam",
+      "title": "Calculus midterm",
+      "subject": "Mathematics",
+      "date": "2026-11-02",
+      "start_time": "10:00",
+      "location": "Hall A"
+    }
+  ]
+}

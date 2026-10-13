@@ -1,4 +1,4 @@
-import { Bell, Calendar, ChevronLeft, ChevronRight, Plus, Sparkles } from "lucide-react";
+import { Bell, Calendar, ChevronLeft, ChevronRight, Plus, Sparkles, Upload } from "lucide-react";
 
 import type { CalendarView } from "@/domain/dto";
 
@@ -15,6 +15,7 @@ interface CalendarHeaderProps {
   onShift: (direction: -1 | 1) => void;
   onViewChange: (view: CalendarView) => void;
   onNewSession: () => void;
+  onImport?: () => void;
 }
 
 export function morningGreeting(name: string) {
@@ -22,7 +23,7 @@ export function morningGreeting(name: string) {
   return normalized ? `Good Morning, ${normalized}!` : "Good Morning!";
 }
 
-export function CalendarHeader({ greetingName, onNewSession, onShift, onViewChange, periodLabel, view }: CalendarHeaderProps) {
+export function CalendarHeader({ greetingName, onNewSession, onImport, onShift, onViewChange, periodLabel, view }: CalendarHeaderProps) {
   return (
     <>
       <header className="flex shrink-0 items-start justify-between gap-4 px-4 pb-5 pt-6 sm:px-8 sm:pt-8">
@@ -89,6 +90,8 @@ export function CalendarHeader({ greetingName, onNewSession, onShift, onViewChan
               </button>
             ))}
           </div>
+          {onImport ? <button id="calendar-import-button" className="flex items-center gap-2 rounded-md border border-border-hover bg-card-hover px-4 py-2 text-[13px] font-semibold text-zinc-200 shadow-sm transition-colors hover:bg-border-panel"
+            onClick={onImport} type="button"><Upload aria-hidden="true" size={16} />Import</button> : null}
           <button
             className="flex items-center gap-2 rounded-md bg-zinc-100 px-4 py-2 text-[13px] font-bold text-black shadow-sm transition-colors hover:bg-white max-sm:shrink-0 max-sm:rounded-full max-sm:bg-white max-sm:px-6 max-sm:py-2.5 max-sm:text-[14px] max-sm:hover:bg-zinc-200"
             onClick={onNewSession}
