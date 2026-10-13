@@ -23,32 +23,35 @@ export type TaskDetailActionResult<T extends TaskDetailDTO | null = TaskDetailDT
   | Readonly<{ status: "error"; code: keyof typeof messages; message: string }>;
 
 type ResolveContext = () => Promise<TaskDetailContext | null>;
+type ResolveReadContext = () => Promise<(Omit<TaskDetailContext, "timeZone"> & {
+  timeZone: string | Promise<string>;
+}) | null>;
 
 function error(code: keyof typeof messages): Extract<TaskDetailActionResult, { status: "error" }> {
   return { status: "error", code, message: messages[code] };
 }
 
 async function execute<T extends TaskDetailDTO | null>(
-  resolveContext: ResolveContext,
+  resolveContext: ResolveReadContext,
   operation: (service: TaskDetailService, actorId: string) => Promise<StudyResult<T>>,
 ): Promise<TaskDetailActionResult<T>> {
   try {
     const context = await resolveContext();
     if (!context) return error("UNAUTHENTICATED");
     const now = context.now().toISOString();
-    const result = await operation(new TaskDetailService({
+    const [timeZone, result] = await Promise.all([context.timeZone, operation(new TaskDetailService({
       tasks: context.taskService, subjects: context.subjectService,
-    }), context.actorId);
+    }), context.actorId)]);
     if (result.status === "error") {
       const code = result.code === "INVALID_ACTOR" ? "UNAUTHENTICATED" :
         result.code === "DUPLICATE_NAME" ? "INVALID_INPUT" : result.code;
       return error(code);
     }
-    return { status: "success", data: { detail: result.data, now, timeZone: context.timeZone } };
+    return { status: "success", data: { detail: result.data, now, timeZone } };
   } catch { return error("STORAGE_UNAVAILABLE"); }
 }
 
-export function readTaskDetailHandler(resolveContext: ResolveContext, taskId: unknown) {
+export function readTaskDetailHandler(resolveContext: ResolveReadContext, taskId: unknown) {
   return execute(resolveContext, (service, actor) => service.read(actor, taskId));
 }
 

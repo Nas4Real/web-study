@@ -1,0 +1,99 @@
+# Story 09-02: Deduplicate request context reads
+
+Epic: epic-09
+Status: deferred (2026-10-11 user decision; Calendar/task candidates retained, session candidate rejected)
+Dependencies: 09-01
+Scope: medium; shared request helper, context callers and focused tests
+
+## User outcome
+
+As a signed-in user, I want screens to load without redundant authentication
+and profile reads delaying the response.
+
+## Acceptance criteria
+
+- [ ] Within a Server Component render request, callers share verified actor,
+  client and profile results where semantically identical; outbound call counts
+  prove deduplication. Proxy and write-operation verification remain independent.
+- [x] Independent Calendar subject/occurrence reads overlap; owner, timezone and
+  bounded-range prerequisites still hold. Measure this experiment separately.
+- [ ] Comparable before/after measurements show a gain beyond variance; null
+  actors, invalid claims, provider failures and user isolation remain correct.
+
+## Expected implementation surface
+
+`src/server/auth/request-auth.ts`, `src/lib/supabase/server.ts`, a narrow shared
+read-context helper, and the settings/task/calendar context callers. If this
+exceeds five implementation files, split context adoption into small commits.
+
+## Engineering constraints
+
+Use supported request-scoped memoization; no global private-data/client cache.
+Do not trust metadata or browser-supplied identity. Preserve verified email
+semantics and SSR refresh behavior. Keep mutation auth fresh and RLS intact.
+
+## Verification / done when
+
+Tests prove repeated equivalent reads are shared within one render scope and
+not reused across actors/requests. Auth redirects and profile/timezone reads
+work with real sessions. Run focused context/loader tests, lint, typecheck and
+build; attach before/after call counts and timing to the ledger.
+
+## Execution decision — 2026-10-10
+
+User authorized the independent Calendar-read experiment next. Full 09-01 remains
+open. Initial and sibling traces do not show duplicate outbound auth/profile
+reads, so do not implement speculative memoization. Test Calendar reads in
+isolation after verified actor/timezone/window resolution, preserving fixture
+behavior, bounded owner reads and fail-closed projection. Capture comparable
+production measurements before retaining the candidate. No whole-story completion
+or hosted speedup claim until its remaining gates are addressed.
+
+## Calendar experiment result
+
+Retained narrow candidate: `Promise.all` after actor/timezone/window resolution,
+both result/error checks before projection; fixture branch remains subject-only.
+Concurrency regression fails before and passes after. All 18 loader tests, full
+units/typecheck/build and 27 relevant browser/visual checks pass; lint retains
+the existing modal-ref warning. No auth, cache, recurrence or UI change.
+
+Matching 20-sample local populated initial entries show provider-span median
+437→348ms and observed-ready 650→495ms. All candidate reads overlap versus none
+before; same five calls. Both ten-sample batches improve, but control/tail
+variation remains. See `docs/performance/CALENDAR-PARALLEL-READS-2026-10-10.md`.
+No hosted/warm-navigation budget claim. Speculative memoization stays deferred
+for lack of duplicate outbound reads; remaining story/release gates stay open.
+
+## Task detail experiment result
+
+Retained first-open-only candidate: after verified auth, overlap the required
+profile/timezone with owned task/subject reads. Subject remains dependent on
+the task; response waits for both results. Mutation/page contexts retain eager
+profile resolution, and auth, RLS, UI/cache/API contracts are unchanged.
+
+Two comparable local-production pairs (ten task opens each per variant) improve
+sampled-ready medians 356.65→255.10ms and 369.65→245.40ms; provider-span medians
+309.96→198.67ms and 331.99→206.59ms. All 20 candidate task reads overlap profile,
+zero controls do; call count stays three, one POST. Two handler tests fail before
+and pass after; full units/typecheck/build and 11 desktop browser checks pass.
+Existing lint warning and newly recorded pre-existing dependency advisories
+remain separate release follow-ups. User deferred mobile. See
+`docs/performance/TASK-DETAIL-PARALLEL-READS-2026-10-10.md` for control differences,
+counts, timings and limits. No hosted, session or whole-story completion claim.
+
+## Session detail experiment result — 2026-10-11
+
+Rejected the profile/occurrence overlap candidate after five isolated local
+production runs, 200 read-only samples. Concurrency occurs in all 20 candidate
+opens and zero of 30 controls, with the same four reads and one POST. Initial
+pairs improve medians, but substantial unchanged-task/provider variation and a
+reverse-order control reduce the credible delta: Candidate 2 ready median
+451.95ms versus Control 3 496.85ms, with worse readiness/provider tails.
+Improvement beyond run variability/non-regression is not established.
+
+Restore the seven candidate application/test files to HEAD 76dac6b; do not retain
+extra orchestration merely because correctness tests pass. Prior task/Calendar
+optimizations remain unchanged. See
+`docs/performance/SESSION-DETAIL-PARALLEL-READS-2026-10-11.md` for conditions,
+counts, verification and the rejected attempt. Mobile and story/release gates
+remain open; no session, hosted or whole-app speedup claim.

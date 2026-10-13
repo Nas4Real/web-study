@@ -66,7 +66,7 @@ export function projectCalendarDays(
     events.push({
       id: `${occurrence.seriesId}:${occurrence.originalStart}`,
       seriesId: occurrence.seriesId, originalStart: occurrence.originalStart, title: occurrence.title,
-      subjectLabel: subject.name, tone: subjectTone(subject.color),
+      subjectLabel: subject.name, subjectColor: subject.color, tone: subjectTone(subject.color),
       startLabel: clock.format(start), endLabel: clock.format(end),
       durationLabel: occurrence.durationMinutes === null ? "" : `${occurrence.durationMinutes}m`,
       location: occurrence.location, inProgress,

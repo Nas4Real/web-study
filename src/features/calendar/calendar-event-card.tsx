@@ -2,13 +2,14 @@ import { Clock4, MapPin } from "lucide-react";
 
 import type { CalendarVisualEventDTO } from "@/domain/dto";
 
-import { calendarToneStyles } from "./calendar-styles";
+import { calendarSubjectStyles, calendarToneStyles } from "./calendar-styles";
 
 export function WeekEventCard({ event, onOpen }: {
   event: CalendarVisualEventDTO;
   onOpen?: (event: CalendarVisualEventDTO) => void;
 }) {
   const tone = calendarToneStyles[event.tone];
+  const subjectStyles = calendarSubjectStyles(event.subjectColor);
   return (
     <button
       aria-label={`Open ${event.title}`}
@@ -22,15 +23,15 @@ export function WeekEventCard({ event, onOpen }: {
     >
       <span className="flex w-full items-center justify-between gap-1.5 leading-none">
         <span className="flex items-center gap-1.5">
-          <span aria-hidden="true" className={`size-1.5 rounded-full ${tone.dot}`} />
-          <span className={`font-mono text-[10px] font-semibold ${event.inProgress ? tone.text : "text-text-muted"}`}>
+          <span aria-hidden="true" className={`size-1.5 rounded-full ${tone.dot}`} style={subjectStyles.dot} />
+          <span className={`font-mono text-[10px] font-semibold ${event.inProgress ? tone.text : "text-text-muted"}`} style={event.inProgress ? subjectStyles.text : undefined}>
             {event.startLabel}
           </span>
         </span>
         <span className="font-mono text-[10px] font-medium text-text-disabled">{event.durationLabel.toUpperCase()}</span>
       </span>
       <span className="mt-[7px] text-[13px] font-bold leading-[1.35] text-white">{event.title}</span>
-      <span className={`mt-1 text-[10px] font-semibold ${tone.text}`}>{event.subjectLabel}</span>
+      <span className={`mt-1 text-[10px] font-semibold ${tone.text}`} style={subjectStyles.text}>{event.subjectLabel}</span>
     </button>
   );
 }
@@ -40,10 +41,11 @@ export function DayEventCard({ event, onOpen }: {
   onOpen?: (event: CalendarVisualEventDTO) => void;
 }) {
   const tone = calendarToneStyles[event.tone];
+  const subjectStyles = calendarSubjectStyles(event.subjectColor);
   return (
     <div className="group flex flex-col gap-3 sm:flex-row sm:gap-6">
       <div className="shrink-0 pt-2 text-left sm:w-24 sm:text-right">
-        <time className={`block font-mono text-[13px] font-bold leading-none ${event.inProgress ? tone.text : "text-zinc-200"}`}>
+        <time className={`block font-mono text-[13px] font-bold leading-none ${event.inProgress ? tone.text : "text-zinc-200"}`} style={event.inProgress ? subjectStyles.text : undefined}>
           {event.startLabel}
         </time>
         <span className={`mt-1 block font-mono text-[11px] font-semibold uppercase ${event.inProgress ? "text-analysis/80" : "text-text-muted"}`}>
@@ -67,8 +69,8 @@ export function DayEventCard({ event, onOpen }: {
         ) : null}
         <span className="flex w-full items-center justify-between gap-4">
           <span className="flex items-center gap-2">
-            <span aria-hidden="true" className={`size-1.5 rounded-full ${tone.dot}`} />
-            <span className={`text-[13px] font-semibold ${tone.text}`}>{event.subjectLabel}</span>
+            <span aria-hidden="true" className={`size-1.5 rounded-full ${tone.dot}`} style={subjectStyles.dot} />
+            <span className={`text-[13px] font-semibold ${tone.text}`} style={subjectStyles.text}>{event.subjectLabel}</span>
           </span>
           <span className={`font-mono text-[12px] font-semibold ${event.inProgress ? "pr-20 text-analysis/90" : "text-text-muted"}`}>
             {event.startLabel} — {event.endLabel}

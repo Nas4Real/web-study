@@ -394,6 +394,8 @@ export const dashboardFixture = {
   assignments: [
     {
       id: "assignment-mathematics",
+      subjectLabel: "Math",
+      priority: "high",
       title: "Mathematics Assignment",
       description: "Chapter 4 : Linear Equation",
       dueLabel: "Due Today",
@@ -403,6 +405,8 @@ export const dashboardFixture = {
     },
     {
       id: "assignment-science",
+      subjectLabel: "Science",
+      priority: "normal",
       title: "Science Worksheet",
       description: "Worksheet 2.3 & 2.4",
       dueLabel: "Due Tomorrow",
@@ -412,6 +416,8 @@ export const dashboardFixture = {
     },
     {
       id: "assignment-english",
+      subjectLabel: "English",
+      priority: "normal",
       title: "English Presentation",
       description: "Reading session",
       dueLabel: "Completed",
@@ -453,11 +459,12 @@ export const dashboardFixture = {
     },
   ],
   todayClasses: [
-    { id: "class-mathematics", seriesId: "20000000-0000-4000-8000-000000000001", originalStart: "2026-08-10T08:00:00.000Z", timeLabel: "09:00", title: "Mathematics", location: "Room 27" },
-    { id: "class-english", seriesId: "20000000-0000-4000-8000-000000000002", originalStart: "2026-08-10T10:00:00.000Z", timeLabel: "11:00", title: "English Language", location: "Room 21" },
-    { id: "class-science", seriesId: "20000000-0000-4000-8000-000000000003", originalStart: "2026-08-10T12:00:00.000Z", timeLabel: "13:00", title: "Science", location: "Lab 3" },
+    { id: "class-mathematics", seriesId: "20000000-0000-4000-8000-000000000001", originalStart: "2026-08-10T08:00:00.000Z", timeLabel: "09:00", title: "Mathematics", location: "Room 27", subjectLabel: "Analyse" },
+    { id: "class-english", seriesId: "20000000-0000-4000-8000-000000000002", originalStart: "2026-08-10T10:00:00.000Z", timeLabel: "11:00", title: "English Language", location: "Room 21", subjectLabel: "Languages" },
+    { id: "class-science", seriesId: "20000000-0000-4000-8000-000000000003", originalStart: "2026-08-10T12:00:00.000Z", timeLabel: "13:00", title: "Science", location: "Lab 3", subjectLabel: "Physics" },
   ],
   calendar: {
+    monthDate: "2026-08-01",
     label: "August 2026",
     selectedDay: 10,
     leadingDays: [27, 28, 29, 30, 31],

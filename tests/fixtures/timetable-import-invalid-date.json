@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "timezone": "Africa/Tunis",
+  "sessions": [
+    { "kind": "university", "title": "Invalid date must not import", "subject": "Mathematics", "date": "2026-02-30", "start_time": "09:00", "duration_minutes": 90 }
+  ]
+}

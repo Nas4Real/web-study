@@ -45,7 +45,7 @@ export async function resolveE2eStudyScope(requestedScope?: string) {
   }
 }
 
-export async function resolveTaskRequestContext(requestedScope?: string): Promise<TaskRequestContext | null> {
+async function resolveTaskServices(requestedScope?: string) {
   const actor = await getVerifiedActor();
   if (!actor) return null;
 
@@ -67,16 +67,37 @@ export async function resolveTaskRequestContext(requestedScope?: string): Promis
     taskService = new TaskService(createSupabaseTaskRepository(client));
   }
 
-  const profile = await profileService.get(actor.userId);
-  if (profile.status === "error") throw new Error(profile.code);
   return {
     actorId: actor.userId,
-    displayName: profile.data.displayName,
     now: scope
       ? () => new Date("2026-10-02T10:00:00.000Z")
       : () => new Date(),
     subjectService,
     taskService,
-    timeZone: profile.data.timezone,
+    profileService,
   };
+}
+
+export async function resolveTaskRequestContext(requestedScope?: string): Promise<TaskRequestContext | null> {
+  const context = await resolveTaskServices(requestedScope);
+  if (!context) return null;
+  const profile = await context.profileService.get(context.actorId);
+  if (profile.status === "error") throw new Error(profile.code);
+  return {
+    actorId: context.actorId, displayName: profile.data.displayName,
+    now: context.now, subjectService: context.subjectService,
+    taskService: context.taskService, timeZone: profile.data.timezone,
+  };
+}
+
+// Read-only details may overlap profile and task reads. Mutations still use
+// the eager context above; both reads must succeed before returning detail.
+export async function resolveTaskDetailRequestContext() {
+  const context = await resolveTaskServices();
+  if (!context) return null;
+  const timeZone = context.profileService.get(context.actorId).then(profile => {
+    if (profile.status === "error") throw new Error(profile.code);
+    return profile.data.timezone;
+  });
+  return { actorId: context.actorId, now: context.now, subjectService: context.subjectService, taskService: context.taskService, timeZone };
 }

@@ -24,3 +24,18 @@ Date: 2026-09-29
   verified Supabase sessions/JWTs for users and personal API keys for external
   integrations. Cookie-authenticated mutations require a same-origin request.
 - In-app notifications only; AI Suggestion backend out of V1.
+
+## 2026-10-10: Navigation optimization planning
+
+- Retain Server Components for initial authenticated reads. Client API queries
+  for Calendar/Tasks are conditional on measured interaction bottlenecks.
+- Add Epic 09 with five core stories and two conditional stories. Local fixture
+  timings are exploratory; story 09-01 must establish production evidence.
+- Distinguish immediate loading feedback from time to usable content. No claim
+  that JSON inherently renders faster or that a loading shell fixes slow queries.
+- Share auth/profile results within a render request only; browser caches are
+  actor-scoped and cleared on auth loss, sign-out or account replacement.
+- Follow the user's later direct-code preference for loading states, reusing
+  approved screen geometry/tokens instead of creating new Superdesign drafts.
+- Planning uses repository BMAD V6 conventions; no installed BMAD skill was
+  found. Existing deferred private-beta product scope remains unchanged.

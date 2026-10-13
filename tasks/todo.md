@@ -1,4 +1,46 @@
-# Signed-in usability fixes
+# Active: Calendar JSON import
+
+- [x] Validate and normalize bounded JSON timetables with canonical session rules.
+- [x] Persist imports atomically with per-user idempotency and owner checks.
+- [x] Add authenticated bulk import API and boundary tests.
+- [x] Add Calendar Import modal with file preview, example download and refresh.
+- [x] Verify migrations, browser flows, full regression gates and publish preview.
+
+Full plan: [CALENDAR-JSON-IMPORT](../.agent/execplans/CALENDAR-JSON-IMPORT.md).
+
+---
+
+# Previous: Copy the localhost UI
+
+- [x] Identify live Vite source and confirm matching `web/app/src` files.
+- [x] Compare source and working app; record source mapping and preserved behavior.
+- [x] Copy shell/tokens and all Dashboard components; browser + regression verification.
+- [x] Copy Tasks screen; verify filters, keyboard details, action menu and creation entry point.
+- [ ] Copy Calendar views/header; verify day/week/month and session actions.
+- [ ] Copy Documents screens; verify subjects/chapters/search and disabled uploads.
+- [ ] Compare/port remaining Settings, dialogs and auth differences.
+- [ ] Publish verified UI slices to the existing preview branch.
+
+Full plan: [LOCALHOST-UI-PARITY](../.agent/execplans/LOCALHOST-UI-PARITY.md).
+
+---
+
+# Historical: Navigation and interaction performance (remaining work deferred)
+
+- [x] Prepare Epic 09 spec, seven stories, ExecPlan and sprint/task indexes.
+- [ ] 09-01: Record authenticated production baseline and ranked bottlenecks.
+- [ ] 09-02: Deduplicate request reads and measure the result.
+- [ ] 09-03: Add immediate navigation feedback/prefetch and measure the result.
+- [ ] 09-04: Synchronize caches and reduce redundant refreshes.
+- [ ] 09-05: Record Calendar client-query implement/defer verdict; execute if justified.
+- [ ] 09-06: Record Tasks client-query implement/defer verdict; execute if justified.
+- [ ] 09-07: Verify before/after results, regression gates and hosted release.
+
+Full plan: [EPIC-09](../.agent/execplans/EPIC-09.md).
+
+---
+
+# Completed: Signed-in usability fixes
 
 - [x] Add tested owner-scoped subject creation action.
 - [x] Add Settings subject creation/list UI.

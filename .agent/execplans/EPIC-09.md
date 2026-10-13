@@ -1,0 +1,546 @@
+# ExecPlan EPIC 09: Navigation and interaction performance
+
+## Current delivery decision — 2026-10-11
+
+Remaining Epic 09 work is deferred at the user's request for the private two-user
+version. Preserve all verified implementation commits; do not continue profiling,
+cache architecture changes, conditional client-query rewrites or region experiments
+unless requested. Stories 09-01 through 09-07 are deferred, not completed. Historical
+progress and open gates below remain evidence, not instructions to resume now.
+See `docs/performance/DEFERRED-WORK-2026-10-11.md` for retained changes and resumption.
+This push does not authorize a merge or production deployment; a future release
+still needs basic desktop critical-flow checks even if extensive profiling stays
+deferred. No known defect is declared fixed merely by deferring its investigation.
+
+## Purpose / user-visible outcome
+
+Navigation promptly acknowledges the destination, and its usable content arrives
+sooner. Task/session actions update their relevant surfaces with fewer duplicate
+reads. Calendar/Tasks may use client JSON queries if traces show they need them.
+
+## Source contracts
+
+Read `AGENTS.md`, `.agent/PLANS.md`, the architecture, Epic 09, its spec and the
+active story. Relevant sources are:
+
+- `_bmad-output/planning-artifacts/specs/spec-navigation-performance.md`
+- `_bmad-output/planning-artifacts/epics/epic-09-navigation-and-interaction-performance.md`
+- `docs/API-AUTHENTICATION.md`
+- `_bmad-output/implementation-artifacts/tests/10-accessibility-performance.md`
+- Existing Task Details, Session Details and recurrence contracts.
+
+## Non-goals
+
+No full SPA rewrite, automatic UI-through-API migration, new design drafts,
+new dependency/framework migration, paid monitoring, broad security campaign,
+notifications, developer settings, account deletion or storage activation.
+
+## Current state
+
+- Workspace layout: `src/app/(workspace)/layout.tsx` awaits settings context.
+- Pages await loaders under `src/server/study/*-page-loader.ts`.
+- Contexts: `settings-request-context.ts`, `task-request-context.ts`,
+  `calendar-request-context.ts`; auth in `src/server/auth/request-auth.ts`;
+  SSR client in `src/lib/supabase/server.ts` and refresh in `proxy.ts`.
+- Sidebar Links and search live in `src/features/shell/`.
+- A lightweight workspace route loading boundary is present below the layout;
+  the layout's initial authentication/profile wait remains outside it.
+- Details use separate page-mounted providers in `use-task-detail.tsx` and
+  `use-session-detail.tsx`. Page close/success handlers sometimes refresh RSC
+  content even without mutations.
+- Existing resource APIs live under `src/app/api/v1`; shared adapters and
+  services are under `src/server/api` and `src/server/study`.
+- Previous local fixture timing is exploratory. Real-auth hosted/local exploratory
+  timings are captured in `docs/performance/BASELINE-2026-10-10.md`.
+
+## Implementation plan
+
+1. **09-01 baseline:** Create a repeatable trace/report procedure for a production
+   build and real hosted auth. Save environment/sample metadata and a sanitized
+   experiment ledger under `docs/performance/`. Mark suspects as hypotheses.
+2. **09-02 reads:** Introduce the smallest shared request-scoped identity/profile
+   helper. Preserve `auth.getUser()` semantics for email unless validated claims
+   are explicitly shown to meet the same requirement. Do not equate proxy checks
+   with render auth. Count actual outbound reads and parallelize Calendar's
+   independent subject/occurrence reads. Remeasure this change alone.
+3. **09-03 navigation:** Add a lightweight loading boundary below the reused
+   workspace layout. Keep layout runtime waits outside the boundary in mind.
+   Cover sidebar and search, stalled reads, interrupted navigation, and mobile.
+   Validate built-in shell prefetch with `next build`/`next start`, since dev
+   does not reproduce production automatic prefetch. Introduce full prefetch
+   only when intent and measured costs justify it. Remeasure separately.
+4. **09-04 synchronization:** Establish one authenticated workspace query cache
+   if traces justify reuse, with actor-scoped keys and explicit freshness/clear
+   rules. Hydrate initial server data where needed without an immediate duplicate
+   query. Replace read-only-close refreshes with mutation-driven invalidation.
+   Preserve server reconciliation and prevent race/rollback corruption.
+5. **Decision checkpoint:** Measure Calendar date/view changes and task flows.
+   For 09-05/09-06, write the evidence and implement/defer verdict before work.
+   Rendering/JS issues require a targeted measured fix, not blind data migration.
+6. **09-05 conditional Calendar:** Reuse shared bounded range projection and
+   existing occurrence rules behind a read adapter. Cache range queries with
+   actor/bounds/timezone/view identity. Ensure rapid date/view changes and browser
+   history cannot show mismatched data. No duplicate RSC and JSON fetch per change.
+7. **09-06 conditional Tasks:** Reuse server read models and API projections;
+   preserve description, grouping, subject and timezone information. Seed the
+   query from server data and confirm/rollback optimistic mutations. Do not
+   reimplement business rules in browser code or break existing API consumers.
+8. **09-07 release:** Compare identical baseline/candidate scenarios, retain only
+   justified improvements, complete regression gates, update the report/ledger,
+   deploy through the existing GitHub/Vercel flow, and verify hosted auth/navigation.
+
+## Database / migration plan
+
+No schema migration is planned. If traces identify a query bottleneck, first
+inspect query counts, bounds and existing indexes. Any needed index change gets
+a separate documented migration, query-plan evidence, RLS checks and rollback
+strategy; avoid speculative indexes or dropping constraints.
+
+## Security checks
+
+Request memoization is bounded to a render request, never across users. Browser
+cache ownership is bound to the verified workspace actor and reset on auth loss,
+sign-out or account replacement. Each server operation independently enforces
+auth and ownership. Public cache headers remain private/no-store as appropriate.
+Keep Origin protection for cookie API writes and do not expose credentials in
+bundles, traces or reports. Test account switching and negative owner references.
+
+## UI parity checks
+
+Reuse the current GetStudy sidebar and approved Dashboard/Tasks/Calendar/
+Documents/Settings layout and tokens. The user's later direct-code preference
+overrides older missing-state draft requirements: do not generate new designs.
+Loading feedback should retain meaningful screen geometry, focus behavior and
+reduced-motion support. Compare completed screens at 1440px and 320px with the
+existing Playwright baselines. Do not update baselines to conceal a regression.
+
+## Verification
+
+After relevant implementation slices:
+
+```text
+rtk pnpm lint
+rtk pnpm typecheck
+rtk test pnpm test
+rtk test pnpm exec playwright test tests/e2e/calendar-data.spec.ts --project=chromium
+rtk test pnpm exec playwright test tests/e2e/task-details.spec.ts --project=chromium
+rtk test pnpm exec playwright test tests/e2e/signed-in-usability.spec.ts --project=chromium
+rtk err pnpm build
+```
+
+Confirm test filenames exist before invoking; add a focused navigation/cache
+suite for delayed reads, cancellation, auth change and rollback. Run relevant
+visual baselines and critical browser journeys at final integration. For timing,
+use a production build and hosted account; report >= 10 samples/scenario with
+commit and environment metadata. Do not enable development auth in production.
+
+## Progress log
+
+- [x] 2026-10-11: Cache-lifecycle verification passes four new rapid-subtask
+  fixture checks (Tasks/Dashboard × success/rollback) and all 20 scoped browser
+  checks without retries. Three local production genuine-auth same-tab account
+  switches pass warmed details, empty sidebar/history revisits and populated
+  return; positive-control DOM detector, finite one-second observation, zero
+  study writes/page errors. No app defect/fix or speedup claim. Initial runner
+  startup failure did not recur; first auth run had a corrected Calendar-heading
+  harness error. All 719 units/typecheck/build pass; existing lint warning.
+  See cache-lifecycle report. Cross-tab/auth-loss, subject/profile/timezone,
+  recurring real-auth mutations and release remain open. No merge/deploy/mobile;
+  local production server stopped, 09-04 not closed.
+
+- [x] 2026-10-11: Dashboard session refresh experiment red→green across matching
+  twenty-save genuine-auth local production runs: extra current-route RSC GETs
+  one→zero throughout, while eight background prefetches remain. Visible cards
+  and same-page details are fresh; original synthetic location/date/start/duration
+  restored. Remove only session-success refresh; retain task refresh, server
+  revalidation and series detail invalidation. All 719 units/typecheck/build and
+  25 desktop browser/visual checks pass, including new Dashboard retry and both
+  deletion scopes; existing lint warning. Timings mixed, no stable latency/hosted
+  gain. See Dashboard reconciliation report. Actor/rapid/conditional/release
+  gates remain open; no merge/production deploy or mobile work.
+
+- [x] 2026-10-11: Calendar reconciliation regression fails before/pass after
+  removing only explicit client refresh from successful session mutations.
+  Server revalidation and series detail-cache invalidation remain. Same-budget
+  20-save control/candidate captures reduce extra current-route RSC GETs one→zero
+  throughout, with fresh visible cards/details and restored synthetic invariants.
+  Confirmation/provider timings are mixed; retain for request efficiency, not
+  a stable latency/hosted gain. All 718 units/typecheck/build and 22 desktop
+  browser/visual checks pass; existing lint warning. New failure/retry coverage
+  retains original content and avoids duplicate cards. Dashboard unchanged;
+  rapid/actor/lifecycle/conditional/release gates remain open. See Calendar
+  reconciliation report; no merge/production deploy or mobile work.
+
+- [x] 2026-10-11: Save provider attribution exposes equivalent-start timestamp
+  strings misclassified as schedule rewrites. Two regressions fail before/pass
+  after reusing instant-based schedule comparison; genuine start changes still
+  reject with exceptions. Keep consistency reread, owner and schedule-CAS guards.
+  All 717 units/typecheck/final build and 21 desktop browser/visual checks pass;
+  existing lint warning. Matching 20-save real-auth repeat removes one pre-write
+  Calendar GET in every sample; original synthetic location/date/time/duration
+  restored. Control captures ten calls in 19 samples, nine in one; fixed nine
+  throughout. Timing variability prevents a stable hosted speedup claim. See
+  `docs/performance/SESSION-SAVE-PROVIDERS-2026-10-11.md`. Mobile, broad lifecycle,
+  conditional querying and release gates remain open; no merge/production deploy.
+
+- [x] 2026-10-11: Frame-sampled one-time save follow-up completes 20 guarded
+  genuine-auth local production samples. Pending-feedback p95 84.7/88ms; paired
+  POST-header-to-ready p95 93.77/91.36ms. All 19 known POST bodies finish after
+  sampled readiness, one completion remains unknown. No app change/speedup or
+  exact paint/React/provider attribution claim. Eight diagnostic tests red→green,
+  full 712 units/typecheck/final build pass, existing lint warning. Four real-auth
+  read-only detail scenarios also pass; original session location/date/time/
+  duration remain restored. See frame-sampled save report. Mobile and story/
+  hosted release gates remain open; no merge or production deployment.
+
+- [x] 2026-10-11: Local one-time session mutation diagnostic uncovered profile/
+  series timezone mismatch. Three component regressions fail before/pass after
+  using canonical session timezone throughout the editor; server ownership and
+  display timezone are unchanged. Recover only the known synthetic session's
+  original 09:00 UTC timestamp through the corrected editor. Ten edit/restore
+  cycles complete with same-page location/date/time/duration verification;
+  20 samples have one POST and one current-route non-prefetch reconciliation
+  each. Assertion-observed medians 907.05/914.50ms are diagnostic upper bounds,
+  not paint/provider attribution or a speedup. Original interrupted run retained;
+  local API lookup returned 503 without writes. See session-mutations report.
+  All 704 units/typecheck/final production build and 21 desktop browser/visual
+  checks pass; no snapshots updated. Existing lint warning and cancelled-response
+  E2E server logs retained in the report rather than hidden.
+  No redesign, merge or production deployment; mobile/story/release gates stay open.
+
+- [x] 2026-10-11: Session-detail overlap experiment rejected, not shipped.
+  Five isolated genuine-auth local runs (200 read-only samples) prove concurrency
+  with unchanged four reads/one POST, but reverse-order control reduces the
+  candidate median gain to 44.9ms within observed run variability, with worse
+  tails. Restore all seven candidate source/test files to HEAD 76dac6b; preserve
+  existing task/Calendar optimizations. Record the failed hypothesis in the
+  session-detail-parallel report. All 19 desktop checks pass on both candidate
+  and restored code; restored full units/typecheck/lint/production build pass
+  (existing lint warning). No snapshot updates, merge or production deployment.
+  Mobile and full story/release gates stay open.
+
+- [x] 2026-10-10: Narrow 09-02 task detail candidate retained: verified actor
+  first, then required profile/timezone overlaps owner task read; dependent
+  subject and eager mutation context preserved. Four isolated genuine-auth local
+  runs, 160 samples: task-ready medians 356.65→255.10ms and 369.65→245.40ms;
+  provider spans 309.96→198.67ms and 331.99→206.59ms. All 20 candidate task opens
+  overlap versus zero controls, same three provider calls/one POST. Two handler
+  tests red→green; full units/typecheck/build and 11 desktop browser checks pass.
+  Existing lint warning remains; dependency audit flags pre-existing build/lint
+  advisories for separate release triage. User defers mobile; no hosted gain,
+  session adoption, merge or production deployment. See task-detail-parallel report.
+
+- [x] 2026-10-10: Same-page warm detail repeat complete: 80 isolated local
+  read-only samples; all 40 opens attributed. Warm session/task sampled-ready
+  medians 10.7/13.75ms, following frame 90/83ms, one fresh POST and four/three
+  provider reads each. No TTL/shared-cache change; cached DOM is not fresh data
+  or exact paint. Three interrupted attempts preserved separately. Five policy
+  tests red→green, full units/typecheck/build pass, existing lint warning. See
+  detail-warm-reopen report; cold-open/mutation/hosted/React gates remain open.
+- [x] 2026-10-10: Narrow 09-04 session freshness defect reproduced on Calendar
+  and Dashboard: reopen after an occurrence edit repaints pre-write room data
+  while the new detail POST is held. Both regressions fail before/pass after
+  removing only that series's cached detail queries on successful writes. Keep
+  read-only cache and the existing route refresh. All four new cache checks pass;
+  related run 24/25 passes. The 320×720 series-edit height mismatch reproduces
+  identically with all nine app lines removed; no baseline/layout edits. Full
+  units/typecheck/production build pass, existing lint warning. See session-cache-freshness report;
+  broad cache lifecycle and release remain open.
+- [x] 2026-10-10: Detail-provider diagnostic slice: 40 isolated local real-auth
+  read-only samples; 20/20 opens attributed to exact fresh POSTs. Session/task
+  ready medians 489/405ms, provider spans 456/356ms; four/three sequential calls
+  with no overlap, correlations 0.981/0.979. No duplicate profile-read evidence.
+  Six red→green tests and full units/typecheck/build pass; existing lint warning.
+  No app change/speedup claim. Warm-reopen/freshness, session mutations, React/paint
+  and hosted attribution remain open. See detail-provider report.
+- [x] 2026-10-10: Plan/spec/epic and seven stories prepared; sprint index extended.
+- [ ] 09-01 production baseline and reproducible report.
+- [x] 2026-10-10: First 09-01 slice: isolated real-auth accounts, sanitized browser
+  profiler, local production runner and provider-call diagnostics implemented.
+- [x] 2026-10-10: Captured 400 hosted and 160 local exploratory samples; saved
+  sanitized aggregate report, limitations and experiment ledger. Quality gates passed.
+- [x] 2026-10-10: Completed isolated hosted empty-account repeat (200 samples).
+  Warm-sidebar content p95 remains 710–994 ms; see isolated report.
+- [x] 2026-10-10: Completed isolated hosted populated-account navigation (200
+  samples). Warm-sidebar content p95 792–1255ms; every route misses 700ms.
+  No long tasks observed; warm paint-after-readiness p95 <= 6.785ms.
+  See `docs/performance/ISOLATED-POPULATED-NAVIGATION-2026-10-10.md` for all groups
+  and stream/readiness limits. Provider/precise interaction work remains pending.
+- [x] 2026-10-10: Captured 80 real-auth interaction samples. Read-only Session
+  Details close sends a same-route non-prefetch GET, unlike Task Details close.
+  Assertion timings are upper bounds, not exact React/paint measurements.
+- [x] 2026-10-10: Captured 100 local production initial-entry samples across both
+  accounts. Every correlated document has 1 profile and 1 auth-user call; no
+  duplicate-read evidence. All 20 Calendar samples serialize subject before
+  occurrence calls; subject median 79–96ms. See initial-provider report.
+- [x] 2026-10-10: Early independent 09-04 close-handler candidate: local browser
+  regression failed with one route GET before and passes with zero after.
+  Calendar/Dashboard read-only close restores focus; edit/delete still reconcile.
+- [x] 2026-10-10: Resolved existing Session Details screenshot-height mismatch.
+  Browser geometry identified the 56px mobile shell header plus 12px gap above
+  a calendar still reserving desktop viewport height. Subtract that 68px only
+  below `lg`; preserve desktop height and the 680px minimum for short screens.
+  Direct geometry regression fails before (870/1094px), passes after
+  (802/1026px). All 21 Calendar/session checks, including unchanged 320/768/1024px
+  Session Details snapshots, pass. No snapshots updated or content hidden.
+- [ ] 09-02 request reads optimized and measured.
+- [x] 2026-10-10: Added diagnostic-only detail readiness sampling and opt-in
+  read-only interaction mode. Four red→green probe tests pass; all 40 genuine-auth
+  local production samples complete. Sampled-ready median/p95: session open
+  604/1148ms, task open 489/668ms; closes 10–11ms median, zero RSC/POST each.
+  Assertion-observed values are substantially higher; report this as measurement
+  overhead, not an application speedup. Full units/typecheck/build pass; lint's
+  existing warning remains. No app/data changes or concurrent tests/builds during
+  capture. React/paint, session mutation and hosted attribution remain pending.
+  See `docs/performance/DETAIL-FRAMES-2026-10-10.md`.
+- [x] 2026-10-10: Narrow 09-02 Calendar experiment retained: owner/window-aware
+  subject and occurrence reads overlap; same five provider calls. Matching
+  20-sample local production entries: provider-span median 437→348ms, observed
+  readiness 650→495ms. Both ten-sample batches improve; controls vary. All 18
+  loader tests, full units/typecheck/build and 27 browser/visual checks pass.
+  See Calendar comparison report; hosted/warm-navigation gains remain unverified.
+- [ ] 09-03 navigation feedback/prefetch verified and measured.
+- [x] 2026-10-10: Narrow pending-feedback candidate: Next link status and search
+  transition acknowledge Calendar navigation. Two 10-sample batches per input
+  and variant (80 local real-auth production samples) reduce feedback p95 from
+  >500ms to <26ms. One RSC request per sample remains. Content tail/non-regression
+  is unresolved; no actual-content speedup or hosted claim. All 33 focused
+  browser checks and unchanged visual baselines pass after replacing two flaky
+  network-idle waits with explicit UI readiness, retaining all assertions.
+  Loading boundary, initial-layout and production/hosted prefetch remain pending.
+- [x] 2026-10-10: Narrow 09-03 loading boundary: genuine-auth local production
+  held Calendar response shows a useful cached fallback; desktop/mobile
+  interruption, search focus, 320px overflow and anonymous redirect checks pass.
+  Both desktop control/candidate already send ten prefetch attempts in a finite
+  three-second window; no completed provider reads attributed to those IDs.
+  Repeat shell p95 43.2/47.2ms (sidebar/search), but search content worsens against
+  this control. Keep content/all-route/hosted gates open; no deployment claim.
+  Full 654 units/typecheck pass, lint has only its existing warning; all 51
+  focused navigation/workspace/Calendar/session checks pass without retries or
+  snapshot updates. Six boundary rendering tests include unknown-path privacy.
+  Final local production build and staged whitespace check also pass.
+  See `docs/performance/WORKSPACE-LOADING-2026-10-10.md`.
+- [x] 2026-10-10: 80-sample correlated candidate/control/control/candidate
+  Calendar repeat: content medians nearly equal, provider/content correlation
+  0.989–0.996, one destination RSC and four provider calls per sample, no errors
+  or long tasks. Candidate content tails remain worse; no new product fix or
+  no-regression/release claim. Preserve useful fallback candidate under review.
+  Three diagnostic red→green tests cover old-log collision, missing correlation
+  and sanitized projection. Boundary/test restored exactly after controls.
+  Full 657 units/typecheck pass; lint has only its existing warning. Control
+  and restored candidate production builds pass; no application diff.
+  See `docs/performance/LOADING-CONTENT-ATTRIBUTION-2026-10-10.md`.
+- [ ] 09-04 cache freshness/mutation synchronization verified and measured.
+- [x] 2026-10-10: Extended the local genuine-auth shell diagnostic across all
+  five routes and desktop/320px keyboard search. All ten scenarios pass held
+  fallback, interruption, completed content, back/forward and anonymous entry;
+  search also retains focus without overflow. Six allowlist tests and full units,
+  typecheck and lint pass (existing warning). Inspected Dashboard desktop and
+  Settings mobile screenshots. Captured finite prefetch windows/provider counts;
+  no global bound, timing/p95 or hosted-success claim. The protected automatic
+  preview reaches app sign-in in Codex but Vercel login in the isolated profiler.
+  Existing synthetic accounts are verified; hosted authenticated checks remain
+  pending. No duplicate accounts, merge or production deployment. See
+  `docs/performance/ALL-ROUTE-LOADING-2026-10-10.md`. Final genuine-auth local
+  production build and whitespace check pass; local production server stopped.
+- [ ] 09-05 implement/defer verdict and required work complete.
+- [x] 2026-10-10: Hosted signed-in smoke completed in Codex's authorized browser
+  with the existing verified populated synthetic account; no duplicate account
+  creation or protection changes. All five routes load via desktop sidebar and
+  320px keyboard search; destination-labelled mobile loading, focus/no overflow,
+  desktop/mobile history and mobile competing navigation pass. Console checks
+  capture no warnings/errors. No record edits or cookie/token exports. Viewport
+  reset afterward. This is not controlled hosted timing or content non-regression;
+  09-03 remains open. See hosted-loading-smoke report.
+- [ ] 09-06 implement/defer verdict and required work complete.
+- [ ] 09-07 final evidence, gates and hosted release.
+
+## Decisions / discoveries
+
+- 2026-10-11: Next 09-04 verification slice preserves page-mounted providers.
+  Exercise same-tab populated→empty account replacement after warming Task,
+  Calendar and Dashboard detail caches, using existing synthetic accounts and
+  local genuine-auth production. Assert absence of populated markers, revisit
+  warmed routes and return to the populated account without study writes. Add
+  scoped fixture checks for rapid subtask clicks, success/failure serialization
+  and rollback limited to the originating task after selecting another task.
+  No shared-cache/auth architecture change unless these checks reproduce a defect;
+  cross-tab session replacement and late auth-loss responses remain separate.
+
+- 2026-10-11: Dashboard session reconciliation is the next separate 09-04
+  experiment. Extend the existing local-only guarded save harness with an
+  allowlisted Dashboard surface, same-page visible-card/detail checks and
+  original location/date/start/duration restoration. Never move the synthetic
+  session into today's range to manufacture coverage. Capture twenty saves
+  before changing only the session-success callback; leave task refresh alone.
+  Require the zero-extra-RSC regression red before/green after and matching
+  edit/delete/failure browser checks. No mobile, UI, auth or schema changes.
+
+- 2026-10-11: Test Calendar's explicit post-session refresh separately from
+  server-action reconciliation. Next's bundled docs state `revalidatePath` in
+  Server Functions immediately updates the viewed affected path; existing edit
+  and delete actions revalidate Calendar and Dashboard. Extend the guarded local
+  save harness with fresh visible card checks and a post-restoration request-count
+  assertion first; reproduce its zero-extra-RSC expectation before changing app
+  code. Candidate removes only Calendar's redundant client refresh, retaining
+  detail invalidation and all server revalidation. Dashboard is a separate slice.
+  Require same-budget control/candidate captures and edit/delete/failure desktop
+  regressions; no UI/auth/schema changes or whole-story completion.
+
+- 2026-10-11: Retain the equivalent-instant correction for correctness and
+  measured pre-write read reduction. Use the existing `scheduleMatches` on
+  validated merged schedule, not string equality, without dropping the owned
+  master reread or repository schedule predicates. Do not remove client refresh
+  alongside it: action-attached rerender plus separate RSC is a hypothesis for
+  a later scoped experiment, not sufficient proof reconciliation is redundant.
+
+- 2026-10-11: Next save attribution is diagnostic-only: explicitly local
+  `PERF_SESSION_PROVIDER=true` with guarded session mutation mode and the existing
+  provider preload. Correlate one exact save POST, exclude old-log/other-request
+  events, and allowlist HTTP methods in sanitized call projections. Account for
+  action-attached page rerender reads; do not label the whole span as database
+  update time. Preserve restoration/freshness checks and unknown body timings.
+
+- 2026-10-11: Extend only diagnostic tooling for one-time session saves: frame-
+  sampled pending feedback, editor dismissal plus enabled Calendar invoker,
+  and click-relative POST headers/completion. Retain assertion upper bounds,
+  unknown/cancelled body timings, first failure stage and existing restoration
+  checks. Header-to-ready includes remaining stream work; it is not React/paint
+  attribution. No application change or cache/transport migration is authorized
+  by this measurement alone. Mobile remains deferred.
+
+- 2026-10-11: Next diagnostic slice covers session saves/reconciliation on
+  existing synthetic one-time Performance session 2 only. Opt-in local mutation
+  mode excludes read-only/warm/provider modes and bypasses all unrelated task
+  writes. Save a temporary location, verify same-page fresh detail, restore its
+  original form value in finally and verify again. Use one-time rather than
+  recurring data to avoid leaving an occurrence override. Record restoration
+  outcome and failed attempts; timing stays an assertion-observed upper bound,
+  not exact paint/provider attribution or an optimization. Mobile remains deferred.
+
+- 2026-10-10 (evaluated and rejected 2026-10-11): Session detail first-open candidate:
+  reuse verified service construction, finish calendar repository setup, then
+  overlap required profile/timezone with the existing owner-aware occurrence
+  and effective-subject chain. No await between starting profile and returning
+  the read context, so its rejection is promptly consumed by the handler.
+  Retain eager Calendar mutation/page contexts. Test deferred/failing profile,
+  unauthenticated setup and preserved effective occurrences; compare isolated
+  local production runs before retaining. Mobile remains user-deferred.
+
+- 2026-10-10: User deferred mobile. Next narrow 09-02 experiment is task
+  detail first-open only: after unchanged verified actor resolution, overlap
+  the required profile/timezone read with owner-scoped task/subject reads.
+  Return nothing until both succeed; keep mutation context eager and unchanged.
+  Capture isolated real-auth local production control/candidate samples with
+  the existing detail provider profiler. Test deferred timezone, profile errors,
+  unauthenticated requests and per-request actor ownership before retention.
+  Session detail adoption is a separate follow-up; no UI/cache/API/schema change.
+
+- 2026-10-10: Attribute the remaining detail-open wait before any application
+  change. Extend only the local read-only profiler with exact single-POST
+  provider correlation. Exclude earlier log rows and reject missing/ambiguous
+  IDs/events; never infer zero provider work from missing evidence. Capture ten
+  samples per open/close with the unchanged production app, no concurrent tests
+  or builds, and report provider span/counts separately from sampled DOM time.
+  Inspect the matching service/repository sequence for ranked hypotheses. Keep
+  warm-reopen/cache and session-mutation work separate until measured.
+
+- 2026-10-10: Continue 09-01 with a diagnostic-only detail-readiness probe.
+  Existing assertion timing remains an upper bound; add actual click capture,
+  animation-frame DOM/control readiness and the following frame as separate
+  fields, never labelled React commit/paint/hydration. Unit-test sampling,
+  missing readiness and cleanup first. Add an opt-in read-only detail mode to
+  the existing genuine-auth profiler, compare at least ten local samples per
+  scenario with unchanged app code and no simultaneous builds/tests. Preserve
+  legacy measurements and keep session-mutation/hosted attribution gates open.
+
+- 2026-10-10: Extend the genuine-auth production shell diagnostic to all five
+  destinations, desktop sidebar (including secondary Settings) and 320px
+  keyboard search. Keep route/source/interruption selection allowlisted and
+  test it before running. Hold only destination non-prefetch RSC; check fallback,
+  interrupted destination, mobile focus/overflow and fresh anonymous entry.
+  Inspect the existing GitHub-triggered preview read-only before hosted checks;
+  do not merge, redeploy production or weaken deployment protection.
+
+- 2026-10-10: Investigate the loading candidate's content-timing gap with a
+  candidate/control/control/candidate local production repeat, ten warm Calendar
+  samples per input per batch. Extend only the ignored/local diagnostic path
+  with per-request provider correlation, excluding pre-run log rows and missing
+  attribution rather than calling it zero. Keep the same profiler patch in
+  both builds; temporarily remove only the boundary and its rendering test for
+  control, then restore exactly. No tests/builds alongside timing captures.
+  Attribute waits before any new product optimization; retain content/hosted
+  gates unless the resulting evidence supports closure.
+
+- Continue 09-03 with a generic, destination-labelled skeleton below the existing
+  authenticated layout. Add rendering tests first, then verify the boundary with
+  real-auth production shell prefetch and a held Calendar navigation response.
+  Keep layout/context/Link defaults unchanged. Count prefetch resource reads and
+  report initial entry separately; do not infer that this boundary covers auth.
+
+- 2026-10-10: Start 09-03 with a narrow pending-feedback slice. Test withheld
+  RSC responses before changing shell/search. Use Next's link pending state and
+  a React transition for search rather than maintaining a second navigation
+  router. Add the lightweight workspace boundary separately, keeping initial
+  layout authentication outside it. Default Link prefetch remains unchanged;
+  production request-count and timing evidence are still required before closing
+  the story. Completed geometry must remain identical; no artificial delay.
+
+- User authorized the next narrow 09-02 Calendar parallel-read slice after the
+  initial-provider findings. Full 09-01 remains open; this independent experiment
+  does not close its interaction/hosted-attribution gaps. Keep context/auth reads
+  unchanged because measured duplicate outbound reads are absent. Compare local
+  production baseline/candidate with real populated auth, repeat samples and
+  provider overlap evidence; preserve visual-fixture early return and all errors.
+
+- While full 09-01 remains open, isolate the independent read-only session-close
+  defect as an early, narrow 09-04 experiment. Split close from edit/delete success
+  on Calendar and Dashboard; require a failing browser regression and preservation
+  of mutation reconciliation. This does not start broad cache/auth changes or
+  mark 09-02/09-03/09-04 complete. Initial hosted request-count baseline is captured.
+
+- Retain initial Server Component reads. Conditional client querying is an
+  extension of the existing architecture, not proof that JSON is faster.
+- Local fixture timings cannot establish a production root cause.
+- Loading feedback and actual-content timing must be reported independently.
+- This plan follows existing BMAD artifacts; no installed BMAD skill was found.
+- Planning-only delivery does not start any runtime optimization automatically.
+- The current approved sidebar exposes navigation search only in the mobile
+  header; profile sidebar at 1440x900 and search at 375x812 separately.
+- Supabase connector project access was denied; the existing dashboard session
+  allowed explicitly approved test-account creation and reading the public key.
+- Real-auth production runs reproduce slow navigation. Some RSC streams are
+  cancelled after consumption: headers/first byte are not full-body completion.
+- Initial profiling runs overlap each other and some quality checks. Keep them
+  exploratory and repeat in isolation before making optimization gain claims.
+- Hosted test-account chapter creation returned 503. No unrelated API fix is
+  bundled into the profiling slice; record it for investigation.
+- Deployment inspection confirms Vercel `iad1`; Supabase Infrastructure confirms
+  `eu-central-1`. Co-location is a hypothesis, not a default infrastructure change.
+- Local sibling navigation traces show one profile read and no auth-user call
+  per observed Tasks/Calendar RSC request. Initial-entry follow-up now records
+  one profile and one auth-user call across all five routes/both accounts.
+  Defer speculative identity/profile memoization; first test Calendar independent
+  reads in 09-02. Local instrumentation is not hosted-provider attribution.
+
+## Completion evidence
+
+Planning and the first diagnostic tooling slice are complete. Story 09-01 is
+in progress; controlled baseline/interaction coverage, production improvements
+and release evidence remain pending. See `docs/performance/README.md`.
+
+The independent session-close candidate passes its red→green browser regression,
+15 relevant functional/Calendar checks, full units, typecheck, lint (existing
+warning), production build and diff check. Calendar/Dashboard close callbacks no
+longer refresh; mutation-success callbacks preserve refresh. No styling/auth/cache
+changes in that slice. A subsequent responsive Calendar sizing correction resolves
+the pre-existing visual mismatch; all 21 relevant browser checks now pass. No
+production speedup or release claim; full Epic 09 integration gates remain pending.
+
+Latest 09-04 freshness slice passes four new delayed-read cache checks and
+24/25 related browser checks. The short 320×720 entire-series edit screenshot
+still fails (774px vs 722px); all nine application lines removed reproduce the
+same 16,370-pixel mismatch. This latest reproduction is a separate visual release
+gate, not evidence that the current cache fix changes layout. Keep the historical
+21-check result above scoped to its earlier capture; do not claim every current
+visual check passes. See `docs/performance/SESSION-CACHE-FRESHNESS-2026-10-10.md`.

@@ -70,5 +70,8 @@ for (const viewport of [
     await expect(page.getByRole("button", { name: "Week" })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(overflow).toBe(false);
+    // The mobile header must share the viewport budget with the calendar.
+    // Two panel borders account for the existing 2px document overflow.
+    await expect(page.evaluate(() => document.documentElement.scrollHeight)).resolves.toBeLessThanOrEqual(viewport.height + 2);
   });
 }

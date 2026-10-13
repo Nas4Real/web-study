@@ -9,7 +9,6 @@ import {
   CalendarDays,
   ChevronsUpDown,
   FolderOpen,
-  HelpCircle,
   LayoutDashboard,
   Menu,
   Settings,
@@ -19,6 +18,7 @@ import {
 
 import { signOutAction } from "@/server/auth/auth-actions";
 import { NavigationSearch } from "./navigation-search";
+import { NavigationLabel } from "./navigation-label";
 
 const navigation = [
   { id: "dashboard", label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -75,12 +75,12 @@ export function StudySidebar({
                     key={item.id}
                     onClick={() => setMobileOpen(false)}
                   >
-                    <Icon aria-hidden="true" size={17} />{item.label}
+                    <Icon aria-hidden="true" size={17} /><NavigationLabel>{item.label}</NavigationLabel>
                   </Link>
                 );
               })}
               <Link className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold ${activeItem === "settings" ? "bg-card-hover text-white" : "text-text-muted"}`} href="/settings" onClick={() => setMobileOpen(false)}>
-                <Settings aria-hidden="true" size={17} />Settings
+                <Settings aria-hidden="true" size={17} /><NavigationLabel>Settings</NavigationLabel>
               </Link>
             </nav>
             <div className="mt-2 flex items-center gap-3 border-t border-border-panel px-3 py-3">
@@ -94,7 +94,7 @@ export function StudySidebar({
           </div>
         ) : null}
       </header>
-      <aside className="sticky top-3 hidden h-[calc(100vh-24px)] w-[260px] shrink-0 flex-col justify-between px-5 py-8 lg:flex">
+      <aside className="hidden h-full w-[260px] shrink-0 flex-col justify-between bg-transparent px-5 py-8 lg:flex">
         <div className="flex flex-col gap-10">
           <Link className="flex items-center gap-3 px-2 text-white" href="/">
             <span className="grid size-9 place-items-center rounded-xl bg-zinc-100 text-lg font-bold text-black">G</span>
@@ -117,7 +117,7 @@ export function StudySidebar({
                   key={item.id}
                 >
                   <Icon aria-hidden="true" className={isActive ? "text-white" : "text-zinc-500"} size={20} />
-                  <span>{item.label}</span>
+                  <NavigationLabel>{item.label}</NavigationLabel>
                 </Link>
               );
             })}
@@ -130,25 +130,18 @@ export function StudySidebar({
               aria-current={activeItem === "settings" ? "page" : undefined}
               className={`flex items-center gap-3.5 rounded-[14px] px-4 py-3 text-[15px] font-semibold transition-colors ${
                 activeItem === "settings"
-                  ? "bg-card-hover text-white"
+                  ? "border border-[#27272a] bg-[#18181b] text-white shadow-sm"
                   : "text-zinc-400 hover:bg-card hover:text-zinc-200"
               }`}
               href="/settings"
             >
               <Settings
                 aria-hidden="true"
-                className={activeItem === "settings" ? "text-white" : "text-zinc-500"}
+                className="text-zinc-500"
                 size={20}
               />
-              <span>Settings</span>
+              <NavigationLabel>Settings</NavigationLabel>
             </Link>
-            <a
-              className="flex items-center gap-3.5 rounded-[14px] px-4 py-3 text-[15px] font-semibold text-zinc-400 transition-colors hover:bg-card hover:text-zinc-200"
-              href="#support"
-            >
-              <HelpCircle aria-hidden="true" className="text-zinc-500" size={20} />
-              <span>Support</span>
-            </a>
           </nav>
 
           <div className="relative">
@@ -184,7 +177,7 @@ export function StudySidebar({
             <button
               aria-expanded={profileOpen}
               aria-label="Open profile menu"
-              className="group flex w-full items-center justify-between overflow-hidden rounded-2xl border border-border-panel bg-card p-3.5 text-left shadow-sm transition-colors hover:border-zinc-600"
+              className="group flex w-full items-center justify-between gap-3.5 overflow-hidden rounded-2xl border border-border-panel bg-card p-3.5 text-left shadow-sm transition-colors hover:border-zinc-600"
               onClick={() => setProfileOpen((open) => !open)}
               type="button"
             >
@@ -197,7 +190,7 @@ export function StudySidebar({
                   <span className="block truncate text-xs font-medium text-zinc-500">{email}</span>
                 </span>
               </span>
-              <ChevronsUpDown aria-hidden="true" className="ml-auto shrink-0 text-zinc-600 transition-colors group-hover:text-white" size={16} />
+              <span className="ml-auto flex size-6 shrink-0 items-center justify-center text-zinc-600 transition-colors group-hover:text-white"><ChevronsUpDown aria-hidden="true" size={16} /></span>
             </button>
           </div>
         </div>

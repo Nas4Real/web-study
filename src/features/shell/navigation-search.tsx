@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 
 export const searchableDestinations = [
   { aliases: "home overview", href: "/", label: "Dashboard" },
@@ -25,6 +25,8 @@ export function NavigationSearch({ compact = false }: Readonly<{ compact?: boole
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const [destination, setDestination] = useState("");
   const listId = useId();
   const results = findNavigationDestinations(query);
   const showingResults = open && Boolean(query);
@@ -44,7 +46,8 @@ export function NavigationSearch({ compact = false }: Readonly<{ compact?: boole
   const navigate = (href: string) => {
     setOpen(false);
     setQuery("");
-    router.push(href);
+    setDestination(searchableDestinations.find((item) => item.href === href)?.label ?? "page");
+    startTransition(() => router.push(href));
   };
 
   return (
@@ -83,6 +86,11 @@ export function NavigationSearch({ compact = false }: Readonly<{ compact?: boole
         />
         {!compact ? <kbd className="font-mono text-[9px] text-text-disabled">Ctrl K</kbd> : null}
       </label>
+      {pending ? (
+        <p className="absolute left-0 right-0 top-11 z-40 rounded-lg border border-border-panel bg-card px-3 py-2.5 text-xs font-semibold text-text-secondary shadow-2xl" role="status">
+          Loading {destination}…
+        </p>
+      ) : null}
       {showingResults ? (
         <div className="absolute left-0 right-0 top-11 z-50 overflow-hidden rounded-lg border border-border-panel bg-card shadow-2xl" id={listId} role="listbox">
           {results.length > 0 ? results.map((item, index) => (

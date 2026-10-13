@@ -1,7 +1,10 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
 import type { CalendarPageDataDTO, CalendarView, CalendarVisualEventDTO } from "@/domain/dto";
 import { sessionDetailFixture } from "@/fixtures";
@@ -16,17 +19,21 @@ import { DayView } from "./views/day-view";
 import { MonthView } from "./views/month-view";
 import { WeekView } from "./views/week-view";
 
+const TimetableImportModal = dynamic(() => import("./timetable-import-modal").then(module => module.TimetableImportModal));
+
 export function CalendarPage({ data, scope }: { data: CalendarPageDataDTO; scope?: string }) {
   return <SessionDetailProvider><CalendarPageContent data={data} scope={scope} /></SessionDetailProvider>;
 }
 
 function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope?: string }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [fixtureView, setFixtureView] = useState<CalendarView>(data.view);
   const [fixtureDate, setFixtureDate] = useState(() => new Date(data.anchorDate));
   const view = data.fixture ? fixtureView : data.view;
   const anchorDate = data.fixture ? fixtureDate : new Date(data.anchorDate);
-  const [dialog, setDialog] = useState<"new" | "detail" | null>(null);
+  const [dialog, setDialog] = useState<"new" | "detail" | "import" | null>(null);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
   const [selectedOccurrence, setSelectedOccurrence] = useState<SessionOccurrenceTarget | null>(null);
   const detail = useSessionDetail(data.fixture ? null : selectedOccurrence);
   const periodLabel = formatCalendarPeriod(anchorDate, view);
@@ -51,21 +58,31 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
   function closeDetail() {
     setDialog(null);
     setSelectedOccurrence(null);
-    if (!data.fixture) router.refresh();
+  }
+
+  function finishSessionMutation() {
+    // The Server Action revalidates this range; discard pre-write detail only.
+    if (selectedOccurrence) queryClient.removeQueries({ queryKey: ["session-detail", selectedOccurrence.seriesId] });
+    closeDetail();
   }
 
   const session = data.fixture ? sessionDetailFixture : detail.data?.detail;
 
   return (
-    <div className="flex h-[calc(100vh-24px)] min-h-[680px] flex-col overflow-hidden">
+    // Mobile reserves 56px for navigation plus its 12px gap; desktop only reserves shell padding.
+    <div className="flex h-[calc(100vh-92px)] min-h-[680px] flex-col overflow-hidden lg:h-[calc(100vh-24px)]">
       <CalendarHeader
         greetingName={data.greetingName}
         onShift={shiftPeriod}
         onNewSession={() => setDialog("new")}
+        onImport={() => setDialog("import")}
         onViewChange={nextView => data.fixture ? setFixtureView(nextView) : navigate(data.date, nextView)}
         periodLabel={periodLabel}
         view={view}
       />
+      {importNotice ? <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border-panel bg-card px-4 py-3 text-[13px] text-zinc-300 sm:px-8" role="status">
+        <span>{importNotice}</span><button aria-label="Dismiss import status" className="text-text-muted hover:text-white" onClick={() => setImportNotice(null)} type="button">Dismiss</button>
+      </div> : null}
       {view === "week" ? <WeekView days={data.weekDays} onOpenEvent={openEvent} /> : null}
       {view === "day" ? (
         <DayView onNewSession={() => setDialog("new")} onOpenEvent={openEvent} sections={data.daySections} />
@@ -74,6 +91,9 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
         <MonthView cells={data.monthCells} label={periodLabel} />
       ) : null}
       {dialog === "new" ? <NewSessionModal onClose={() => setDialog(null)} subjects={data.subjects} timeZone={data.timeZone} /> : null}
+      {dialog === "import" ? <TimetableImportModal subjects={data.subjects} onClose={() => setDialog(null)}
+        onImported={result => { setImportNotice(result.alreadyImported ? "This timetable is already imported. No duplicates added." : `Imported ${result.sessionCount} session series and ${result.subjectsCreated} new ${result.subjectsCreated === 1 ? "subject" : "subjects"}.`); router.refresh(); }}
+        onViewCalendar={result => { setDialog(null); navigate(result.firstDate, "week"); }} /> : null}
       {dialog === "detail" && !data.fixture && detail.isPending ? (
         <p className="sr-only" role="status">Loading session details.</p>
       ) : null}
@@ -86,6 +106,7 @@ function CalendarPageContent({ data, scope }: { data: CalendarPageDataDTO; scope
       {dialog === "detail" && session ? (
         <SessionDetailsModal
           onClose={closeDetail}
+          onMutated={finishSessionMutation}
           invokerFocusId={selectedOccurrence ? `session-open-${selectedOccurrence.seriesId}:${selectedOccurrence.originalStart}` : undefined}
           session={session}
           subjects={data.subjects}

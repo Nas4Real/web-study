@@ -267,9 +267,7 @@ export class CalendarService {
       ...update.data,
     });
     if (!merged.success) return INVALID_INPUT;
-    const rewritesSchedule = (["recurrenceRule", "startsAt", "timezone"] as const).some(
-      (field) => field in update.data && update.data[field] !== existing.data[field],
-    );
+    const rewritesSchedule = !scheduleMatches(merged.data, existing.data);
     if (rewritesSchedule) {
       try {
         const exceptions = await this.repository.listExceptionsOwned(actor.data, [id.data]);

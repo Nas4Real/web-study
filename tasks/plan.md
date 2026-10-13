@@ -1,4 +1,72 @@
-# Implementation Plan: Signed-in usability fixes
+# Active Plan: Calendar JSON import
+
+Implement the complete [Calendar JSON import ExecPlan](../.agent/execplans/CALENDAR-JSON-IMPORT.md), including validation, atomic authenticated API, Calendar UI, tests, documentation and preview publication. The user explicitly requests proceeding from planning straight through implementation without review pauses. Existing UI parity and deferred performance work remain preserved below.
+
+Completed 2026-10-13: authenticated atomic imports, Calendar preview/confirmation, deployed migration, real browser/JWT/SQL verification, 807 passing tests, typecheck/lint/build. See [verification report](../docs/testing/CALENDAR-IMPORT-2026-10-13.md). Published through the existing Vercel preview branch; production is unchanged.
+
+---
+
+# Previous Plan: Copy the localhost UI
+
+Date: 2026-10-11. Source: `C:/Users/itsna/Desktop/web/app/src`.
+
+Port the existing React markup/classes from `localhost:5173`; do not redesign.
+Keep real Next routes, authentication, services, data, task/session dialogs and mutations.
+Use [the UI parity ExecPlan](../.agent/execplans/LOCALHOST-UI-PARITY.md).
+
+1. Copy shared shell/tokens and Dashboard components; verify desktop layout and actions.
+2. Copy Tasks markup while preserving completion, detail and creation behavior.
+3. Copy Calendar and Documents views while preserving occurrence identity and organization.
+4. Compare Settings, dialogs and authentication with source; port actual differences only.
+5. Verify each slice in the browser and run regression gates before preview publication.
+
+Remaining performance/mobile work stays deferred; it is not part of this port.
+
+---
+
+# Historical Plan: Navigation and interaction performance (remaining work deferred)
+
+Date: 2026-10-10. Planning complete; implementation pending.
+
+The user requested BMAD-style optimization planning for slow navigation.
+Use the full [Epic 09 ExecPlan](../.agent/execplans/EPIC-09.md) and
+[engineering spec](../_bmad-output/planning-artifacts/specs/spec-navigation-performance.md).
+The older usability plan is retained below as historical context.
+
+## Ordered tasks
+
+1. 09-01: Establish a real authenticated production baseline and locate delays.
+2. 09-02: Share actor/profile reads per render request; parallelize independent reads.
+3. 09-03: Immediate destination feedback and measured, bounded shell prefetch.
+4. 09-04: Cache freshness, targeted mutation synchronization and fewer refreshes.
+5. Decide 09-05 Calendar and 09-06 Tasks client queries independently from evidence.
+6. 09-07: Compare results, verify behavior and release through existing Vercel setup.
+
+## Checkpoints and architecture
+
+Keep initial Server Component reads; introduce JSON queries selectively.
+Remeasure after 09-02/09-03 and 09-04 before conditional client migration.
+Every retained optimization needs before/after evidence; a skeleton is not
+proof that content loads faster. Cache ownership and auth reset are mandatory.
+Five core stories plus two conditional stories are indexed in the sprint file.
+No code changes, runtime tests or performance gains are claimed by this plan.
+
+## Risks and mitigations
+
+- Production cause is unknown: trace real auth and data first; local fixtures are insufficient.
+- Loading shell can hide slow reads: measure usable-content time independently.
+- Shared caches can retain stale/foreign state: actor keys, auth reset and mutation invalidation.
+- Prefetch can add unnecessary work: measure and cap likely destinations.
+- Client migration can duplicate rules: route adapters reuse shared application services.
+
+## Open questions
+
+No product choice blocks planning. Hosted profiling access/conditions and the
+09-05/09-06 implement/defer verdicts are resolved during their named stories.
+
+---
+
+# Historical Plan: Signed-in usability fixes
 
 ## Overview
 

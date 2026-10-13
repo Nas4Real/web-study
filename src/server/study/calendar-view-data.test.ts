@@ -64,6 +64,11 @@ describe("effective-occurrence calendar projection", () => {
   const dates = ["2026-10-04", "2026-10-05", "2026-10-06"];
   const now = new Date("2026-10-05T09:38:00.000Z");
 
+  it.each(["#60a5fa", "#4ade80", "#a78bfa", "#22d3ee", "#facc15", "#fb7185"])("preserves the stored subject color %s instead of replacing it with blue", color => {
+    const days = projectCalendarDays(dates, [occurrence], [{ ...subject, color }], "Africa/Tunis", now);
+    expect(days[1].events[0]).toMatchObject({ subjectColor: color });
+  });
+
   it("places moved occurrences by effective date but preserves original identity", () => {
     const days = projectCalendarDays(dates, [occurrence], [subject], "Africa/Tunis", now);
     expect(days[0].events).toEqual([]);
@@ -71,7 +76,7 @@ describe("effective-occurrence calendar projection", () => {
     expect(days[1].events[0]).toEqual({
       id: "series-1:2026-10-04T08:00:00.000Z",
       seriesId: "series-1", originalStart: "2026-10-04T08:00:00.000Z", title: "Effective lecture",
-      subjectLabel: "Physics", tone: "physics", startLabel: "09:30", endLabel: "11:00",
+      subjectLabel: "Physics", subjectColor: "#10b981", tone: "physics", startLabel: "09:30", endLabel: "11:00",
       durationLabel: "90m", location: "Room 401", inProgress: true, progressLabel: "Ends in 22 mins",
     });
   });

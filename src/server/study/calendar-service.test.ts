@@ -239,6 +239,40 @@ describe("CalendarService", () => {
     expect(JSON.stringify(result)).not.toContain("private provider detail");
   });
 
+  it.each([
+    "2026-10-05T08:00:00+00:00",
+    "2026-10-05T09:00:00+01:00",
+  ])("allows content edits with exceptions when stored start %s represents the same instant", async (startsAt) => {
+    const recurring = { ...SERIES, startsAt, recurrenceRule: "FREQ=WEEKLY;COUNT=3" };
+    const saved = { ...recurring, startsAt: SERIES.startsAt, location: "Room 402" };
+    const store = repository({
+      findOwned: vi.fn().mockResolvedValue({ data: recurring, errorCode: null }),
+      listExceptionsOwned: vi.fn().mockResolvedValue({ data: [EXCEPTION], errorCode: null }),
+      updateOwned: vi.fn().mockResolvedValue({ data: saved, errorCode: null }),
+    });
+
+    await expect(new CalendarService(store).update(USER_ID, SERIES_ID, {
+      startsAt: SERIES.startsAt,
+      location: "Room 402",
+    }, recurring)).resolves.toEqual({ data: saved, status: "success" });
+    // Equivalent serialization must not trigger schedule-rewrite exception work.
+    expect(store.listExceptionsOwned).not.toHaveBeenCalled();
+    expect(store.updateOwned).toHaveBeenCalledWith(USER_ID, SERIES_ID,
+      expect.objectContaining({ location: "Room 402", startsAt: SERIES.startsAt }),
+      { startsAt, timezone: recurring.timezone, recurrenceRule: recurring.recurrenceRule });
+  });
+
+  it("rejects a genuinely changed start when exceptions exist", async () => {
+    const store = repository({
+      listExceptionsOwned: vi.fn().mockResolvedValue({ data: [EXCEPTION], errorCode: null }),
+    });
+
+    await expect(new CalendarService(store).update(USER_ID, SERIES_ID, {
+      startsAt: "2026-10-05T08:01:00.000Z",
+    })).resolves.toEqual({ code: "INVALID_INPUT", status: "error" });
+    expect(store.updateOwned).not.toHaveBeenCalled();
+  });
+
   it("rejects schedule rewrites that would orphan stored exceptions", async () => {
     const store = repository({
       listExceptionsOwned: vi.fn().mockResolvedValue({
